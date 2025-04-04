@@ -65,3 +65,54 @@ Make sure the air `tmp/` directory is excluded in `.gitignore`:
 # Air build output
 backend/tmp/
 ```
+
+---
+
+## 🧼 Pre-commit Hooks
+
+We use [pre-commit](https://pre-commit.com) to enforce code quality and formatting before commits.
+
+When you commit changes, the following hooks are run automatically:
+
+- `trailing-whitespace` – removes trailing whitespace
+- `end-of-file-fixer` – ensures files end with a single newline
+- `check-yaml` – validates `.yml` and `.yaml` syntax
+- `check-added-large-files` – warns on large files
+- `golangci-lint` – lints Go code in the `backend/` directory using `golangci-lint run`
+- `golangci-fmt` – formats Go code in the `backend/` directory using `golangci-lint fmt`
+
+We use [golangci-lint](https://golangci-lint.run/usage/configuration/) to lint and format our backend go code.
+
+### 📦 Installation (one-time setup)
+
+```bash
+pip install pre-commit
+```
+
+If `pip` does not work, try `pip3` otherwise you may have to install [pip](https://pip.pypa.io/en/stable/installation/).
+
+## ⚙️ Enabling hooks
+
+Run this once after cloning the repo:
+
+```bash
+pre-commit install
+```
+
+## 🧪 Testing hooks
+
+To run all hooks manually:
+
+```bash
+pre-commit run --all-files
+```
+
+## 📁 Config location
+
+All hook configuration is defined in .pre-commit-config.yaml at the project root. Hooks targeting the Go backend are scoped using:
+
+```yaml
+entry: bash -c "cd backend && <command>"
+```
+
+This ensures formatting and linting happen relative to the Go module in backend/.
