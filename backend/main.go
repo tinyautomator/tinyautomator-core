@@ -5,13 +5,15 @@ import (
 )
 
 func main() {
-    r := gin.Default()
+	r := gin.Default()
 
-    r.GET("/", func(c *gin.Context) {
-        c.JSON(200, gin.H{
-            "message": "TinyAutomator backend is live 🚀",
-        })
-    })
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "TinyAutomator backend is live 🚀",
+		})
+	})
 
-    r.Run(":8080")
+	if err := r.Run(":8080"); err != nil {
+		panic("Failed to start server: " + err.Error())
+	}
 }
