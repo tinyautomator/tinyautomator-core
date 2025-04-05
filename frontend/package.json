@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "react-router dev",
     "build": "tsc -b && vite build",
-    "lint": "eslint src",
+    "lint": "eslint .",
     "preview": "vite preview",
-    "format": "prettier . --write"
+    "format": "prettier --list-different --write ."
   },
   "dependencies": {
     "@react-router/node": "^7.5.0",
