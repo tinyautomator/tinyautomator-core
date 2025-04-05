@@ -11,14 +11,26 @@ repos:
   - repo: local
     hooks:
       - id: golangci-lint
-        name: lint files
+        name: golangci-lint
         entry: bash -c "cd backend && golangci-lint run"
         language: system
         types: [go]
         files: ^backend/
       - id: golangci-fmt
-        name: format files
+        name: golangci-fmt
         entry: bash -c "cd backend && golangci-lint fmt"
         language: system
         types: [go]
         files: ^backend/
+      - id: eslint
+        name: eslint
+        entry: bash -c "cd frontend && yarn lint"
+        language: system
+        types: [tsx, ts, javascript, jsx]
+        files: ^frontend/
+      - id: prettier
+        name: prettier
+        entry: bash -c "cd frontend && yarn format"
+        language: system
+        types: [tsx, ts, javascript, jsx, json, css, markdown]
+        files: ^frontend/
