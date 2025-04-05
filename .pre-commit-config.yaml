@@ -26,11 +26,9 @@ repos:
         name: eslint
         entry: bash -c "cd frontend && yarn lint"
         language: system
-        types: [tsx, ts, javascript, jsx]
-        files: ^frontend/
+        files: ^frontend/.*\.(ts|tsx|js|jsx|json|md)$
       - id: prettier
         name: prettier
         entry: bash -c "cd frontend && yarn format"
         language: system
-        types: [tsx, ts, javascript, jsx, json, css, markdown]
-        files: ^frontend/
+        files: ^frontend/.*\.(ts|tsx|js|jsx|json|md)$
