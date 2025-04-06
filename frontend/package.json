@@ -11,6 +11,8 @@
     "format": "prettier --list-different --write ."
   },
   "dependencies": {
+    "@clerk/react-router": "^1.2.0",
+    "@react-router/fs-routes": "^7.5.0",
     "@react-router/node": "^7.5.0",
     "isbot": "^5",
     "react": "^19.0.0",
