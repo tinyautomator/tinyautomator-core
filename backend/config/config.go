@@ -11,6 +11,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	DEVELOPMENT = "development"
+	PRODUCTION  = "production"
+)
+
 type EnvironmentVariables struct {
 	LogLevel    string `envconfig:"LOG_LEVEL" default:"INFO"`
 	ClerkApiKey string `envconfig:"CLERK_API_KEY"`
@@ -69,15 +74,15 @@ func (cfg *AppConfig) Log() *logrus.Logger {
 
 func (cfg *AppConfig) loadEnvironmentVariables() error {
 	if cfg.env = os.Getenv("APPLICATION_ENV"); cfg.env == "" {
-		cfg.env = "development"
+		cfg.env = DEVELOPMENT
 	}
 
 	if err := godotenv.Overload(".env", ".env."+cfg.env); err != nil {
 		return err
 	}
 
-	if cfg.env == "development" {
-		if err := godotenv.Overload(".env.development.local"); err != nil {
+	if cfg.env == DEVELOPMENT {
+		if err := godotenv.Overload(".env." + DEVELOPMENT + ".local"); err != nil {
 			return err
 		}
 	}
@@ -102,7 +107,7 @@ func (cfg *AppConfig) configureLogger() error {
 		cfg.log.SetLevel(logLevel)
 	}
 
-	if cfg.env == "production" {
+	if cfg.env == PRODUCTION {
 		cfg.log.SetFormatter(&logrus.JSONFormatter{
 			PrettyPrint: false, // TODO: think about this
 		})
