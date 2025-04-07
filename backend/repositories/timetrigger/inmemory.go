@@ -34,3 +34,10 @@ func (r *inMemoryRepository) UpdateTrigger(t models.TimeTrigger) error {
 	}
 	return errors.New("trigger not found")
 }
+
+func (r *inMemoryRepository) FetchDueTriggers() ([]models.TimeTrigger, error) {
+
+	// In a real-world scenario, this would involve checking the current time
+	// against the trigger's schedule. For simplicity, we'll return all triggers.
+	return r.triggers, nil
+}
