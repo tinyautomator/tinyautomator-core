@@ -1,2 +1,5 @@
 # Air build output
 tmp/
+
+# local environment vars
+.env.development.local
