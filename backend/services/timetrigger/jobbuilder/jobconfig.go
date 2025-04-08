@@ -16,52 +16,66 @@ type JobConfig struct {
 }
 
 func BuildJobConfig(t models.TimeTrigger) (JobConfig, error) {
-	// Define the task
-	var task gocron.Task
-	switch t.Action {
-	case "send_email":
-		task = gocron.NewTask(func() {
-			// TODO : Implement the email sending logic
-			// This is a placeholder for the actual email sending logic
-
-			log.Printf("Sending email for trigger ID %d", t.ID)
-		})
-
-	default:
-		return JobConfig{}, errors.New("unknown action: " + t.Action)
-	}
-	
-
-	hour, min, err := parseTriggerAt(t.TriggerAt)
+	task, err := buildTask(t)
 	if err != nil {
 		return JobConfig{}, err
 	}
-	atTime := gocron.NewAtTime(uint(hour), uint(min), 0)
 
-	// Build the job definition
-	var def gocron.JobDefinition
-	switch t.Interval {
-	case "once":
-		def = gocron.OneTimeJob(gocron.OneTimeJobStartDateTime(t.NextRun))
-	case "daily":
-		def = gocron.DailyJob(1, gocron.NewAtTimes(atTime))
-	case "weekly":
-		def = gocron.WeeklyJob(1, gocron.NewWeekdays(GetWeekDay(t.DayOfWeek)), gocron.NewAtTimes(atTime))
-	case "monthly":
-		def = gocron.MonthlyJob(1, gocron.NewDaysOfTheMonth(getDayOfTheMonth(t.DayOfMonth)), gocron.NewAtTimes(atTime))
-	default:
-		return JobConfig{}, errors.New("invalid interval: " + t.Interval)
+	def, err := buildDefinition(t)
+	if err != nil {
+		return JobConfig{}, err
 	}
 
-	// Job options (e.g., tagging)
-	tag := "trigger-" + strconv.FormatUint(uint64(t.ID), 10)
-	opts := []gocron.JobOption{
-		gocron.WithTags(tag),
+	opts, err := buildOptions(t)
+	if err != nil {
+		return JobConfig{}, err
 	}
 
 	return JobConfig{
-		Definition: def,
 		Task:       task,
+		Definition: def,
 		Options:    opts,
 	}, nil
+}
+
+func buildTask(t models.TimeTrigger) (gocron.Task, error) {
+	switch t.Action {
+	case "send_email":
+		return gocron.NewTask(func() {
+			log.Printf("Sending email for trigger ID %d", t.ID)
+		}), nil
+	default:
+		return nil, errors.New("unknown action: " + t.Action)
+	}
+}
+
+func buildDefinition(t models.TimeTrigger) (gocron.JobDefinition, error) {
+	hour, min, err := parseTriggerAt(t.TriggerAt)
+	if err != nil {
+		return nil, err
+	}
+	atTime := gocron.NewAtTime(uint(hour), uint(min), 0)
+
+	switch t.Interval {
+	case "once":
+		return gocron.OneTimeJob(gocron.OneTimeJobStartDateTime(t.NextRun)), nil
+	case "daily":
+		return gocron.DailyJob(1, gocron.NewAtTimes(atTime)), nil
+	case "weekly":
+		return gocron.WeeklyJob(1, gocron.NewWeekdays(getWeekDay(t.DayOfWeek)), gocron.NewAtTimes(atTime)), nil
+	case "monthly":
+		return gocron.MonthlyJob(1, gocron.NewDaysOfTheMonth(getDayOfTheMonth(t.DayOfMonth)), gocron.NewAtTimes(atTime)), nil
+	default:
+		return nil, errors.New("invalid interval: " + t.Interval)
+	}
+}
+
+
+func buildOptions(t models.TimeTrigger) ([]gocron.JobOption, error) {
+	typeTag := "trigger-" + strconv.FormatUint(uint64(t.ID), 10)
+	actionTag := "action-" + t.Action
+	opts := []gocron.JobOption{
+		gocron.WithTags(typeTag, actionTag),
+	}
+	return opts, nil
 }
