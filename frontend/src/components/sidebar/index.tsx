@@ -1,16 +1,12 @@
 import {
-  BookOpen,
   Calendar,
   Code,
   Database,
   FileText,
-  LayoutDashboard,
   Mail,
   MessageSquare,
-  Play,
   Settings,
   Sparkles,
-  Zap,
 } from "lucide-react";
 
 import {
@@ -27,52 +23,31 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import "../../App.css";
+import { WORKSPACE_MENU_ITEMS_TO_ICONS } from "./constants";
 
-export function AppSidebar({ activeView, setActiveView }) {
+export default function ({ activeView, setActiveView }) {
   return (
-    <Sidebar>
+    <Sidebar className="relative flex h-full flex-col justify-between">
       <SidebarHeader>
-        <div className="flex items-center justify-between px-4 py-2">
-          <span className="text-sm font-medium">Main Menu</span>
+        <div className="flex items-center justify-between px-4 pt-2 pb-1">
+          <span className="text-sm font-medium">Workspace</span>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="scrollbar-hidden">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeView === "dashboard"}
-                  onClick={() => setActiveView("dashboard")}
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeView === "builder"}
-                  onClick={() => setActiveView("builder")}
-                >
-                  <Zap className="h-4 w-4" />
-                  <span>Workflow Builder</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeView === "library"}
-                  onClick={() => setActiveView("library")}
-                >
-                  <BookOpen className="h-4 w-4" />
-                  <span>Workflow Library</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Play className="h-4 w-4" />
-                  <span>Debugger</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {Object.keys(WORKSPACE_MENU_ITEMS_TO_ICONS).map((wi) => (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={activeView === wi}
+                    onClick={() => setActiveView(wi)}
+                  >
+                    {WORKSPACE_MENU_ITEMS_TO_ICONS[wi]}
+                    <span>{wi}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -80,7 +55,7 @@ export function AppSidebar({ activeView, setActiveView }) {
         <SidebarSeparator />
 
         <SidebarGroup>
-          <SidebarGroupLabel>Integrations</SidebarGroupLabel>
+          <SidebarGroupLabel className="pb-3">Integrations</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
