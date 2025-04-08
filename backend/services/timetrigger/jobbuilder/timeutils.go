@@ -11,7 +11,7 @@ import (
 
 // Can be adapted to parse weekdays
 // For now, it just returns the weekday as string assuming 0-6 (Sunday-Saturday)
-func GetWeekDay(dayOfWeek int) time.Weekday {
+func getWeekDay(dayOfWeek int) time.Weekday {
 	return time.Weekday(dayOfWeek)
 }
 
