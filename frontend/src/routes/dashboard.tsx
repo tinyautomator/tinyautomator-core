@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Plus, Zap } from "lucide-react";
-//import "reactflow/dist/style.css"
+// import "reactflow/dist/style.css";
 
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserButton } from "@clerk/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,16 +14,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/appSidebar/appSidebar";
-import { Dashboard } from "@/components/dashboard/dashboard";
+import Sidebar from "@/components/sidebar";
+import Dashboard from "@/components/dashboard";
 
-export default function App() {
-  const [activeView, setActiveView] = useState("dashboard");
+export default function Dash() {
+  const [activeView, setActiveView] = useState("Dashboard");
 
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <div className="flex h-screen flex-col bg-slate-50">
+        <div className="flex h-screen w-screen flex-col bg-slate-50">
           {/* Navbar */}
           <header className="flex h-14 items-center border-b bg-white px-6 z-10">
             <div className="flex items-center gap-2 font-semibold">
@@ -37,10 +37,7 @@ export default function App() {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Avatar className="h-8 w-8 cursor-pointer">
-                    <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
+                  <UserButton />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
@@ -56,10 +53,10 @@ export default function App() {
 
           {/* Main Content */}
           <div className="flex flex-1 overflow-hidden">
-            <AppSidebar activeView={activeView} setActiveView={setActiveView} />
+            <Sidebar activeView={activeView} setActiveView={setActiveView} />
 
             <main className="flex-1 overflow-hidden">
-              {activeView === "dashboard" && <Dashboard />}
+              {activeView === "Dashboard" && <Dashboard />}
             </main>
           </div>
         </div>
