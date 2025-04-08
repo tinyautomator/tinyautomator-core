@@ -111,8 +111,9 @@ func TestBuildJobConfig_InvalidInterval(t *testing.T) {
 func TestBuildJobConfig_InvalidTimeFormat(t *testing.T) {
 	trigger := models.TimeTrigger{
 		ID:        7,
-		Interval:  "daily",
-		TriggerAt: "25:61", // Invalid
+		Interval:  "weekly",
+		DayOfWeek: 10,
+		TriggerAt: "23:04", // Invalid
 		Action:    "send_email",
 	}
 

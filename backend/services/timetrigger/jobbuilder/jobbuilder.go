@@ -62,9 +62,17 @@ func buildDefinition(t models.TimeTrigger) (gocron.JobDefinition, error) {
 	case "daily":
 		return gocron.DailyJob(1, gocron.NewAtTimes(atTime)), nil
 	case "weekly":
-		return gocron.WeeklyJob(1, gocron.NewWeekdays(getWeekDay(t.DayOfWeek)), gocron.NewAtTimes(atTime)), nil
+		var dayOfWeek, err = getWeekDay(t.DayOfWeek)
+		if err != nil {
+			return nil, err
+		}
+		return gocron.WeeklyJob(1, gocron.NewWeekdays(dayOfWeek), gocron.NewAtTimes(atTime)), nil
 	case "monthly":
-		return gocron.MonthlyJob(1, gocron.NewDaysOfTheMonth(getDayOfTheMonth(t.DayOfMonth)), gocron.NewAtTimes(atTime)), nil
+		var dayOfMonth, err = getDayOfTheMonth(t.DayOfMonth)
+		if err != nil {
+			return nil, err
+		}
+		return gocron.MonthlyJob(1, gocron.NewDaysOfTheMonth(dayOfMonth), gocron.NewAtTimes(atTime)), nil
 	default:
 		return nil, errors.New("invalid interval: " + t.Interval)
 	}
