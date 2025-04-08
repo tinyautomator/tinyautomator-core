@@ -27,14 +27,21 @@ func parseTriggerAt(triggerAt string) (int, int, error) {
 		return 0, 0, errors.New("invalid triggerAt format")
 	}
 
+
 	hour, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return 0, 0, err
+	}
+	if hour < 0 || hour > 23 {
+		return 0, 0, errors.New("hour must be between 1 and 24")
 	}
 
 	minute, err := strconv.Atoi(parts[1])
 	if err != nil {
 		return 0, 0, err
+	}
+	if minute < 0 || minute > 59 {
+		return 0, 0, errors.New("minute must be between 0 and 59")
 	}
 
 	return hour, minute, nil
