@@ -21,9 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import "../../App.css";
 
-export function Dashboard() {
+export default function () {
   return (
-    <div className="h-full overflow-auto p-6">
+    <div className="h-full overflow-auto p-6 scrollbar-hidden">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
