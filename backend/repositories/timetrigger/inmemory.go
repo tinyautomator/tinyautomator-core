@@ -7,37 +7,44 @@ import (
 )
 
 type inMemoryRepository struct {
-	nextID  int
-	triggers []models.TimeTrigger
+	triggers map[uint]models.TimeTrigger
+	nextID   uint
 }
 
 func NewInMemoryRepository() *inMemoryRepository {
 	return &inMemoryRepository{
-		triggers: []models.TimeTrigger{},
-		nextID:  1,
+		triggers: make(map[uint]models.TimeTrigger),
+		nextID:   1,
 	}
+}
+
+func (r *inMemoryRepository) GetTriggerByID(id uint) (models.TimeTrigger, error) {
+	trigger, exists := r.triggers[id]
+	if !exists {
+		return models.TimeTrigger{}, errors.New("trigger not found")
+	}
+	return trigger, nil
 }
 
 func (r *inMemoryRepository) SaveTrigger(t models.TimeTrigger) error {
-	t.ID = uint(r.nextID)
+	t.ID = r.nextID
+	r.triggers[t.ID] = t
 	r.nextID++
-	r.triggers = append(r.triggers, t)
 	return nil
-}	
+}
 
 func (r *inMemoryRepository) UpdateTrigger(t models.TimeTrigger) error {
-	for i := range r.triggers {
-		if r.triggers[i].ID == t.ID {
-			r.triggers[i] = t
-			return nil
-		}
+	if _, exists := r.triggers[t.ID]; !exists {
+		return errors.New("trigger not found")
 	}
-	return errors.New("trigger not found")
+	r.triggers[t.ID] = t
+	return nil
 }
 
 func (r *inMemoryRepository) FetchDueTriggers() ([]models.TimeTrigger, error) {
-
-	// In a real-world scenario, this would involve checking the current time
-	// against the trigger's schedule. For simplicity, we'll return all triggers.
-	return r.triggers, nil
+	results := make([]models.TimeTrigger, 0, len(r.triggers))
+	for _, trigger := range r.triggers {
+		results = append(results, trigger)
+	}
+	return results, nil
 }
