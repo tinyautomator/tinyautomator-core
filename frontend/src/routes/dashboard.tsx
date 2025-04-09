@@ -1,21 +1,13 @@
 import { useState } from "react";
-import { Plus, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 // import "reactflow/dist/style.css";
 
-import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserButton } from "@clerk/react-router";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "@/components/sidebar";
 import Dashboard from "@/components/dashboard";
+import WorkflowBuilder from "@/components/workflow";
 
 export default function Dash() {
   const [activeView, setActiveView] = useState("Dashboard");
@@ -31,23 +23,7 @@ export default function Dash() {
               <span>TinyAutomator</span>
             </div>
             <div className="ml-auto flex items-center gap-4">
-              <Button variant="outline" size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                New Workflow
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <UserButton />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Log out</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <UserButton />
             </div>
           </header>
 
@@ -57,6 +33,7 @@ export default function Dash() {
 
             <main className="flex-1 overflow-hidden">
               {activeView === "Dashboard" && <Dashboard />}
+              {activeView === "Workflow Builder" && <WorkflowBuilder />}
             </main>
           </div>
         </div>
