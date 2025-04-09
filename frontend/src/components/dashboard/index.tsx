@@ -105,7 +105,6 @@ export default function () {
               lastRun="2 hours ago"
               status="active"
               runs={142}
-              successRate={99.3}
             />
             <WorkflowCard
               title="Daily Team Digest"
@@ -113,7 +112,6 @@ export default function () {
               lastRun="Today at 9:00 AM"
               status="active"
               runs={65}
-              successRate={100}
             />
             <WorkflowCard
               title="Lead Capture"
@@ -121,7 +119,6 @@ export default function () {
               lastRun="12 minutes ago"
               status="active"
               runs={287}
-              successRate={98.6}
             />
             <WorkflowCard
               title="Data Formatting"
@@ -129,7 +126,6 @@ export default function () {
               lastRun="Yesterday at 11:00 PM"
               status="active"
               runs={42}
-              successRate={95.2}
             />
             <WorkflowCard
               title="Customer Onboarding"
@@ -137,7 +133,6 @@ export default function () {
               lastRun="1 hour ago"
               status="active"
               runs={189}
-              successRate={99.5}
             />
             <WorkflowCard
               title="Social Media Posts"
@@ -145,7 +140,6 @@ export default function () {
               lastRun="3 hours ago"
               status="paused"
               runs={76}
-              successRate={97.8}
             />
           </div>
         </TabsContent>
@@ -301,14 +295,21 @@ export default function () {
   );
 }
 
+interface WorkflowCardProps {
+  title: string;
+  description: string;
+  lastRun: string;
+  status: string;
+  runs: number;
+}
+
 function WorkflowCard({
   title,
   description,
   lastRun,
   status,
   runs,
-  successRate,
-}) {
+}: WorkflowCardProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -324,12 +325,6 @@ function WorkflowCard({
         <div className="flex items-center justify-between text-sm">
           <div className="text-muted-foreground">Last run: {lastRun}</div>
           <div className="font-medium">{runs} runs</div>
-        </div>
-        <div className="mt-2">
-          <Progress value={successRate} className="h-1" />
-          <div className="mt-1 text-xs text-right text-muted-foreground">
-            {successRate}% success
-          </div>
         </div>
       </CardContent>
       <CardFooter className="pt-2">
