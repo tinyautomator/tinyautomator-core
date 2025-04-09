@@ -38,7 +38,15 @@ func BuildJobConfig(t models.TimeTrigger) (JobConfig, error) {
 	}, nil
 }
 
+var TestTaskOverride func(t models.TimeTrigger) gocron.Task
+
+
 func buildTask(t models.TimeTrigger) (gocron.Task, error) {
+	if TestTaskOverride != nil {
+		return TestTaskOverride(t), nil
+	}
+
+	
 	switch t.Action {
 	case "send_email":
 		return gocron.NewTask(func() {

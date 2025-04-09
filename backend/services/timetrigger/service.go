@@ -18,34 +18,55 @@ type Service struct {
 	scheduler gocron.Scheduler
 }
 
-func NewScheduler() gocron.Scheduler {
-	s, err := gocron.NewScheduler(gocron.WithLocation(time.UTC))
-	if err != nil {
-		log.Fatalf("failed to create scheduler: %v", err)
-	}
-	return s
-}
-
-func NewService(repo timetrigger.Repository) *Service {
+func NewService(r timetrigger.Repository) *Service {
 	return &Service{
-		repo: repo,
-		scheduler: NewScheduler(),
+		repo: r,
+		scheduler: newScheduler(),
 	}
 }
 
-func (s *Service) ScheduleTrigger(t models.TimeTrigger) error {
+func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job , error) {
 
 		jobCfg, err := jobbuilder.BuildJobConfig(t)
 		if err != nil {
 			log.Printf("Error building job config for trigger ID %d: %v", t.ID, err)
-			return err
+			return nil, err
 		}
 
-		job, err := s.scheduler.NewJob(jobCfg.Definition, jobCfg.Task, jobCfg.Options...)
+		job , err := s.scheduler.NewJob(jobCfg.Definition, jobCfg.Task, jobCfg.Options...)
 		if err != nil {
 			log.Printf("Error creating job for trigger ID %d: %v", t.ID, err)
-			return err
+			return nil, err
 		}
-		log.Printf("Scheduled job for trigger ID %d with tags: %v", t.ID, job.Tags())
-		return nil
+		t.NextRun = calculateNextRun(t)
+		_ = s.repo.UpdateTrigger(t)
+		
+		return job, nil
 	}
+
+func newScheduler() gocron.Scheduler {
+		testLogger := gocron.NewLogger(gocron.LogLevelError)
+		s, err := gocron.NewScheduler(gocron.WithLocation(time.UTC), gocron.WithLogger(testLogger))
+	
+		if err != nil {
+			log.Fatalf("failed to create scheduler: %v", err)
+		}
+		s.Start()
+		return s
+}
+
+func calculateNextRun(t models.TimeTrigger) time.Time {
+	now := time.Now().UTC()
+	switch t.Interval {
+	case "daily":
+		return now.Add(24 * time.Hour)
+	case "weekly":
+		return now.Add(7 * 24 * time.Hour)
+	case "monthly":
+		return now.AddDate(0, 1, 0)
+	case "once":
+		return t.NextRun
+	default:
+		return now
+	}
+}
