@@ -50,23 +50,23 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 }
 
 // calculateNextRun returns the next scheduled run time for a given TimeTrigger.
-// It adds the appropriate interval to the current NextRun value.
-// This function is only called after a trigger has been scheduled and executed,
-// so it assumes that NextRun already represents the last scheduled execution time.
+// It uses the LastRun value to determine the next interval.
+// This function is only called after a trigger has been executed,
+// so it assumes LastRun is set and accurate.
 func calculateNextRun(t models.TimeTrigger) (time.Time, error) {
 	switch t.Interval {
 	case "daily":
-		return t.NextRun.Add(24 * time.Hour), nil
+		return t.LastRun.Add(24 * time.Hour), nil
 	case "weekly":
-		return t.NextRun.Add(7 * 24 * time.Hour), nil
+		return t.LastRun.Add(7 * 24 * time.Hour), nil
 	case "monthly":
-		nextMonth := t.NextRun.AddDate(0, 1, 0)
+		nextMonth := t.LastRun.AddDate(0, 1, 0)
 		candidate := time.Date(
 			nextMonth.Year(),
 			nextMonth.Month(),
 			t.DayOfMonth,
-			t.NextRun.Hour(),
-			t.NextRun.Minute(),
+			t.LastRun.Hour(),
+			t.LastRun.Minute(),
 			0, 0, nextMonth.Location(),
 		)
 		if candidate.Day() != t.DayOfMonth {
@@ -80,6 +80,16 @@ func calculateNextRun(t models.TimeTrigger) (time.Time, error) {
 	}
 }
 
+// updateLastRun updates the LastRun field of a TimeTrigger to the current NextRun value.
+// Since this function is called after the trigger has been executed,
+// it sets LastRun to the time when the trigger was last executed.
+func markTriggerExecuted(t *models.TimeTrigger)  {
+	// Promote current NextRun to LastRun for rescheduling
+	t.LastRun = t.NextRun
+}
+
+// parseTriggerAt parses the TriggerAt string in "HH:MM" format and returns the hour and minute as integers.
+// It also validates the hour and minute values to ensure they are within valid ranges.
 func parseTriggerAt(triggerAt string) (int, int, error) {
 	parts := strings.Split(triggerAt, ":")
 	if len(parts) != 2 {
@@ -105,3 +115,4 @@ func parseTriggerAt(triggerAt string) (int, int, error) {
 
 	return hour, minute, nil
 }
+

@@ -97,12 +97,16 @@ func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job , error) {
 			log.Printf("Error creating job for trigger ID %d: %v", t.ID, err)
 			return nil, err
 		}
+
+		markTriggerExecuted(&t)
+
 		t.NextRun, err = calculateNextRun(t)
 		if err != nil {
 			log.Printf("Error calculating next run for trigger ID %d: %v", t.ID, err)
 			return nil, err
 		}
 		_ = s.repo.UpdateTrigger(t)
+		
 		
 		return job, nil
 	}
