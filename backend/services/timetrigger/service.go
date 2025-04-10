@@ -26,7 +26,6 @@ func NewService(r timetrigger.Repository) *Service {
 }
 // ValidateTrigger checks that the given TimeTrigger has a valid configuration.
 // It ensures the interval, timing, and action fields are consistent and safe to schedule.
-
 func ValidateTrigger(t models.TimeTrigger) error {
 	// Check if the interval is valid
 	switch t.Interval {
@@ -80,9 +79,6 @@ func ValidateTrigger(t models.TimeTrigger) error {
 	return nil
 }
 		
-
-
-
 func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job , error) {
 		err := ValidateTrigger(t)
 		if err != nil {

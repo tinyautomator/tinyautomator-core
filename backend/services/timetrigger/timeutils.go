@@ -8,6 +8,10 @@ import (
 
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
+
+// ComputeFirstRun returns the first valid run time for a given TimeTrigger.
+// It uses the trigger's interval and TriggerAt to calculate the first occurrence
+// after the current time, handling daily, weekly, and monthly logic.
 func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 	hour, min, err := parseTriggerAt(t.TriggerAt)
 	if err != nil {
@@ -27,21 +31,19 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 		weekdayToday := int(now.Weekday())
 		daysUntil := (7 + t.DayOfWeek - weekdayToday) % 7
 
-		candidate := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, time.UTC).AddDate(0, 0, daysUntil)
-		if candidate.Before(now) {
-			candidate = candidate.AddDate(0, 0, 7)
+		baseTime = baseTime.AddDate(0, 0, daysUntil)
+		if baseTime.Before(now) {
+			baseTime = baseTime.AddDate(0, 0, 7)
 		}
-		return candidate, nil
+		return baseTime, nil
 	case "monthly":
-		// Try this month first
-		firstTry := time.Date(now.Year(), now.Month(), t.DayOfMonth, hour, min, 0, 0, time.UTC)
-		if firstTry.Day() != t.DayOfMonth {
-			return time.Time{}, errors.New("invalid day of month: " +  strconv.Itoa(t.DayOfMonth))
+		if baseTime.Day() != t.DayOfMonth {
+			return time.Time{}, errors.New("invalid day of month: " + strconv.Itoa(t.DayOfMonth))
 		}
-		if firstTry.After(now) {
-			return firstTry, nil
+		if baseTime.After(now) {
+			return baseTime, nil
 		}
-		return firstTry.AddDate(0, 1, 0), nil
+		return baseTime.AddDate(0, 1, 0), nil
 	default:
 		return time.Time{}, errors.New("invalid interval: " + t.Interval)
 	}
@@ -68,7 +70,7 @@ func calculateNextRun(t models.TimeTrigger) (time.Time, error) {
 			0, 0, nextMonth.Location(),
 		)
 		if candidate.Day() != t.DayOfMonth {
-			return time.Time{}, nil // skip this month if invalid day
+			return time.Time{}, nil 
 		}
 		return candidate, nil
 	case "once":
