@@ -58,15 +58,14 @@ func buildTask(t models.TimeTrigger) (gocron.Task, error) {
 }
 
 func buildDefinition(t models.TimeTrigger) (gocron.JobDefinition, error) {
-	hour, min, err := parseTriggerAt(t.TriggerAt)
-	if err != nil {
-		return nil, err
+	if t.NextRun.IsZero() {
+		return nil, errors.New("NextRun must be set for job scheduling")
 	}
-	atTime := gocron.NewAtTime(uint(hour), uint(min), 0)
+	
+	
+	atTime := gocron.NewAtTime(uint(t.NextRun.Hour()), uint(t.NextRun.Minute()), 0)
 
 	switch t.Interval {
-	case "once":
-		return gocron.OneTimeJob(gocron.OneTimeJobStartDateTime(t.NextRun)), nil
 	case "daily":
 		return gocron.DailyJob(1, gocron.NewAtTimes(atTime)), nil
 	case "weekly":

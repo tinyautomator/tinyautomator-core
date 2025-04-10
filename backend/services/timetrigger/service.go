@@ -38,7 +38,11 @@ func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job , error) {
 			log.Printf("Error creating job for trigger ID %d: %v", t.ID, err)
 			return nil, err
 		}
-		t.NextRun = calculateNextRun(t)
+		t.NextRun, err = calculateNextRun(t)
+		if err != nil {
+			log.Printf("Error calculating next run for trigger ID %d: %v", t.ID, err)
+			return nil, err
+		}
 		_ = s.repo.UpdateTrigger(t)
 		
 		return job, nil
@@ -55,19 +59,3 @@ func newScheduler() gocron.Scheduler {
 		return s
 }
 
-// CalculateNextRun returns the next time a trigger should fire based on its interval and scheduling fields.
-func calculateNextRun(t models.TimeTrigger) time.Time {
-	now := time.Now().UTC()
-	switch t.Interval {
-	case "daily":
-		return now.Add(24 * time.Hour)
-	case "weekly":
-		return now.Add(7 * 24 * time.Hour)
-	case "monthly":
-		return now.AddDate(0, 1, 0)
-	case "once":
-		return time.Time{}
-	default:
-		return now
-	}
-}
