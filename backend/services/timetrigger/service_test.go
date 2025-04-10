@@ -187,3 +187,28 @@ func verifyExecution(t *testing.T, executed <-chan executedJobInfo, name string,
 }
 
 
+// Unit Test For Computing First Run
+
+func TestComputeFirstRun(t *testing.T) {
+	t.Logf("🧪 Unit Test — ComputeFirstRun Logic")
+	t.Logf("🕒 Test Start Time: %s", time.Now().UTC().Format(time.DateTime))
+
+	testCases := getComputeFirstRunTestCases()
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			actualRunTime, err := ComputeFirstRun(tc.Trigger)
+
+			if tc.ExpectErr {
+				require.Error(t, err, "expected an error but got none")
+				return
+			}
+
+			require.NoError(t, err, "expected no error but got one")
+			require.WithinDuration(t, tc.ExpectedRun, actualRunTime, time.Second,
+				"expected run time %v but got %v", tc.ExpectedRun, actualRunTime)
+		})
+	}
+}
