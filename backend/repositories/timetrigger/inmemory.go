@@ -18,19 +18,11 @@ func NewInMemoryRepository() *inMemoryRepository {
 	}
 }
 
-func (r *inMemoryRepository) GetTriggerByID(id uint) (models.TimeTrigger, error) {
-	trigger, exists := r.triggers[id]
-	if !exists {
-		return models.TimeTrigger{}, errors.New("trigger not found")
-	}
-	return trigger, nil
-}
-
-func (r *inMemoryRepository) SaveTrigger(t models.TimeTrigger) error {
+func (r *inMemoryRepository) SaveTrigger(t models.TimeTrigger) (models.TimeTrigger, error) {
 	t.ID = r.nextID
 	r.triggers[t.ID] = t
 	r.nextID++
-	return nil
+	return t, nil
 }
 
 func (r *inMemoryRepository) UpdateTrigger(t models.TimeTrigger) error {
@@ -41,6 +33,15 @@ func (r *inMemoryRepository) UpdateTrigger(t models.TimeTrigger) error {
 	return nil
 }
 
+func (r *inMemoryRepository) GetTriggerByID(id uint) (models.TimeTrigger, error) {
+	trigger, exists := r.triggers[id]
+	if !exists {
+		return models.TimeTrigger{}, errors.New("trigger not found")
+	}
+	return trigger, nil
+}
+
+// TODO: Implement logic to fetch due triggers based on the NextRun time
 func (r *inMemoryRepository) FetchDueTriggers() ([]models.TimeTrigger, error) {
 	results := make([]models.TimeTrigger, 0, len(r.triggers))
 	for _, trigger := range r.triggers {
