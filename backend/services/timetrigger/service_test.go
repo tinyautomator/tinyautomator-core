@@ -22,7 +22,7 @@ type executedJobInfo struct {
 // It ensures that each test case is isolated and does not interfere with others.
 // This is useful for testing edge cases and ensuring that the scheduler behaves correctly in isolation.
 // The test cases are run in parallel, which allows for faster execution.
-func TestScheduleTrigger_Unit_TableDriven(t *testing.T) {
+func TestScheduleTrigger_Unit_TriggerValidation(t *testing.T) {
 	t.Logf("🧪 Unit Test — Isolated Scheduler/Repo Per Case")
 	t.Logf("🕒 Current Time: %s", time.Now().UTC().Format(time.DateTime))
 
@@ -64,13 +64,18 @@ func TestScheduleTrigger_Unit_TableDriven(t *testing.T) {
 	}
 }
 
-// --- Integration Test ---
-// This test uses a shared scheduler and repository across all test cases.
-// It ensures that the scheduler can handle multiple triggers and execute them correctly.
-// This is a more realistic scenario, as it simulates how the scheduler would work in a production environment.
-// The test cases are run sequentially, and the scheduler is expected to handle the execution of each trigger correctly.
-func TestScheduleTrigger_Integration_SharedScheduler(t *testing.T) {
-	t.Logf("🌐 Integration Test — Shared Scheduler + Shared Repo")
+// TestScheduleTrigger_Validation_MixedCases verifies scheduler behavior across all trigger types.
+// It ensures that:
+// - Valid triggers across different intervals ("once", "daily", "weekly", "monthly") schedule correctly
+// - Their NextRun values are properly computed
+// - Invalid configurations (e.g. bad time format, unknown action, invalid dayOfWeek) are rejected and not scheduled
+// - Job execution is observed for all valid & executable triggers within ~60 seconds
+// 
+// This is NOT a full integration test (no external services or persistent state),
+// but rather a comprehensive functional validation of trigger scheduling and execution logic.
+
+func TestScheduleTrigger_MixedSchedulingBehavior(t *testing.T) {
+	t.Logf("🌐 MixedSchedulingBehavior — Shared Scheduler + Shared Repo")
 	t.Logf("🕒 Current Time: %s", time.Now().UTC().Format(time.DateTime))
 
 	
@@ -118,10 +123,10 @@ func TestScheduleTrigger_Integration_SharedScheduler(t *testing.T) {
 		case info := <-executed:
 			updated, err := service.repo.GetTriggerByID(info.ID)
 			if err != nil {
-				t.Logf("⚠ Executed job %d but couldn't fetch updated trigger", info.ID)
+				t.Logf("⚠ Executed job (%s) but couldn't fetch updated trigger", info.Name)
 			} else {
-				t.Logf("✅ Job executed: (ID: %d) (Interval: %s) (NextRun: %v) (Action: %s)",
-					info.ID, updated.Interval, updated.NextRun.Format(time.DateTime), updated.Action)
+				t.Logf("✅ Job executed: (Name: %s) (ID: %d) (Interval: %s) (NextRun: %v) (Action: %s)",
+					info.Name, updated.ID, updated.Interval, updated.NextRun.Format(time.DateTime), updated.Action)
 			}
 			executedCount++
 		case <-timeout:
@@ -172,7 +177,7 @@ func verifyExecution(t *testing.T, executed <-chan executedJobInfo, name string,
 			t.Logf("⚠️ Executed job %q but failed to fetch updated trigger", name)
 			return
 		}
-		t.Logf("✅ Job (%s) executed -> Trigger ID: %d | Updated NextRun: %s",
+		t.Logf("✅ Job (%s) executed trigger id: (%d) | Updated NextRun: %s",
 			info.Name, updated.ID, updated.NextRun.Format(time.DateTime))
 	case <-time.After(65 * time.Second):
 		if tc.shouldExecute {

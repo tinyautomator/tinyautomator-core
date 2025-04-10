@@ -55,6 +55,7 @@ func newScheduler() gocron.Scheduler {
 		return s
 }
 
+// CalculateNextRun returns the next time a trigger should fire based on its interval and scheduling fields.
 func calculateNextRun(t models.TimeTrigger) time.Time {
 	now := time.Now().UTC()
 	switch t.Interval {
@@ -65,7 +66,7 @@ func calculateNextRun(t models.TimeTrigger) time.Time {
 	case "monthly":
 		return now.AddDate(0, 1, 0)
 	case "once":
-		return t.NextRun
+		return time.Time{}
 	default:
 		return now
 	}
