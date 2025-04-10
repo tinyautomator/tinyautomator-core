@@ -7,25 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
-
-func TestBuildJobConfig_OnceEmail_Valid(t *testing.T) {
-	trigger := models.TimeTrigger{
-		ID:        1,
-		Interval:  "once",
-		TriggerAt: "12:30",
-		Action:    "send_email",
-	}
-
-	jobCfg, err := BuildJobConfig(trigger)
-	require.NoError(t, err)
-	require.NotNil(t, jobCfg.Task)
-	require.NotNil(t, jobCfg.Definition)
-	require.Len(t, jobCfg.Options, 1)
-
-	t.Log("Once Email JobConfig:")
-	spew.Dump(jobCfg)
-}
-
 func TestBuildJobConfig_DailyEmail_Valid(t *testing.T) {
 	trigger := models.TimeTrigger{
 		ID:        2,

@@ -36,13 +36,6 @@ func getTestCases() map[string]func() triggerTestCase {
 	var defaultOffset = 3 * time.Second
 
 	return map[string]func() triggerTestCase{
-		"valid/once": func() triggerTestCase {
-			return triggerTestCase{
-				trigger:       makeTimeTriggerWithOffset(1, "once", "send_email", 0, 0, defaultOffset),
-				valid:         true,
-				shouldExecute: true,
-			}
-		},
 		"valid/daily": func() triggerTestCase {
 			return triggerTestCase{
 				trigger:       makeTimeTriggerWithOffset(2, "daily", "send_email", 0, 0, defaultOffset),
@@ -73,7 +66,7 @@ func getTestCases() map[string]func() triggerTestCase {
 		},
 		"invalid/unknown action": func() triggerTestCase {
 			return triggerTestCase{
-				trigger:       makeTimeTriggerWithOffset(6, "once", "play_league_of_legends", 0, 0, defaultOffset),
+				trigger:       makeTimeTriggerWithOffset(6, "daily", "play_league_of_legends", 0, 0, defaultOffset),
 				valid:         false,
 				shouldExecute: false,
 			}
@@ -83,10 +76,11 @@ func getTestCases() map[string]func() triggerTestCase {
 			return triggerTestCase{
 				trigger: models.TimeTrigger{
 					ID:        7,
-					Interval:  "once",
-					Action:    "send_email",
+					Interval:  "monthly",
+					DayOfMonth: 15,
 					TriggerAt: "25:00", // invalid
 					NextRun:   t,
+					Action:    "send_email",
 				},
 				valid:         false,
 				shouldExecute: false,
