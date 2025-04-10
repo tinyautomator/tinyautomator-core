@@ -5,7 +5,8 @@ import (
 )
 
 type Repository interface {
-	SaveTrigger        (trigger models.TimeTrigger) error
+	GetTriggerByID(id uint) (models.TimeTrigger, error)
+	SaveTrigger        (trigger models.TimeTrigger) (models.TimeTrigger, error)
 	UpdateTrigger      (trigger models.TimeTrigger) error
 	FetchDueTriggers() ([]models.TimeTrigger, error)
 }

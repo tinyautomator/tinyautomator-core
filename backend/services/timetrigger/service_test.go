@@ -17,7 +17,36 @@ type executedJobInfo struct {
 	Trigger models.TimeTrigger
 }
 
-// --- Unit Test ---
+// --- Unit Tests ---
+// Pure unit logic, no job scheduling or goroutines
+func TestComputeFirstRun(t *testing.T) {
+	t.Logf("🧪 Unit Test — ComputeFirstRun Logic")
+	t.Logf("🕒 Test Start Time: %s", time.Now().UTC().Format(time.DateTime))
+
+	testCases := getComputeFirstRunTestCases()
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			actualRunTime, err := ComputeFirstRun(tc.Trigger)
+
+			if tc.ExpectErr {
+				require.Error(t, err, "expected an error but got none")
+				return
+			}
+
+			require.NoError(t, err, "expected no error but got one")
+			require.WithinDuration(t, tc.ExpectedRun, actualRunTime, time.Second,
+				"expected run time %v but got %v", tc.ExpectedRun, actualRunTime)
+		})
+	}
+}
+
+
+// --- Functional/Unit-Level Integration Tests ---
+// These isolate components but still spin up schedulers
+
 // This test uses a separate scheduler and repository for each test case.
 // It ensures that each test case is isolated and does not interfere with others.
 // This is useful for testing edge cases and ensuring that the scheduler behaves correctly in isolation.
@@ -74,6 +103,8 @@ func TestScheduleTrigger_Unit_TriggerValidation(t *testing.T) {
 // This is NOT a full integration test (no external services or persistent state),
 // but rather a comprehensive functional validation of trigger scheduling and execution logic.
 
+// --- Mixed or Scenario-Based Tests ---
+// Broader coverage with shared state, testing multiple behaviors
 func TestScheduleTrigger_MixedSchedulingBehavior(t *testing.T) {
 	t.Logf("🌐 MixedSchedulingBehavior — Shared Scheduler + Shared Repo")
 	t.Logf("🕒 Current Time: %s", time.Now().UTC().Format(time.DateTime))
@@ -137,6 +168,7 @@ func TestScheduleTrigger_MixedSchedulingBehavior(t *testing.T) {
 }
 
 // --- Helpers ---
+// Non-test funcs used by the above
 
 func overrideTaskExecution(t *testing.T, executed chan executedJobInfo, testName string) {
 	t.Helper()
@@ -186,29 +218,3 @@ func verifyExecution(t *testing.T, executed <-chan executedJobInfo, name string,
 	}
 }
 
-
-// Unit Test For Computing First Run
-
-func TestComputeFirstRun(t *testing.T) {
-	t.Logf("🧪 Unit Test — ComputeFirstRun Logic")
-	t.Logf("🕒 Test Start Time: %s", time.Now().UTC().Format(time.DateTime))
-
-	testCases := getComputeFirstRunTestCases()
-
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-
-			actualRunTime, err := ComputeFirstRun(tc.Trigger)
-
-			if tc.ExpectErr {
-				require.Error(t, err, "expected an error but got none")
-				return
-			}
-
-			require.NoError(t, err, "expected no error but got one")
-			require.WithinDuration(t, tc.ExpectedRun, actualRunTime, time.Second,
-				"expected run time %v but got %v", tc.ExpectedRun, actualRunTime)
-		})
-	}
-}

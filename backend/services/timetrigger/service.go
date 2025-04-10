@@ -18,6 +18,17 @@ type Service struct {
 	scheduler gocron.Scheduler
 }
 
+func newScheduler() gocron.Scheduler {
+	logger := gocron.NewLogger(gocron.LogLevelError)
+	s, err := gocron.NewScheduler(gocron.WithLocation(time.UTC), gocron.WithLogger(logger))
+
+	if err != nil {
+		log.Fatalf("failed to create scheduler: %v", err)
+	}
+	s.Start()
+	return s
+}
+
 func NewService(r timetrigger.Repository) *Service {
 	return &Service{
 		repo: r,
@@ -62,9 +73,6 @@ func ValidateTrigger(t models.TimeTrigger) error {
 	// Check if the next run time is valid
 	if t.NextRun.IsZero() {
 		return errors.New("invalid trigger: next run time is not set")
-	}
-	if t.NextRun.Before(time.Now()) {
-		return errors.New("invalid trigger: next run time is in the past")
 	}
 
 	// Check if the action is valid
@@ -111,14 +119,4 @@ func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job , error) {
 		return job, nil
 	}
 
-func newScheduler() gocron.Scheduler {
-		testLogger := gocron.NewLogger(gocron.LogLevelError)
-		s, err := gocron.NewScheduler(gocron.WithLocation(time.UTC), gocron.WithLogger(testLogger))
-	
-		if err != nil {
-			log.Fatalf("failed to create scheduler: %v", err)
-		}
-		s.Start()
-		return s
-}
 
