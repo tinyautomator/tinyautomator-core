@@ -1,104 +1,101 @@
 package jobbuilder
 
 import (
+	"strings"
 	"testing"
+	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
-func TestBuildJobConfig_DailyEmail_Valid(t *testing.T) {
-	trigger := models.TimeTrigger{
-		ID:        2,
-		Interval:  "daily",
-		TriggerAt: "16:30",
-		Action:    "send_email",
-	}
 
-	jobCfg, err := BuildJobConfig(trigger)
-	require.NoError(t, err)
-	require.NotNil(t, jobCfg.Task)
-	require.NotNil(t, jobCfg.Definition)
-	require.Len(t, jobCfg.Options, 1)
-
-	t.Log("Daily Email JobConfig:")
-	spew.Dump(jobCfg)
+func nextFullMinute() time.Time {
+	now := time.Now().UTC()
+	return now.Add(1 * time.Minute).Truncate(time.Minute)
 }
 
-func TestBuildJobConfig_WeeklyEmail_Valid(t *testing.T) {
-	trigger := models.TimeTrigger{
-		ID:        3,
-		Interval:  "weekly",
-		DayOfWeek: 3, // Wednesday
-		TriggerAt: "10:00",
-		Action:    "send_email",
+func makeTrigger(id int, interval, triggerAt, action string, dayOfWeek, dayOfMonth int) models.TimeTrigger {
+	return models.TimeTrigger{
+		ID:         uint(id),
+		Interval:   interval,
+		TriggerAt:  triggerAt,
+		Action:     action,
+		DayOfWeek:  dayOfWeek,
+		DayOfMonth: dayOfMonth,
+		NextRun:    nextFullMinute(),
 	}
-
-	jobCfg, err := BuildJobConfig(trigger)
-	require.NoError(t, err)
-	require.NotNil(t, jobCfg.Task)
-	require.NotNil(t, jobCfg.Definition)
-	require.Len(t, jobCfg.Options, 1)
-
-	t.Log("Weekly Email JobConfig:")
-	spew.Dump(jobCfg)
 }
 
-func TestBuildJobConfig_MonthlyEmail_Valid(t *testing.T) {
-	trigger := models.TimeTrigger{
-		ID:         4,
-		Interval:   "monthly",
-		DayOfMonth: 15,
-		TriggerAt:  "08:00",
-		Action:     "send_email",
+func TestBuildJobConfig_ValidTriggers(t *testing.T) {
+	tests := []struct {
+		name    string
+		trigger models.TimeTrigger
+	}{
+		{
+			name:    "valid/daily",
+			trigger: makeTrigger(1, "daily", "10:00", "send_email", 0, 0),
+		},
+		{
+			name:    "valid/weekly",
+			trigger: makeTrigger(2, "weekly", "11:30", "send_email", 3, 0), // Wednesday
+		},
+		{
+			name:    "valid/monthly",
+			trigger: makeTrigger(3, "monthly", "08:15", "send_email", 0, 15),
+		},
 	}
 
-	jobCfg, err := BuildJobConfig(trigger)
-	require.NoError(t, err)
-	require.NotNil(t, jobCfg.Task)
-	require.NotNil(t, jobCfg.Definition)
-	require.Len(t, jobCfg.Options, 1)
-
-	t.Log("Monthly Email JobConfig:")
-	spew.Dump(jobCfg)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			jobCfg, err := BuildJobConfig(tc.trigger)
+			require.NoError(t, err)
+			require.NotNil(t, jobCfg.Task)
+			require.NotNil(t, jobCfg.Definition)
+			require.Len(t, jobCfg.Options, 1)
+			t.Logf("%s JobConfig:", tc.name)
+			t.Log("\n✅ End of case:", tc.name)
+			t.Log("\n")
+			t.Log(strings.Repeat("-", 30))
+		})
+	
+		
+	}
+	t.Log("\n\n\n")
 }
 
-func TestBuildJobConfig_InvalidAction(t *testing.T) {
-	trigger := models.TimeTrigger{
-		ID:        5,
-		Interval:  "daily",
-		TriggerAt: "09:00",
-		Action:    "launch_rockets", // Unsupported
+func TestBuildJobConfig_InvalidTriggers(t *testing.T) {
+	tests := []struct {
+		name    string
+		trigger models.TimeTrigger
+	}{
+		{
+			name:    "invalid/action",
+			trigger: makeTrigger(4, "daily", "09:00", "launch_rockets", 0, 0),
+		},
+		{
+			name:    "invalid/interval",
+			trigger: makeTrigger(5, "yearly", "11:00", "send_email", 0, 0),
+		},
+		{
+			name:    "invalid/day of week",
+			trigger: makeTrigger(6, "weekly", "23:04", "send_email", 10, 0),
+		},
+		{
+			name:    "invalid/day of month",
+			trigger: makeTrigger(7, "monthly", "14:00", "send_email", 0, 32),
+		},
 	}
 
-	_, err := BuildJobConfig(trigger)
-	require.Error(t, err)
-	t.Logf("Expected error for invalid action: %v", err)
-}
-
-func TestBuildJobConfig_InvalidInterval(t *testing.T) {
-	trigger := models.TimeTrigger{
-		ID:        6,
-		Interval:  "yearly", // Unsupported
-		TriggerAt: "11:00",
-		Action:    "send_email",
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := BuildJobConfig(tc.trigger)
+			require.Error(t, err)
+			t.Logf("Expected error for %s: %v", tc.name, err)
+			
+			t.Log("\n✅ End of case:", tc.name)
+			t.Log("\n")
+			t.Log(strings.Repeat("-", 30))
+		})
+		
 	}
-
-	_, err := BuildJobConfig(trigger)
-	require.Error(t, err)
-	t.Logf("Expected error for invalid interval: %v", err)
-}
-
-func TestBuildJobConfig_InvalidTimeFormat(t *testing.T) {
-	trigger := models.TimeTrigger{
-		ID:        7,
-		Interval:  "weekly",
-		DayOfWeek: 10, // Invalid
-		TriggerAt: "23:04", 
-		Action:    "send_email",
-	}
-
-	_, err := BuildJobConfig(trigger)
-	require.Error(t, err)
-	t.Logf("Expected error for invalid time format: %v", err)
 }
