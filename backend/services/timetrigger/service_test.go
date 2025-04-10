@@ -19,6 +19,17 @@ type executedJobInfo struct {
 
 // --- Unit Tests ---
 // Pure unit logic, no job scheduling or goroutines
+
+func TestValidateTrigger(t *testing.T) {
+	for name, tc := range getTriggerValidationCases() {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			err := ValidateTrigger(tc.trigger)
+			assertValidation(t, err, tc.valid, name)
+		})
+	}
+}
+
 func TestComputeFirstRun(t *testing.T) {
 	t.Logf("🧪 Unit Test — ComputeFirstRun Logic")
 	t.Logf("🕒 Test Start Time: %s", time.Now().UTC().Format(time.DateTime))
@@ -43,7 +54,6 @@ func TestComputeFirstRun(t *testing.T) {
 	}
 }
 
-
 // --- Functional/Unit-Level Integration Tests ---
 // These isolate components but still spin up schedulers
 
@@ -55,10 +65,8 @@ func TestScheduleTrigger_Unit_TriggerValidation(t *testing.T) {
 	t.Logf("🧪 Unit Test — Isolated Scheduler/Repo Per Case")
 	t.Logf("🕒 Current Time: %s", time.Now().UTC().Format(time.DateTime))
 
-	testCases := getTestCases()
 
-	for name, factory := range testCases {
-		tc := factory()
+	for name, tc := range getSchedulingTestCases() {
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
@@ -66,9 +74,8 @@ func TestScheduleTrigger_Unit_TriggerValidation(t *testing.T) {
 			executed := make(chan executedJobInfo, 1)
 			service := NewService(timetrigger.NewInMemoryRepository())
 			defer service.scheduler.Shutdown()
-			trigger, err := service.repo.SaveTrigger(tc.trigger)
-			require.NoError(t, err, "Failed to save trigger")
-			tc.trigger = trigger
+
+			tc.trigger = saveTrigger(t, service.repo, tc.trigger)
 
 			resetTaskOverride()
 			t.Cleanup(resetTaskOverride)
@@ -79,14 +86,9 @@ func TestScheduleTrigger_Unit_TriggerValidation(t *testing.T) {
 
 			job, err := service.ScheduleTrigger(tc.trigger)
 
+			assertValidation(t, err, tc.valid, name)
 			if tc.valid {
-				require.NoError(t, err, "Expected valid scheduling for %q", name)
 				logNextRun(t, name, job, tc.trigger)
-			} else {
-				require.Error(t, err, "Expected error for invalid trigger: %q", name)
-			}
-
-			if tc.valid {
 				verifyExecution(t, executed, name, tc, service)
 			}
 		})
@@ -109,18 +111,13 @@ func TestScheduleTrigger_MixedSchedulingBehavior(t *testing.T) {
 	t.Logf("🌐 MixedSchedulingBehavior — Shared Scheduler + Shared Repo")
 	t.Logf("🕒 Current Time: %s", time.Now().UTC().Format(time.DateTime))
 
-	
-
 	service := NewService(timetrigger.NewInMemoryRepository())
 	defer service.scheduler.Shutdown()
 
 	executed := make(chan executedJobInfo, 10)
-	testCases := getTestCases()
 	executionsExpected := 0
 
-	for name, factory := range testCases {
-		tc := factory()
-
+	for name, tc := range getSchedulingTestCases() {
 		trigger, err := service.repo.SaveTrigger(tc.trigger)
 		require.NoError(t, err, "Failed to save trigger %q", name)
 		tc.trigger = trigger
@@ -132,21 +129,19 @@ func TestScheduleTrigger_MixedSchedulingBehavior(t *testing.T) {
 		}
 
 		job, err := service.ScheduleTrigger(tc.trigger)
-
-		if tc.valid {
-			require.NoError(t, err, "Expected valid scheduling for %q", name)
+		assertValidation(t, err, tc.valid, name)
+		
+		if err == nil && job != nil {
 			logNextRun(t, name, job, tc.trigger)
-		} else {
-			require.Error(t, err, "Expected error for invalid trigger: %q", name)
-			continue
 		}
+		
 
 		if tc.shouldExecute {
 			executionsExpected++
 		}
 	}
 
-	timeout := time.After(65 * time.Second)
+	timeout := time.After(executionTimeout)
 	executedCount := 0
 
 	for executedCount < executionsExpected {
@@ -218,3 +213,23 @@ func verifyExecution(t *testing.T, executed <-chan executedJobInfo, name string,
 	}
 }
 
+
+// --- Test Helpers ---
+
+func saveTrigger(t *testing.T, repo timetrigger.Repository, trigger models.TimeTrigger) models.TimeTrigger {
+	t.Helper()
+	saved, err := repo.SaveTrigger(trigger)
+	require.NoError(t, err, "Failed to save trigger")
+	return saved
+}
+
+func assertValidation(t *testing.T, err error, valid bool, name string) {
+	t.Helper()
+	if valid {
+		require.NoError(t, err, "Expected valid for %q", name)
+	} else {
+		require.Error(t, err, "Expected error for invalid trigger %q", name)
+	}
+}
+
+const executionTimeout = 65 * time.Second
