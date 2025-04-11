@@ -136,7 +136,7 @@ func (s *Service) CreateTaskFactory() TaskFactory {
 				// Actual email sending logic
 				// Other action types...
 			}
-			s.recordTriggerExecution(&t)
+			
 			// After execution, update the trigger state
 			err := s.completeTriggerCycle(&t)
 			if err != nil{
@@ -159,8 +159,7 @@ func (s *Service) completeTriggerCycle(t *models.TimeTrigger) error {
         return fmt.Errorf("update failed for trigger %d: %w", t.ID, err)
     }
     
-    log.Printf("Trigger %d updated successfully. Next run: %s", 
-        t.ID, t.NextRun.Format(time.RFC3339))
+   s.recordTriggerExecution(t)
     return nil
 }
 

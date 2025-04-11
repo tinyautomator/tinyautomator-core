@@ -143,7 +143,7 @@ func TestScheduleTrigger_Unit_TriggerValidation(t *testing.T) {
 			resetTaskOverride()
 			t.Cleanup(resetTaskOverride)
 
-			if tc.shouldExecute {
+			if tc.valid && tc.shouldExecute {
 				overrideTaskExecution(t, executed, name)
 			}
 

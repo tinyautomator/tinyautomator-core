@@ -16,7 +16,9 @@ type JobConfig struct {
 
 func BuildJobConfig(t models.TimeTrigger, taskFactory func(models.TimeTrigger) gocron.Task) (JobConfig, error) {
 	task := taskFactory(t)
-
+	if TestTaskOverride != nil {
+		task = TestTaskOverride(t)
+	}
 	def, err := buildDefinition(t)
 	if err != nil {
 		return JobConfig{}, err
