@@ -62,20 +62,25 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 // It uses the LastRun value to determine the next interval.
 // This function is only called after a trigger has been executed,
 // so it assumes LastRun is set and accurate.
-func computeNextRun(t models.TimeTrigger) (time.Time, error) {
+func (s *Service) computeNextRun(t *models.TimeTrigger) error {
 	now := time.Now().UTC()
+
 	if t.LastRun.After(now.Add(1 * time.Minute)) {
-		return time.Time{}, errors.New(
+		return errors.New(
 			"invalid lastRun: " + t.LastRun.Format(time.DateTime) +
-			" is too far in the future (now = " + time.Now().Format(time.DateTime) + ")",
+				" is too far in the future (now = " + now.Format(time.DateTime) + ")",
 		)
 	}
-	
+
 	switch t.Interval {
 	case "daily":
-		return t.LastRun.Add(24 * time.Hour), nil
+		t.NextRun = t.LastRun.Add(24 * time.Hour)
+		return nil
+
 	case "weekly":
-		return t.LastRun.Add(7 * 24 * time.Hour), nil
+		t.NextRun = t.LastRun.Add(7 * 24 * time.Hour)
+		return nil
+
 	case "monthly":
 		nextMonth := t.LastRun.AddDate(0, 1, 0)
 		candidate := time.Date(
@@ -86,21 +91,24 @@ func computeNextRun(t models.TimeTrigger) (time.Time, error) {
 			t.LastRun.Minute(),
 			0, 0, nextMonth.Location(),
 		)
+
+		// If the candidate date was adjusted by overflow (e.g., Feb 31 → Mar 2), reject
 		if candidate.Day() != t.DayOfMonth {
-			return time.Time{}, nil 
+			return errors.New("invalid dayOfMonth for the computed month")
 		}
-		return candidate, nil
-	case "once":
-		return time.Time{}, nil
+
+		t.NextRun = candidate
+		return nil
 	default:
-		return time.Time{}, errors.New("invalid interval: " + t.Interval)
+		return errors.New("invalid interval: " + t.Interval)
 	}
 }
+
 
 // updateLastRun updates the LastRun field of a TimeTrigger to the current NextRun value.
 // Since this function is called after the trigger has been executed,
 // it sets LastRun to the time when the trigger was last executed.
-func markTriggerExecuted(t *models.TimeTrigger)  {
+func (s *Service) markTriggerExecuted(t *models.TimeTrigger)  {
 	// Promote current NextRun to LastRun for rescheduling
 	t.LastRun = t.NextRun
 }

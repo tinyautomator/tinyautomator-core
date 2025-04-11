@@ -106,9 +106,9 @@ func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job , error) {
 			return nil, err
 		}
 
-		markTriggerExecuted(&t)
+		s.markTriggerExecuted(&t)
 
-		t.NextRun, err = computeNextRun(t)
+		err = s.computeNextRun(&t)
 		if err != nil {
 			log.Printf("Error calculating next run for trigger ID %d: %v", t.ID, err)
 			return nil, err
