@@ -80,24 +80,30 @@ func TestComputeNextRun(t *testing.T){
 
 	testCases := getComputeNextRunTestCases()
 
+	service := NewService(timetrigger.NewInMemoryRepository())
+
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 
-			actualNextRun, err := computeNextRun(tc.Trigger)
-			t.Logf("🔎 Trigger: Interval=%s | LastRun=%s | TriggerAt=%s",
-			tc.Trigger.Interval,
-			tc.Trigger.LastRun.Format(time.DateTime),
-			tc.Trigger.TriggerAt,
-			)
-
-			t.Logf("✅ Expected: %s", tc.ExpectedRun.Format(time.DateTime))
-			t.Logf("🧮 Computed: %s", actualNextRun.Format(time.DateTime))
-
+			err := service.computeNextRun(&tc.Trigger)
 			if tc.ExpectErr {
 				require.Error(t, err, "expected an error but got none")
 				return
 			}
+
+			actualNextRun := tc.Trigger.NextRun
+			t.Logf("🔎 Trigger ID=%d | Interval=%s | LastRun=%s | TriggerAt=%s",
+			tc.Trigger.ID,
+			tc.Trigger.Interval,
+			tc.Trigger.LastRun.Format(time.DateTime),
+			tc.Trigger.TriggerAt,
+			)
+		
+
+			t.Logf("✅ Expected: %s", tc.ExpectedRun.Format(time.DateTime))
+			t.Logf("🧮 Computed: %s", actualNextRun.Format(time.DateTime))
+
 			require.NoError(t, err, "expected no error but got one")
 			require.WithinDuration(t, tc.ExpectedRun, actualNextRun, time.Second,
 				"expected next run time %v but got %v", tc.ExpectedRun, actualNextRun)
@@ -214,7 +220,7 @@ func TestScheduleTrigger_MixedSchedulingBehavior(t *testing.T) {
 }
 
 // --- Helpers ---
-// Non-test funcs used by the above
+
 
 func overrideTaskExecution(t *testing.T, executed chan executedJobInfo, testName string) {
 	t.Helper()
@@ -264,8 +270,6 @@ func verifyExecution(t *testing.T, executed <-chan executedJobInfo, name string,
 	}
 }
 
-
-// --- Test Helpers ---
 
 func saveTrigger(t *testing.T, repo timetrigger.Repository, trigger models.TimeTrigger) models.TimeTrigger {
 	t.Helper()
