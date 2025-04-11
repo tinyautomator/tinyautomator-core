@@ -27,7 +27,7 @@ func NewWorker(pollingInterval time.Duration) (*Worker , error){
 	}, nil
 }
 
-func (w *Worker) PollAndRun() error {
+func (w *Worker) PollAndSchedule() error {
 	for {
 		triggersDueSoon, err := w.service.repo.FetchTriggersScheduledWithinDuration(w.pollInterval)
 		if err != nil {
