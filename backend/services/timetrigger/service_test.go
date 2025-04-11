@@ -20,6 +20,12 @@ type executedJobInfo struct {
 // --- Unit Tests ---
 // Pure unit logic, no job scheduling or goroutines
 
+// TestValidateTrigger checks that TimeTrigger validation logic correctly accepts or rejects triggers.
+// It verifies constraints like:
+// - correct combination of interval + dayOfWeek/dayOfMonth
+// - valid time format for TriggerAt
+// - supported action types
+// - proper NextRun value set
 func TestValidateTrigger(t *testing.T) {
 	for name, tc := range getTriggerValidationCases() {
 		t.Run(name, func(t *testing.T) {
@@ -30,6 +36,9 @@ func TestValidateTrigger(t *testing.T) {
 	}
 }
 
+// TestComputeFirstRun verifies that the first scheduled run time
+// is computed correctly based on the trigger interval, day, and time of day.
+// This test is intended for new or unscheduled triggers with no LastRun value.
 func TestComputeFirstRun(t *testing.T) {
 	t.Logf("🧪 Unit Test — ComputeFirstRun Logic")
 	t.Logf("🕒 Test Start Time: %s", time.Now().UTC().Format(time.DateTime))
@@ -41,6 +50,14 @@ func TestComputeFirstRun(t *testing.T) {
 			t.Parallel()
 
 			actualRunTime, err := ComputeFirstRun(tc.Trigger)
+			t.Logf("🔎 Trigger: Interval=%s | NextRun=%s | TriggerAt=%s",
+			tc.Trigger.Interval,
+			tc.Trigger.NextRun.Format(time.DateTime),
+			tc.Trigger.TriggerAt,
+			)
+
+			t.Logf("✅ Expected: %s", tc.ExpectedRun.Format(time.DateTime))
+			t.Logf("🧮 Computed: %s", actualRunTime.Format(time.DateTime))
 
 			if tc.ExpectErr {
 				require.Error(t, err, "expected an error but got none")
@@ -50,6 +67,40 @@ func TestComputeFirstRun(t *testing.T) {
 			require.NoError(t, err, "expected no error but got one")
 			require.WithinDuration(t, tc.ExpectedRun, actualRunTime, time.Second,
 				"expected run time %v but got %v", tc.ExpectedRun, actualRunTime)
+		})
+	}
+}
+
+// TestComputeNextRun verifies that the next run is scheduled correctly
+// based on the trigger's LastRun and interval. This is used for recurring
+// triggers that have already executed at least once.
+func TestComputeNextRun(t *testing.T){
+	t.Logf("🧪 Unit Test — ComputeNextRun Logic")
+	t.Logf("🕒 Test Start Time: %s", time.Now().UTC().Format(time.DateTime))
+
+	testCases := getComputeNextRunTestCases()
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			actualNextRun, err := computeNextRun(tc.Trigger)
+			t.Logf("🔎 Trigger: Interval=%s | LastRun=%s | TriggerAt=%s",
+			tc.Trigger.Interval,
+			tc.Trigger.LastRun.Format(time.DateTime),
+			tc.Trigger.TriggerAt,
+			)
+
+			t.Logf("✅ Expected: %s", tc.ExpectedRun.Format(time.DateTime))
+			t.Logf("🧮 Computed: %s", actualNextRun.Format(time.DateTime))
+
+			if tc.ExpectErr {
+				require.Error(t, err, "expected an error but got none")
+				return
+			}
+			require.NoError(t, err, "expected no error but got one")
+			require.WithinDuration(t, tc.ExpectedRun, actualNextRun, time.Second,
+				"expected next run time %v but got %v", tc.ExpectedRun, actualNextRun)
 		})
 	}
 }
