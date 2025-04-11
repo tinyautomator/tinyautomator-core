@@ -2,7 +2,6 @@ package timetrigger
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -32,9 +31,7 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 	case "weekly":
 		// calculate date of this week's target weekday
 		daysToAdd := (7 + t.DayOfWeek - int(now.Weekday())) % 7
-		fmt.Println(daysToAdd)
 		scheduledDay := now.AddDate(0, 0, daysToAdd)
-		fmt.Println(scheduledDay.Format(time.DateTime))
 		baseTime := time.Date(scheduledDay.Year(), scheduledDay.Month(), scheduledDay.Day(), hour, min, 0, 0, time.UTC)
 
 		if baseTime.After(now) {
@@ -127,7 +124,7 @@ func parseTriggerAt(triggerAt string) (int, int, error) {
 		return 0, 0, err
 	}
 	if hour < 0 || hour > 23 {
-		return 0, 0, errors.New("hour must be between 1 and 24")
+		return 0, 0, errors.New("hour must be between 0 and 23")
 	}
 
 	minute, err := strconv.Atoi(parts[1])

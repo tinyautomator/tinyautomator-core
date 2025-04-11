@@ -2,7 +2,6 @@ package jobbuilder
 
 import (
 	"errors"
-	"log"
 	"strconv"
 
 	"github.com/go-co-op/gocron/v2"
@@ -15,11 +14,8 @@ type JobConfig struct {
 	Options    []gocron.JobOption
 }
 
-func BuildJobConfig(t models.TimeTrigger) (JobConfig, error) {
-	task, err := buildTask(t)
-	if err != nil {
-		return JobConfig{}, err
-	}
+func BuildJobConfig(t models.TimeTrigger, taskFactory func(models.TimeTrigger) gocron.Task) (JobConfig, error) {
+	task := taskFactory(t)
 
 	def, err := buildDefinition(t)
 	if err != nil {
@@ -41,21 +37,6 @@ func BuildJobConfig(t models.TimeTrigger) (JobConfig, error) {
 var TestTaskOverride func(t models.TimeTrigger) gocron.Task
 
 
-func buildTask(t models.TimeTrigger) (gocron.Task, error) {
-	if TestTaskOverride != nil {
-		return TestTaskOverride(t), nil
-	}
-
-	
-	switch t.Action {
-	case "send_email":
-		return gocron.NewTask(func() {
-			log.Printf("Sending email for trigger ID %d", t.ID)
-		}), nil
-	default:
-		return nil, errors.New("unknown action: " + t.Action)
-	}
-}
 
 func buildDefinition(t models.TimeTrigger) (gocron.JobDefinition, error) {
 	if t.NextRun.IsZero() {
@@ -94,3 +75,20 @@ func buildOptions(t models.TimeTrigger) ([]gocron.JobOption, error) {
 	}
 	return opts, nil
 }
+
+// FUNCTION FOR TESTING
+// func buildTask(t models.TimeTrigger) (gocron.Task, error) {
+// 	if TestTaskOverride != nil {
+// 		return TestTaskOverride(t), nil
+// 	}
+
+	
+// 	switch t.Action {
+// 	case "send_email":
+// 		return gocron.NewTask(func() {
+// 			log.Printf("Sending email for trigger ID %d", t.ID)
+// 		}), nil
+// 	default:
+// 		return nil, errors.New("unknown action: " + t.Action)
+// 	}
+// }

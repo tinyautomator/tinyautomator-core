@@ -1,10 +1,12 @@
 package jobbuilder
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/go-co-op/gocron/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
@@ -24,6 +26,14 @@ func makeTrigger(id int, interval, triggerAt, action string, dayOfWeek, dayOfMon
 		DayOfMonth: dayOfMonth,
 		NextRun:    nextFullMinute(),
 	}
+}
+
+// mockTaskFactory is a simple task factory for testing purposes
+func mockTaskFactory(t models.TimeTrigger) gocron.Task {
+	return gocron.NewTask(func() {
+		// This is a no-op task for testing
+		fmt.Printf("mocktest factory hey this worked")
+	})
 }
 
 func TestBuildJobConfig_ValidTriggers(t *testing.T) {
@@ -47,7 +57,7 @@ func TestBuildJobConfig_ValidTriggers(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			jobCfg, err := BuildJobConfig(tc.trigger)
+			jobCfg, err := BuildJobConfig(tc.trigger, mockTaskFactory)
 			require.NoError(t, err)
 			require.NotNil(t, jobCfg.Task)
 			require.NotNil(t, jobCfg.Definition)
@@ -57,8 +67,6 @@ func TestBuildJobConfig_ValidTriggers(t *testing.T) {
 			t.Log("\n")
 			t.Log(strings.Repeat("-", 30))
 		})
-	
-		
 	}
 	t.Log("\n\n\n")
 }
@@ -88,7 +96,9 @@ func TestBuildJobConfig_InvalidTriggers(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := BuildJobConfig(tc.trigger)
+			// For invalid triggers, we need to provide the task factory too,
+			// but the error should come from validation before the task is used
+			_, err := BuildJobConfig(tc.trigger, mockTaskFactory)
 			require.Error(t, err)
 			t.Logf("Expected error for %s: %v", tc.name, err)
 			
@@ -96,6 +106,5 @@ func TestBuildJobConfig_InvalidTriggers(t *testing.T) {
 			t.Log("\n")
 			t.Log(strings.Repeat("-", 30))
 		})
-		
 	}
 }
