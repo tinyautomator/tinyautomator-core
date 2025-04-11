@@ -80,7 +80,10 @@ func TestComputeNextRun(t *testing.T){
 
 	testCases := getComputeNextRunTestCases()
 
-	service := NewService(timetrigger.NewInMemoryRepository())
+	service, err := NewService(timetrigger.NewInMemoryRepository())
+	require.NoError(t, err)
+	defer service.scheduler.Shutdown()
+
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -129,7 +132,10 @@ func TestScheduleTrigger_Unit_TriggerValidation(t *testing.T) {
 			t.Parallel()
 
 			executed := make(chan executedJobInfo, 1)
-			service := NewService(timetrigger.NewInMemoryRepository())
+			service, err := NewService(timetrigger.NewInMemoryRepository())
+			
+			require.NoError(t, err)
+			
 			defer service.scheduler.Shutdown()
 
 			tc.trigger = saveTrigger(t, service.repo, tc.trigger)
@@ -168,7 +174,10 @@ func TestScheduleTrigger_MixedSchedulingBehavior(t *testing.T) {
 	t.Logf("🌐 MixedSchedulingBehavior — Shared Scheduler + Shared Repo")
 	t.Logf("🕒 Current Time: %s", time.Now().UTC().Format(time.DateTime))
 
-	service := NewService(timetrigger.NewInMemoryRepository())
+	service, err := NewService(timetrigger.NewInMemoryRepository())
+	
+	require.NoError(t, err)
+	
 	defer service.scheduler.Shutdown()
 
 	executed := make(chan executedJobInfo, 10)
