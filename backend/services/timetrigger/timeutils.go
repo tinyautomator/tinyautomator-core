@@ -2,6 +2,7 @@ package timetrigger
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -19,24 +20,31 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 	}
 
 	now := time.Now().UTC()
-	baseTime := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, time.UTC)
 
 	switch t.Interval {
 	case "daily":
+		baseTime := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, time.UTC)
 		if baseTime.After(now) {
 			return baseTime, nil
 		}
 		return baseTime.Add(24 * time.Hour), nil
-	case "weekly":
-		weekdayToday := int(now.Weekday())
-		daysUntil := (7 + t.DayOfWeek - weekdayToday) % 7
 
-		baseTime = baseTime.AddDate(0, 0, daysUntil)
-		if baseTime.Before(now) {
-			baseTime = baseTime.AddDate(0, 0, 7)
+	case "weekly":
+		// calculate date of this week's target weekday
+		daysToAdd := (7 + t.DayOfWeek - int(now.Weekday())) % 7
+		fmt.Println(daysToAdd)
+		scheduledDay := now.AddDate(0, 0, daysToAdd)
+		fmt.Println(scheduledDay.Format(time.DateTime))
+		baseTime := time.Date(scheduledDay.Year(), scheduledDay.Month(), scheduledDay.Day(), hour, min, 0, 0, time.UTC)
+
+		if baseTime.After(now) {
+			return baseTime, nil
 		}
-		return baseTime, nil
+		return baseTime.AddDate(0, 0, 7), nil
+
 	case "monthly":
+		baseTime := time.Date(now.Year(), now.Month(), t.DayOfMonth, hour, min, 0, 0, time.UTC)
+
 		if baseTime.Day() != t.DayOfMonth {
 			return time.Time{}, errors.New("invalid day of month: " + strconv.Itoa(t.DayOfMonth))
 		}
@@ -44,6 +52,7 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 			return baseTime, nil
 		}
 		return baseTime.AddDate(0, 1, 0), nil
+
 	default:
 		return time.Time{}, errors.New("invalid interval: " + t.Interval)
 	}
@@ -53,7 +62,15 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 // It uses the LastRun value to determine the next interval.
 // This function is only called after a trigger has been executed,
 // so it assumes LastRun is set and accurate.
-func calculateNextRun(t models.TimeTrigger) (time.Time, error) {
+func computeNextRun(t models.TimeTrigger) (time.Time, error) {
+	now := time.Now().UTC()
+	if t.LastRun.After(now.Add(1 * time.Minute)) {
+		return time.Time{}, errors.New(
+			"invalid lastRun: " + t.LastRun.Format(time.DateTime) +
+			" is too far in the future (now = " + time.Now().Format(time.DateTime) + ")",
+		)
+	}
+	
 	switch t.Interval {
 	case "daily":
 		return t.LastRun.Add(24 * time.Hour), nil
