@@ -7,7 +7,7 @@ import (
 )
 
 
-func nextFullMinute() time.Time {
+func nextFullMinuteForTest() time.Time {
 	now := time.Now().UTC()
 	return now.Add(1 * time.Minute).Truncate(time.Minute) 
 }
@@ -34,27 +34,27 @@ func makeTestTrigger(id int, interval string, action string, dayOfWeek int, dayO
 func allTriggerTestCases() map[string]triggerTestCase {
 	return map[string]triggerTestCase{
 		"valid/daily": {
-			trigger:       makeTestTrigger(2, "daily", "send_email", 0, 0, nextFullMinute(), time.Time{}),
+			trigger:       makeTestTrigger(2, "daily", "send_email", 0, 0, nextFullMinuteForTest(), time.Time{}),
 			valid:         true,
 			shouldExecute: true,
 		},
 		"valid/weekly": {
-			trigger:       makeTestTrigger(3, "weekly", "send_email", int(time.Now().UTC().Weekday()), 0, nextFullMinute(), time.Time{}),
+			trigger:       makeTestTrigger(3, "weekly", "send_email", int(time.Now().UTC().Weekday()), 0, nextFullMinuteForTest(), time.Time{}),
 			valid:         true,
 			shouldExecute: true,
 		},
 		"valid/monthly": {
-			trigger:       makeTestTrigger(4, "monthly", "send_email", 0, time.Now().UTC().Day(), nextFullMinute(), time.Time{}),
+			trigger:       makeTestTrigger(4, "monthly", "send_email", 0, time.Now().UTC().Day(), nextFullMinuteForTest(), time.Time{}),
 			valid:         true,
 			shouldExecute: true,
 		},
 		"invalid/unknown interval": {
-			trigger:       makeTestTrigger(5, "yearly", "send_email", 0, 0, nextFullMinute(), time.Time{}),
+			trigger:       makeTestTrigger(5, "yearly", "send_email", 0, 0, nextFullMinuteForTest(), time.Time{}),
 			valid:         false,
 			shouldExecute: false,
 		},
 		"invalid/unknown action": {
-			trigger:       makeTestTrigger(6, "daily", "play_league_of_legends", 0, 0, nextFullMinute(), time.Time{}),
+			trigger:       makeTestTrigger(6, "daily", "play_league_of_legends", 0, 0, nextFullMinuteForTest(), time.Time{}),
 			valid:         false,
 			shouldExecute: false,
 		},
@@ -64,19 +64,19 @@ func allTriggerTestCases() map[string]triggerTestCase {
 				Interval:   "monthly",
 				DayOfMonth: 15,
 				TriggerAt:  "25:00", // invalid
-				NextRun:    nextFullMinute(),
+				NextRun:    nextFullMinuteForTest(),
 				Action:     "send_email",
 			},
 			valid:         false,
 			shouldExecute: false,
 		},
 		"invalid/day of week": {
-			trigger:       makeTestTrigger(8, "weekly", "send_email", 8, 0, nextFullMinute(), time.Time{}), // invalid weekday
+			trigger:       makeTestTrigger(8, "weekly", "send_email", 8, 0, nextFullMinuteForTest(), time.Time{}), // invalid weekday
 			valid:         false,
 			shouldExecute: false,
 		},
 		"invalid/day of month": {
-			trigger:       makeTestTrigger(9, "monthly", "send_email", 0, 32, nextFullMinute(), time.Time{}), // invalid day
+			trigger:       makeTestTrigger(9, "monthly", "send_email", 0, 32, nextFullMinuteForTest(), time.Time{}), // invalid day
 			valid:         false,
 			shouldExecute: false,
 		},
