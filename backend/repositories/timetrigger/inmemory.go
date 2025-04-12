@@ -2,6 +2,7 @@ package timetrigger
 
 import (
 	"errors"
+	"time"
 
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
@@ -41,11 +42,17 @@ func (r *inMemoryRepository) GetTriggerByID(id uint) (models.TimeTrigger, error)
 	return trigger, nil
 }
 
-// TODO: Implement logic to fetch due triggers based on the NextRun time
-func (r *inMemoryRepository) FetchDueTriggers() ([]models.TimeTrigger, error) {
+func (r *inMemoryRepository) FetchTriggersScheduledWithinDuration(duration time.Duration) ([]models.TimeTrigger, error){
+	now := time.Now().UTC()
+	cutoff := now.Add(duration)
+
 	results := make([]models.TimeTrigger, 0, len(r.triggers))
+
 	for _, trigger := range r.triggers {
-		results = append(results, trigger)
+		if trigger.NextRun.Before(cutoff) {
+			results = append(results, trigger)
+		}
 	}
+
 	return results, nil
 }

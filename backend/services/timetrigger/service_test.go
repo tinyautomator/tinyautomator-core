@@ -27,13 +27,19 @@ type executedJobInfo struct {
 // - supported action types
 // - proper NextRun value set
 func TestValidateTrigger(t *testing.T) {
+	service, err := NewService(timetrigger.NewInMemoryRepository())
+	
+	require.NoError(t , err)
+
 	for name, tc := range getTriggerValidationCases() {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			err := ValidateTrigger(tc.trigger)
+			err := service.ValidateTrigger(tc.trigger)
 			assertValidation(t, err, tc.valid, name)
 		})
 	}
+
+	service.Shutdown()
 }
 
 // TestComputeFirstRun verifies that the first scheduled run time
@@ -147,7 +153,7 @@ func TestScheduleTrigger_Unit_TriggerValidation(t *testing.T) {
 				overrideTaskExecution(t, executed, name)
 			}
 
-			job, err := service.ScheduleTrigger(tc.trigger)
+			job,err := service.ScheduleTrigger(tc.trigger)
 
 			assertValidation(t, err, tc.valid, name)
 			if tc.valid {

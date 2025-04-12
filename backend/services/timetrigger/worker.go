@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-co-op/gocron/v2"
-	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
 )
 
@@ -40,12 +38,7 @@ func (w *Worker) PollAndSchedule() error {
 				fmt.Printf("❌ Error executing trigger ID %d: %v\n", trigger.ID, err)
 			}
 			
-			err = w.validateJobNextRunMatch(trigger, job)
-			if err != nil{
-				return err
-			}
-
-			
+			_ = job
 			
 		}
 		
@@ -54,20 +47,5 @@ func (w *Worker) PollAndSchedule() error {
 	}
 }
 
-func (w *Worker) validateJobNextRunMatch(t models.TimeTrigger, j gocron.Job) (error){
-	jobNextRun, err := j.NextRun()
-	if err != nil{
-		return err
-	}
-	if !t.NextRun.Truncate(time.Minute).Equal(jobNextRun.Truncate(time.Minute)){
-		 return fmt.Errorf(
-			"trigger NextRun %s and job NextRun do not match %s",
-			t.NextRun.Format(time.DateTime),
-			jobNextRun.Format(time.DateTime),
-		)
-		
-	}
-	return nil
-}
 
 
