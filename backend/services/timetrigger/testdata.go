@@ -12,51 +12,65 @@ func nextFullMinuteForTest() time.Time {
 	return now.Add(1 * time.Minute).Truncate(time.Minute) 
 }
 
-type triggerTestCase struct {
-	trigger       models.TimeTrigger
-	valid         bool
-	shouldExecute bool
-}
+func makeTimeTrigger(
+	id int,
+	interval string,
+	action string,
+	offset time.Duration,
+	lastRun time.Time,
+) models.TimeTrigger {
+	scheduled := time.Now().UTC().Add(offset).Truncate(time.Minute)
 
-func makeTestTrigger(id int, interval string, action string, dayOfWeek int, dayOfMonth int, time time.Time, lastRun time.Time) models.TimeTrigger {
+	dayOfWeek := 0
+	dayOfMonth := 0
+
+	switch interval {
+	case "weekly":
+		dayOfWeek = int(scheduled.Weekday())
+	case "monthly":
+		dayOfMonth = scheduled.Day()
+	}
+
 	return models.TimeTrigger{
 		ID:         uint(id),
 		Interval:   interval,
 		Action:     action,
 		DayOfWeek:  dayOfWeek,
 		DayOfMonth: dayOfMonth,
-		TriggerAt:  time.Format("15:04"),
-		NextRun:    time,
+		TriggerAt:  scheduled.Format("15:04"),
+		NextRun:    scheduled,
 		LastRun:    lastRun,
 	}
 }
 
-func allTriggerTestCases() map[string]triggerTestCase {
-	return map[string]triggerTestCase{
-		"valid/daily": {
-			trigger:       makeTestTrigger(2, "daily", "send_email", 0, 0, nextFullMinuteForTest(), time.Time{}),
-			valid:         true,
-			shouldExecute: true,
+
+type schedulerTestCase struct {
+	trigger models.TimeTrigger   // The trigger to be scheduled
+	valid   bool                 // Whether it should schedule successfully
+}
+
+
+func allTriggerTestCases() map[string]schedulerTestCase {
+	return map[string]schedulerTestCase{
+		"valid/daily/in-30-min": {
+			trigger: makeTimeTrigger(2, "daily", "send_email", 30*time.Minute, time.Time{}),
+			valid:   true,
 		},
-		"valid/weekly": {
-			trigger:       makeTestTrigger(3, "weekly", "send_email", int(time.Now().UTC().Weekday()), 0, nextFullMinuteForTest(), time.Time{}),
-			valid:         true,
-			shouldExecute: true,
+		"valid/weekly/in-2-hours": {
+			trigger: makeTimeTrigger(3, "weekly", "send_email", 2*time.Hour, time.Time{}),
+			valid:   true,
 		},
-		"valid/monthly": {
-			trigger:       makeTestTrigger(4, "monthly", "send_email", 0, time.Now().UTC().Day(), nextFullMinuteForTest(), time.Time{}),
-			valid:         true,
-			shouldExecute: true,
+		"valid/monthly/in-1-day": {
+			trigger: makeTimeTrigger(4, "monthly", "send_email", 24*time.Hour, time.Time{}),
+			valid:   true,
 		},
 		"invalid/unknown interval": {
-			trigger:       makeTestTrigger(5, "yearly", "send_email", 0, 0, nextFullMinuteForTest(), time.Time{}),
-			valid:         false,
-			shouldExecute: false,
+			trigger: makeTimeTrigger(5, "yearly", "send_email", 45*time.Minute, time.Time{}),
+			valid:   false,
 		},
 		"invalid/unknown action": {
-			trigger:       makeTestTrigger(6, "daily", "play_league_of_legends", 0, 0, nextFullMinuteForTest(), time.Time{}),
-			valid:         false,
-			shouldExecute: false,
+			trigger: makeTimeTrigger(6, "daily", "play_league_of_legends", 1*time.Hour, time.Time{}),
+			valid:   false,
 		},
 		"invalid/time format": {
 			trigger: models.TimeTrigger{
@@ -64,32 +78,43 @@ func allTriggerTestCases() map[string]triggerTestCase {
 				Interval:   "monthly",
 				DayOfMonth: 15,
 				TriggerAt:  "25:00", // invalid
-				NextRun:    nextFullMinuteForTest(),
+				NextRun:    time.Now().UTC().Add(90 * time.Minute),
 				Action:     "send_email",
 			},
-			valid:         false,
-			shouldExecute: false,
+			valid: false,
 		},
 		"invalid/day of week": {
-			trigger:       makeTestTrigger(8, "weekly", "send_email", 8, 0, nextFullMinuteForTest(), time.Time{}), // invalid weekday
-			valid:         false,
-			shouldExecute: false,
+			trigger: models.TimeTrigger{
+				ID:         8,
+				Interval:   "weekly",
+				DayOfWeek:  8, // invalid
+				TriggerAt:  time.Now().UTC().Add(1 * time.Hour).Format("15:04"),
+				NextRun:    time.Now().UTC().Add(1 * time.Hour),
+				Action:     "send_email",
+			},
+			valid: false,
 		},
 		"invalid/day of month": {
-			trigger:       makeTestTrigger(9, "monthly", "send_email", 0, 32, nextFullMinuteForTest(), time.Time{}), // invalid day
-			valid:         false,
-			shouldExecute: false,
+			trigger: models.TimeTrigger{
+				ID:         9,
+				Interval:   "monthly",
+				DayOfMonth: 32, // invalid
+				TriggerAt:  time.Now().UTC().Add(2 * time.Hour).Format("15:04"),
+				NextRun:    time.Now().UTC().Add(2 * time.Hour),
+				Action:     "send_email",
+			},
+			valid: false,
 		},
 	}
 }
 
 //  Use for ValidateTrigger() tests
-func getTriggerValidationCases() map[string]triggerTestCase {
+func getTriggerValidationCases() map[string]schedulerTestCase {
 	return allTriggerTestCases() // All cases relevant
 }
 
 //  Use for ScheduleTrigger() tests
-func getSchedulingTestCases() map[string]triggerTestCase {
+func getSchedulingTestCases() map[string]schedulerTestCase {
 	return allTriggerTestCases() // Reuse same set for now, can filter if needed later
 }
 type TimeRunCalculationTestCase struct {
