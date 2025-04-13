@@ -24,6 +24,13 @@ func NewWorker(pollingInterval time.Duration) (*Worker , error){
 		pollInterval: pollingInterval,
 	}, nil
 }
+func (w *Worker) StartScheduler() {
+	w.service.Start()
+}
+
+func (w *Worker) StopScheduler() {
+	w.service.Shutdown()
+}
 
 func (w *Worker) PollAndSchedule() error {
 	for {
