@@ -23,8 +23,9 @@ type Service struct {
 	onTriggerComplete func(models.TimeTrigger)
 }
 
+// Return error here
 func newScheduler() gocron.Scheduler {
-	logger := gocron.NewLogger(gocron.LogLevelError)
+	logger := gocron.NewLogger(gocron.LogLevelDebug)
 	s, err := gocron.NewScheduler(gocron.WithLocation(time.UTC), gocron.WithLogger(logger))
 
 	if err != nil {
