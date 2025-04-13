@@ -31,6 +31,9 @@ func (w *Worker) StartScheduler() {
 func (w *Worker) StopScheduler() {
 	w.service.Shutdown()
 }
+func (w *Worker) GetServiceRepo() timetrigger.Repository{
+	return w.service.repo
+} 
 
 func (w *Worker) PollAndSchedule() error {
 	for {

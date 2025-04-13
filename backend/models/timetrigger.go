@@ -1,5 +1,3 @@
-// TODO: Implement grom model for TimeTrigger
-
 package models
 
 import "time"
