@@ -1,0 +1,27 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    queries: "query/"
+    schema: "schema/"
+    gen:
+      go:
+        package: "dao"
+        out: "dao"
+        emit_json_tags: true
+        emit_sql_as_comment: true
+        emit_interface: true
+        emit_result_struct_pointers: true #  TODO: think about this
+        emit_params_struct_pointers: true #  TODO: think about this
+        overrides:
+          - db_type: "TEXT"
+            nullable: true
+            go_type:
+              import: "github.com/guregu/null/v6"
+              package: "null"
+              type: "String"
+          - db_type: "DATETIME"
+            nullable: true
+            go_type:
+              import: "github.com/guregu/null/v6"
+              package: "null"
+              type: "String"
