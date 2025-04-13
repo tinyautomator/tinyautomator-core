@@ -18,7 +18,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -290,7 +289,6 @@ function InnerFlow() {
             fitView
           >
             <Controls />
-            <MiniMap />
             <Background color="#aaa" gap={16} />
           </ReactFlow>
         </div>
@@ -474,7 +472,7 @@ function processData(input) {
   );
 }
 
-export function WorkflowBuilder() {
+export default function WorkflowBuilder() {
   return (
     <ReactFlowProvider>
       <InnerFlow />
