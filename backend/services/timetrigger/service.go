@@ -129,6 +129,7 @@ func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job , error) {
 		err = s.validateJobNextRunMatch(t, job)
 		if err != nil{
 			log.Printf("⚠️ NextRun mismatch for trigger ID %d: %v", t.ID, err)
+			return nil, err
 		}
 		
 
@@ -165,6 +166,9 @@ func (s *Service) CreateTaskFactory() TaskFactory {
 	}
 }
 
+// completeTriggerCycle handles the full post-execution lifecycle of a trigger.
+// It marks the trigger as executed, computes the next scheduled run, updates
+// the repository, and notifies the optional onTriggerComplete test hook.
 func (s *Service) completeTriggerCycle(t *models.TimeTrigger) error {
     log.Printf("Completing trigger cycle for ID %d (Action: %s)", t.ID, t.Action)
     
@@ -188,6 +192,9 @@ func (s *Service) completeTriggerCycle(t *models.TimeTrigger) error {
     return nil
 }
 
+// validateJobNextRunMatch compares the expected NextRun time from the trigger
+// with the actual scheduled NextRun time of the gocron job. It returns an error
+// if the values do not match (to the nearest minute), ensuring scheduling consistency.
 func (s *Service) validateJobNextRunMatch(t models.TimeTrigger, j gocron.Job) (error){
 	jobNextRun, err := j.NextRun()
 	if err != nil{
@@ -204,7 +211,9 @@ func (s *Service) validateJobNextRunMatch(t models.TimeTrigger, j gocron.Job) (e
 	return nil
 }
 
-
+// jobEventOptions returns a JobOption that attaches event listeners to a gocron job.
+// These listeners log job lifecycle events: start, success, and failure.
+// Useful for observability and lightweight debugging.
 func (s *Service) jobEventOptions(t models.TimeTrigger) gocron.JobOption {
 	return gocron.WithEventListeners(
 		gocron.BeforeJobRuns(func(id uuid.UUID, name string) {
