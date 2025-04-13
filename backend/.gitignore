@@ -3,3 +3,10 @@ tmp/
 
 # local environment vars
 .env.development.local
+
+# vscode
+.vscode/
+
+# local DB test files
+*.db
+*.session.sql

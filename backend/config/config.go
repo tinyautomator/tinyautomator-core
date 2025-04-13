@@ -112,17 +112,17 @@ func (cfg *AppConfig) configureLogger() error {
 			PrettyPrint: false, // TODO: think about this
 		})
 	} else {
-		cfg.log.SetReportCaller(true)
+		// cfg.log.SetReportCaller(true)
 		cfg.log.SetFormatter(&logrus.TextFormatter{
 			FullTimestamp: true,
 		})
 	}
 
 	// TODO: clean this up - this is just to demonstrate how to log stuff
-	cfg.Log().WithField("key", "value").Debug("test DEBUG log")
-	cfg.Log().WithField("key", "value").Info("test INFO log")
-	cfg.Log().WithField("key", "value").Warn("test WARN log")
-	cfg.Log().WithField("key", "value").Error("test ERROR log")
+	// cfg.Log().WithField("key", "value").Debug("test DEBUG log")
+	// cfg.Log().WithField("key", "value").Info("test INFO log")
+	// cfg.Log().WithField("key", "value").Warn("test WARN log")
+	// cfg.Log().WithField("key", "value").Error("test ERROR log")
 
 	return nil
 }
