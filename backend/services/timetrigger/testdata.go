@@ -6,10 +6,9 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-
 func nextFullMinuteForTest() time.Time {
 	now := time.Now().UTC()
-	return now.Add(1 * time.Minute).Truncate(time.Minute) 
+	return now.Add(1 * time.Minute).Truncate(time.Minute)
 }
 
 func makeTimeTrigger(
@@ -43,12 +42,10 @@ func makeTimeTrigger(
 	}
 }
 
-
 type schedulerTestCase struct {
-	trigger models.TimeTrigger   // The trigger to be scheduled
-	valid   bool                 // Whether it should schedule successfully
+	trigger models.TimeTrigger // The trigger to be scheduled
+	valid   bool               // Whether it should schedule successfully
 }
-
 
 func allTriggerTestCases() map[string]schedulerTestCase {
 	return map[string]schedulerTestCase{
@@ -85,12 +82,12 @@ func allTriggerTestCases() map[string]schedulerTestCase {
 		},
 		"invalid/day of week": {
 			trigger: models.TimeTrigger{
-				ID:         8,
-				Interval:   "weekly",
-				DayOfWeek:  8, // invalid
-				TriggerAt:  time.Now().UTC().Add(1 * time.Hour).Format("15:04"),
-				NextRun:    time.Now().UTC().Add(1 * time.Hour),
-				Action:     "send_email",
+				ID:        8,
+				Interval:  "weekly",
+				DayOfWeek: 8, // invalid
+				TriggerAt: time.Now().UTC().Add(1 * time.Hour).Format("15:04"),
+				NextRun:   time.Now().UTC().Add(1 * time.Hour),
+				Action:    "send_email",
 			},
 			valid: false,
 		},
@@ -108,34 +105,36 @@ func allTriggerTestCases() map[string]schedulerTestCase {
 	}
 }
 
-//  Use for ValidateTrigger() tests
+// Use for ValidateTrigger() tests
 func getTriggerValidationCases() map[string]schedulerTestCase {
 	return allTriggerTestCases() // All cases relevant
 }
 
-//  Use for ScheduleTrigger() tests
+// Use for ScheduleTrigger() tests
 func getSchedulingTestCases() map[string]schedulerTestCase {
 	return allTriggerTestCases() // Reuse same set for now, can filter if needed later
 }
+
 type TimeRunCalculationTestCase struct {
-	Name 	     string
-	Now 	     time.Time
-	Trigger      models.TimeTrigger
-	ExpectedRun  time.Time
-	ExpectErr    bool
+	Name        string
+	Now         time.Time
+	Trigger     models.TimeTrigger
+	ExpectedRun time.Time
+	ExpectErr   bool
 }
 type makeTestTriggerOpt struct {
-	action 		string
-	dayOfWeek 	int
-	dayOfMonth 	int
-	lastRun 	time.Time
+	action     string
+	dayOfWeek  int
+	dayOfMonth int
+	lastRun    time.Time
 }
+
 func defaultOpts() makeTestTriggerOpt {
 	return makeTestTriggerOpt{
 		action:     "send_email",
 		dayOfWeek:  -1,
 		dayOfMonth: -1,
-		lastRun: time.Time{},
+		lastRun:    time.Time{},
 	}
 }
 func tr(id int, interval string, time time.Time, opt makeTestTriggerOpt) models.TimeTrigger {
@@ -148,7 +147,7 @@ func tr(id int, interval string, time time.Time, opt makeTestTriggerOpt) models.
 	if opt.dayOfMonth == -1 {
 		opt.dayOfMonth = time.Day()
 	}
-	
+
 	return models.TimeTrigger{
 		ID:         uint(id),
 		Interval:   interval,
@@ -166,90 +165,90 @@ func getComputeFirstRunTestCases() []TimeRunCalculationTestCase {
 
 	return []TimeRunCalculationTestCase{
 		{
-			Name: "valid/daily/trigger time later today",
-			Now: now,
-			Trigger: tr(1, "daily", now.Add(1*time.Hour), defaultOpts()),
+			Name:        "valid/daily/trigger time later today",
+			Now:         now,
+			Trigger:     tr(1, "daily", now.Add(1*time.Hour), defaultOpts()),
 			ExpectedRun: now.Add(1 * time.Hour),
-			ExpectErr: false,
+			ExpectErr:   false,
 		},
 		{
-			Name: "valid/daily/trigger time passed today",
-			Now: now,
-			Trigger: tr(2, "daily", now.Add(-2*time.Hour), defaultOpts()),
+			Name:        "valid/daily/trigger time passed today",
+			Now:         now,
+			Trigger:     tr(2, "daily", now.Add(-2*time.Hour), defaultOpts()),
 			ExpectedRun: now.Add(22 * time.Hour),
-			ExpectErr: false,
+			ExpectErr:   false,
 		},
 		{
 			Name: "valid/weekly/same weekday future",
-			Now: now,
+			Now:  now,
 			Trigger: tr(3, "weekly", now.Add(1*time.Hour), makeTestTriggerOpt{
 				dayOfWeek: int(now.Add(1 * time.Hour).Weekday()),
 			}),
 			ExpectedRun: now.Add(1 * time.Hour),
-			ExpectErr: false,
+			ExpectErr:   false,
 		},
 		{
 			Name: "valid/weekly/same weekday past",
-			Now: now,
+			Now:  now,
 			Trigger: tr(4, "weekly", now.Add(-2*time.Hour), makeTestTriggerOpt{
 				dayOfWeek: int(now.Add(-2 * time.Hour).Weekday()),
 			}),
-			
+
 			ExpectedRun: now.Add(-2 * time.Hour).Add(7 * 24 * time.Hour), // next week 2 hours in the past
-			ExpectErr: false,
+			ExpectErr:   false,
 		},
 		{
 			Name: "valid/weekly/different future weekday",
-			Now: now,
+			Now:  now,
 			Trigger: tr(8, "weekly", now.Add(48*time.Hour), makeTestTriggerOpt{
 				dayOfWeek: (int(now.Weekday()) + 2) % 7, // 2 days ahead
 			}),
 			ExpectedRun: now.Add(48 * time.Hour),
-			ExpectErr: false,
+			ExpectErr:   false,
 		},
 		{
 			Name: "valid/weekly/different past weekday",
-			Now: now,
+			Now:  now,
 			Trigger: tr(9, "weekly", now.Add(-48*time.Hour), makeTestTriggerOpt{
 				dayOfWeek: (int(now.Weekday()) + 5) % 7, // 2 days ago
 			}),
 			ExpectedRun: now.Add(-48 * time.Hour).Add(7 * 24 * time.Hour),
-			ExpectErr: false,
+			ExpectErr:   false,
 		},
-		
+
 		{
 			Name: "valid/monthly/trigger later today",
-			Now: now,
+			Now:  now,
 			Trigger: tr(5, "monthly", now.Add(90*time.Minute), makeTestTriggerOpt{
 				dayOfMonth: now.Add(90 * time.Minute).Day(),
 			}),
 			ExpectedRun: now.Add(90 * time.Minute),
-			ExpectErr: false,
+			ExpectErr:   false,
 		},
 		{
 			Name: "valid/monthly/trigger passed today",
-			Now: now,
+			Now:  now,
 			Trigger: tr(6, "monthly", now.Add(-2*time.Hour), makeTestTriggerOpt{
 				dayOfMonth: now.Add(-2 * time.Hour).Day(),
 			}),
 			ExpectedRun: now.Add(-2 * time.Hour).Add(30 * 24 * time.Hour), // next month 2 hours in the past
-			ExpectErr: false,
+			ExpectErr:   false,
 		},
-		
+
 		{
 			Name: "invalid/monthly/invalid date (Feb 31)",
-			Now: time.Date(2025, 2, 1, 10, 0, 0, 0, time.UTC),
+			Now:  time.Date(2025, 2, 1, 10, 0, 0, 0, time.UTC),
 			Trigger: tr(6, "monthly", time.Date(2025, 2, 1, 10, 0, 0, 0, time.UTC), makeTestTriggerOpt{
 				dayOfMonth: 31,
 			}),
 			ExpectErr: true,
 		},
 		{
-			Name: "invalid/unknown interval",
-			Now: now,
-			Trigger: tr(7, "every_other_day", now, defaultOpts()),
+			Name:      "invalid/unknown interval",
+			Now:       now,
+			Trigger:   tr(7, "every_other_day", now, defaultOpts()),
 			ExpectErr: true,
-		},		
+		},
 	}
 }
 
@@ -286,12 +285,12 @@ func getComputeNextRunTestCases() []TimeRunCalculationTestCase {
 		{
 			Name: "valid/monthly/feb 29 non-leap year",
 			Now:  time.Date(2025, 2, 01, 10, 0, 0, 0, time.UTC),
-			Trigger: tr(5, "monthly",time.Date(2025, 2, 01, 10, 0, 0, 0, time.UTC) , makeTestTriggerOpt{
+			Trigger: tr(5, "monthly", time.Date(2025, 2, 01, 10, 0, 0, 0, time.UTC), makeTestTriggerOpt{
 				dayOfMonth: 29,
 				lastRun:    time.Date(2025, 1, 29, 1, 0, 0, 0, time.UTC),
 			}),
-			ExpectedRun: time.Date(2025, 3, 29, 1, 0 ,0 , 0, time.UTC),
-			ExpectErr: false,
+			ExpectedRun: time.Date(2025, 3, 29, 1, 0, 0, 0, time.UTC),
+			ExpectErr:   false,
 		},
 		{
 			Name: "invalid/daily/last run in future",
@@ -307,6 +306,5 @@ func getComputeNextRunTestCases() []TimeRunCalculationTestCase {
 			}),
 			ExpectErr: true,
 		},
-		
 	}
 }

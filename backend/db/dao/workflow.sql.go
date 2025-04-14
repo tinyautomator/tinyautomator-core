@@ -7,7 +7,80 @@ package dao
 
 import (
 	"context"
+
+	null "github.com/guregu/null/v6"
 )
+
+const createWorkflow = `-- name: CreateWorkflow :one
+INSERT INTO workflow (
+  name,
+  description,
+  created_at,
+  updated_at
+)
+VALUES (
+  ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+)
+RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
+`
+
+type CreateWorkflowParams struct {
+	Name        string      `json:"name"`
+	Description null.String `json:"description"`
+}
+
+// CreateWorkflow
+//
+//	INSERT INTO workflow (
+//	  name,
+//	  description,
+//	  created_at,
+//	  updated_at
+//	)
+//	VALUES (
+//	  ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+//	)
+//	RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
+func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error) {
+	row := q.db.QueryRowContext(ctx, createWorkflow, arg.Name, arg.Description)
+	var i Workflow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.Description,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastRunAt,
+	)
+	return &i, err
+}
+
+const getWorkflow = `-- name: GetWorkflow :one
+SELECT id, user_id, name, description, is_active, created_at, updated_at, last_run_at FROM workflow
+WHERE id = ?
+`
+
+// GetWorkflow
+//
+//	SELECT id, user_id, name, description, is_active, created_at, updated_at, last_run_at FROM workflow
+//	WHERE id = ?
+func (q *Queries) GetWorkflow(ctx context.Context, id int64) (*Workflow, error) {
+	row := q.db.QueryRowContext(ctx, getWorkflow, id)
+	var i Workflow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.Description,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastRunAt,
+	)
+	return &i, err
+}
 
 const getWorkflowEdges = `-- name: GetWorkflowEdges :many
 SELECT workflow_id, source_node_id, target_node_id

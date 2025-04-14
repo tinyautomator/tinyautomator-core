@@ -7,23 +7,23 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
 )
 
-type Worker struct{
-	service *Service
+type Worker struct {
+	service      *Service
 	pollInterval time.Duration
-
 }
 
-func NewWorker(pollingInterval time.Duration) (*Worker , error){
-	repo := timetrigger.NewInMemoryRepository()
+func NewWorker(pollingInterval time.Duration, repo timetrigger.Repository) (*Worker, error) {
 	service, err := NewService(repo)
-	if err != nil{
+
+	if err != nil {
 		return nil, fmt.Errorf("repo cannot be empty")
 	}
 	return &Worker{
-		service: service,
+		service:      service,
 		pollInterval: pollingInterval,
 	}, nil
 }
+
 func (w *Worker) StartScheduler() {
 	w.service.Start()
 }
@@ -31,9 +31,6 @@ func (w *Worker) StartScheduler() {
 func (w *Worker) StopScheduler() {
 	w.service.Shutdown()
 }
-func (w *Worker) GetServiceRepo() timetrigger.Repository{
-	return w.service.repo
-} 
 
 func (w *Worker) PollAndSchedule() error {
 	for {
@@ -47,15 +44,11 @@ func (w *Worker) PollAndSchedule() error {
 			if err != nil {
 				fmt.Printf("❌ Error executing trigger ID %d: %v\n", trigger.ID, err)
 			}
-			
+
 			_ = job
-			
+
 		}
-		
 
 		time.Sleep(w.pollInterval)
 	}
 }
-
-
-

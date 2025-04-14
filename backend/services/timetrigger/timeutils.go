@@ -101,11 +101,10 @@ func (s *Service) computeNextRun(t *models.TimeTrigger) error {
 	}
 }
 
-
 // updateLastRun updates the LastRun field of a TimeTrigger to the current NextRun value.
 // Since this function is called after the trigger has been executed,
 // it sets LastRun to the time when the trigger was last executed.
-func (s *Service) markTriggerExecuted(t *models.TimeTrigger)  {
+func (s *Service) markTriggerExecuted(t *models.TimeTrigger) {
 	// Promote current NextRun to LastRun for rescheduling
 	t.LastRun = t.NextRun
 }
@@ -117,7 +116,6 @@ func parseTriggerAt(triggerAt string) (int, int, error) {
 	if len(parts) != 2 {
 		return 0, 0, errors.New("invalid triggerAt format")
 	}
-
 
 	hour, err := strconv.Atoi(parts[0])
 	if err != nil {
@@ -137,4 +135,3 @@ func parseTriggerAt(triggerAt string) (int, int, error) {
 
 	return hour, minute, nil
 }
-

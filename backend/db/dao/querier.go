@@ -9,6 +9,24 @@ import (
 )
 
 type Querier interface {
+	//CreateWorkflow
+	//
+	//  INSERT INTO workflow (
+	//    name,
+	//    description,
+	//    created_at,
+	//    updated_at
+	//  )
+	//  VALUES (
+	//    ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+	//  )
+	//  RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
+	CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error)
+	//GetWorkflow
+	//
+	//  SELECT id, user_id, name, description, is_active, created_at, updated_at, last_run_at FROM workflow
+	//  WHERE id = ?
+	GetWorkflow(ctx context.Context, id int64) (*Workflow, error)
 	//GetWorkflowEdges
 	//
 	//  SELECT workflow_id, source_node_id, target_node_id
