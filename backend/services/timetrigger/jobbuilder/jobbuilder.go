@@ -42,8 +42,7 @@ func buildDefinition(t models.TimeTrigger) (gocron.JobDefinition, error) {
 	if t.NextRun.IsZero() {
 		return nil, errors.New("NextRun must be set for job scheduling")
 	}
-	
-	
+
 	atTime := gocron.NewAtTime(uint(t.NextRun.Hour()), uint(t.NextRun.Minute()), 0)
 
 	switch t.Interval {
@@ -65,7 +64,6 @@ func buildDefinition(t models.TimeTrigger) (gocron.JobDefinition, error) {
 		return nil, errors.New("invalid interval: " + t.Interval)
 	}
 }
-
 
 func buildOptions(t models.TimeTrigger) ([]gocron.JobOption, error) {
 	typeTag := "trigger-" + strconv.FormatUint(uint64(t.ID), 10)

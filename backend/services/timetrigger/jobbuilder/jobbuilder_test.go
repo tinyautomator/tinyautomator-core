@@ -101,7 +101,7 @@ func TestBuildJobConfig_InvalidTriggers(t *testing.T) {
 			_, err := BuildJobConfig(tc.trigger, mockTaskFactory)
 			require.Error(t, err)
 			t.Logf("Expected error for %s: %v", tc.name, err)
-			
+
 			t.Log("\n✅ End of case:", tc.name)
 			t.Log("\n")
 			t.Log(strings.Repeat("-", 30))

@@ -1,3 +1,19 @@
+-- name: GetWorkflow :one
+SELECT * FROM workflow
+WHERE id = ?;
+
+-- name: CreateWorkflow :one
+INSERT INTO workflow (
+  name,
+  description,
+  created_at,
+  updated_at
+)
+VALUES (
+  ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+)
+RETURNING *;
+
 -- name: GetWorkflowNodes :many
 SELECT id, workflow_id, name, type, category, service, config
 FROM workflow_node
