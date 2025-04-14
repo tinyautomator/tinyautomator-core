@@ -20,8 +20,8 @@ import (
 // - proper NextRun value set
 func TestValidateTrigger(t *testing.T) {
 	service, err := NewService(timetrigger.NewInMemoryRepository())
-	
-	require.NoError(t , err)
+
+	require.NoError(t, err)
 
 	for name, tc := range getTriggerValidationCases() {
 		t.Run(name, func(t *testing.T) {
@@ -49,9 +49,9 @@ func TestComputeFirstRun(t *testing.T) {
 
 			actualRunTime, err := ComputeFirstRun(tc.Trigger)
 			t.Logf("🔎 Trigger: Interval=%s | NextRun=%s | TriggerAt=%s",
-			tc.Trigger.Interval,
-			tc.Trigger.NextRun.Format(time.DateTime),
-			tc.Trigger.TriggerAt,
+				tc.Trigger.Interval,
+				tc.Trigger.NextRun.Format(time.DateTime),
+				tc.Trigger.TriggerAt,
 			)
 
 			t.Logf("✅ Expected: %s", tc.ExpectedRun.Format(time.DateTime))
@@ -72,7 +72,7 @@ func TestComputeFirstRun(t *testing.T) {
 // TestComputeNextRun verifies that the next run is scheduled correctly
 // based on the trigger's LastRun and interval. This is used for recurring
 // triggers that have already executed at least once.
-func TestComputeNextRun(t *testing.T){
+func TestComputeNextRun(t *testing.T) {
 	t.Logf("🧪 Unit Test — ComputeNextRun Logic")
 	t.Logf("🕒 Test Start Time: %s", time.Now().UTC().Format(time.DateTime))
 
@@ -81,7 +81,6 @@ func TestComputeNextRun(t *testing.T){
 	service, err := NewService(timetrigger.NewInMemoryRepository())
 	require.NoError(t, err)
 	defer service.scheduler.Shutdown()
-
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -95,12 +94,11 @@ func TestComputeNextRun(t *testing.T){
 
 			actualNextRun := tc.Trigger.NextRun
 			t.Logf("🔎 Trigger ID=%d | Interval=%s | LastRun=%s | TriggerAt=%s",
-			tc.Trigger.ID,
-			tc.Trigger.Interval,
-			tc.Trigger.LastRun.Format(time.DateTime),
-			tc.Trigger.TriggerAt,
+				tc.Trigger.ID,
+				tc.Trigger.Interval,
+				tc.Trigger.LastRun.Format(time.DateTime),
+				tc.Trigger.TriggerAt,
 			)
-		
 
 			t.Logf("✅ Expected: %s", tc.ExpectedRun.Format(time.DateTime))
 			t.Logf("🧮 Computed: %s", actualNextRun.Format(time.DateTime))
@@ -132,23 +130,22 @@ func TestScheduleTrigger_SchedulesValidTriggersInScheduler(t *testing.T) {
 			repo := timetrigger.NewInMemoryRepository()
 			service, err := NewService(repo)
 			require.NoError(t, err)
-			
+
 			service.Start()
 
-			
 			defer service.Shutdown()
 
 			tc.trigger = saveTrigger(t, service.repo, tc.trigger)
 
-			job,err := service.ScheduleTrigger(tc.trigger)
+			job, err := service.ScheduleTrigger(tc.trigger)
 
 			if tc.valid {
 				require.NotNil(t, job, "expected job to be returned for valid trigger")
-				
-				time.Sleep(10 * time.Millisecond) 
+
+				time.Sleep(10 * time.Millisecond)
 				nextRun, err := job.NextRun()
 				require.NoError(t, err, "NextRun should be available for valid scheduled job")
-				
+
 				t.Logf("✅ Job scheduled: ID=%d | TriggerAt=%s | Scheduler NextRun=%s",
 					tc.trigger.ID, tc.trigger.TriggerAt, nextRun.Format(time.DateTime))
 
@@ -178,4 +175,3 @@ func assertValidation(t *testing.T, err error, valid bool, name string) {
 		require.Error(t, err, "Expected error for invalid trigger %q", name)
 	}
 }
-
