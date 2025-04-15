@@ -1,4 +1,4 @@
-package timetrigger
+package worker
 
 import (
 	"testing"

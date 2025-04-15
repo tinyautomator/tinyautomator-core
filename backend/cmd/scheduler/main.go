@@ -3,16 +3,21 @@ package main
 import (
 	"time"
 
+	"github.com/tinyautomator/tinyautomator-core/backend/cmd/scheduler/worker"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	repo "github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
-	"github.com/tinyautomator/tinyautomator-core/backend/services/timetrigger"
 )
 
 func main() {
-	cfg, _ := config.NewAppConfig()
+	cfg, err := config.NewAppConfig()
+
+	if err != nil {
+		panic("Failed to initialize config " + err.Error())
+	}
+
 	cfg.Log().Info("Initializing worker")
 
-	worker, err := timetrigger.NewWorker(10*time.Minute, repo.NewInMemoryRepository())
+	worker, err := worker.NewWorker(10*time.Minute, repo.NewInMemoryRepository())
 	if err != nil {
 		cfg.Log().Fatalf("Failed to create worker: %v", err)
 	}
