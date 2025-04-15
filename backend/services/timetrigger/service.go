@@ -51,7 +51,9 @@ func (s *Service) Start() {
 }
 
 func (s *Service) Shutdown() {
-	s.scheduler.Shutdown()
+	if err := s.scheduler.Shutdown(); err != nil {
+		panic(err)
+	}
 }
 
 // ValidateTrigger checks that the given TimeTrigger has a valid configuration.

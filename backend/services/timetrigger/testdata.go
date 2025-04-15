@@ -6,11 +6,6 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-func nextFullMinuteForTest() time.Time {
-	now := time.Now().UTC()
-	return now.Add(1 * time.Minute).Truncate(time.Minute)
-}
-
 func makeTimeTrigger(
 	id int,
 	interval string,

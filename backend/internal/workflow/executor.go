@@ -10,7 +10,7 @@ import (
 	"github.com/yourbasic/graph"
 )
 
-func ExecuteWorkflow(cfg cfg.AppConfigIFace, nodes []*dao.WorkflowNode, edges []*dao.WorkflowEdge) error {
+func ExecuteWorkflow(cfg cfg.AppConfig, nodes []*dao.WorkflowNode, edges []*dao.WorkflowEdge) error {
 	// Build ID ↔ Index maps
 	idToIndex := make(map[int64]int)
 	indexToNode := make(map[int]*dao.WorkflowNode)

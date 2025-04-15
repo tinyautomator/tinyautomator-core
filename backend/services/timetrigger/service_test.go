@@ -80,7 +80,12 @@ func TestComputeNextRun(t *testing.T) {
 
 	service, err := NewService(timetrigger.NewInMemoryRepository())
 	require.NoError(t, err)
-	defer service.scheduler.Shutdown()
+
+	defer func() {
+		if err := service.scheduler.Shutdown(); err != nil {
+			panic(err)
+		}
+	}()
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"database/sql"
 	"errors"
 	"os"
 	"strings"
@@ -9,6 +10,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
+	_ "modernc.org/sqlite"
 )
 
 const (
@@ -30,22 +33,22 @@ func (e EnvironmentVariables) validate() error {
 	}
 }
 
-type AppConfigIFace interface {
+type AppConfig interface {
 	GetEnv() string
 	GetEnvVars() EnvironmentVariables
 	Log() *logrus.Logger
+	GetDB() *dao.Queries
 }
 
-type AppConfig struct {
+type appConfig struct {
 	env     string
 	envVars EnvironmentVariables
 	log     *logrus.Logger
+	db      *dao.Queries
 }
 
-func NewAppConfig() (*AppConfig, error) {
-	cfg := &AppConfig{
-		log: logrus.New(),
-	}
+func NewAppConfig() (*appConfig, error) {
+	cfg := &appConfig{}
 
 	if err := cfg.loadEnvironmentVariables(); err != nil {
 		return nil, err
@@ -55,24 +58,32 @@ func NewAppConfig() (*AppConfig, error) {
 		return nil, err
 	}
 
+	if err := cfg.configureDB(); err != nil {
+		return nil, err
+	}
+
 	clerk.SetKey(cfg.envVars.ClerkApiKey)
 
 	return cfg, nil
 }
 
-func (cfg *AppConfig) GetEnv() string {
+func (cfg *appConfig) GetEnv() string {
 	return cfg.env
 }
 
-func (cfg *AppConfig) GetEnvVars() EnvironmentVariables {
+func (cfg *appConfig) GetEnvVars() EnvironmentVariables {
 	return cfg.envVars
 }
 
-func (cfg *AppConfig) Log() *logrus.Logger {
+func (cfg *appConfig) Log() *logrus.Logger {
 	return cfg.log
 }
 
-func (cfg *AppConfig) loadEnvironmentVariables() error {
+func (cfg *appConfig) GetDB() *dao.Queries {
+	return cfg.db
+}
+
+func (cfg *appConfig) loadEnvironmentVariables() error {
 	if cfg.env = os.Getenv("APPLICATION_ENV"); cfg.env == "" {
 		cfg.env = DEVELOPMENT
 	}
@@ -98,7 +109,8 @@ func (cfg *AppConfig) loadEnvironmentVariables() error {
 	return nil
 }
 
-func (cfg *AppConfig) configureLogger() error {
+func (cfg *appConfig) configureLogger() error {
+	cfg.log = logrus.New()
 	cfg.log.SetOutput(os.Stdout)
 
 	if logLevel, err := logrus.ParseLevel(cfg.envVars.LogLevel); err != nil {
@@ -108,23 +120,24 @@ func (cfg *AppConfig) configureLogger() error {
 	}
 
 	if cfg.env == PRODUCTION {
-		cfg.log.SetFormatter(&logrus.JSONFormatter{
-			PrettyPrint: false, // TODO: think about this
-		})
+		cfg.log.SetFormatter(&logrus.JSONFormatter{})
+		cfg.log.SetReportCaller(true)
 	} else {
-		// cfg.log.SetReportCaller(true)
 		cfg.log.SetFormatter(&logrus.TextFormatter{
 			FullTimestamp: true,
 		})
 	}
-
-	// TODO: clean this up - this is just to demonstrate how to log stuff
-	// cfg.Log().WithField("key", "value").Debug("test DEBUG log")
-	// cfg.Log().WithField("key", "value").Info("test INFO log")
-	// cfg.Log().WithField("key", "value").Warn("test WARN log")
-	// cfg.Log().WithField("key", "value").Error("test ERROR log")
-
 	return nil
 }
 
-var _ AppConfigIFace = &AppConfig{}
+func (cfg *appConfig) configureDB() error {
+	conn, err := sql.Open("sqlite", "file:dev.db?_foreign_keys=on")
+	if err != nil {
+		cfg.Log().Fatalf("❌ failed to open db: %v", err)
+	}
+
+	cfg.db = dao.New(conn)
+	return nil
+}
+
+var _ AppConfig = &appConfig{}
