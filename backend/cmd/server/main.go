@@ -17,7 +17,12 @@ func main() {
 		})
 	})
 
-	cfg, _ := config.NewAppConfig()
+	cfg, err := config.NewAppConfig()
+
+	if err != nil {
+		panic("Failed to initialize config " + err.Error())
+	}
+
 	db := cfg.GetDB()
 	routes.RegisterWorkflowRoutes(r, controllers.NewWorkflowController(repo.NewWorkflowRepository(db)))
 

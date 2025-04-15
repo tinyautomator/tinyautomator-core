@@ -4,43 +4,19 @@ import (
 	"context"
 
 	"github.com/clerk/clerk-sdk-go/v2/user"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-type User struct {
-	ID           string
-	FirstName    *string
-	LastName     *string
-	EmailAddress *string
-}
-
-func GetUser(ctx context.Context, userID string) User {
-	clerkUser, _ := user.Get(ctx, userID)
-	return User{
-		ID:           clerkUser.ID,
-		FirstName:    clerkUser.FirstName,
-		LastName:     clerkUser.LastName,
-		EmailAddress: clerkUser.PrimaryEmailAddressID,
+func GetUser(ctx context.Context, userID string) (*models.User, error) {
+	if clerkUser, err := user.Get(ctx, userID); err != nil {
+		return nil, err
+	} else {
+		user := &models.User{
+			ID:           clerkUser.ID,
+			FirstName:    clerkUser.FirstName,
+			LastName:     clerkUser.LastName,
+			EmailAddress: clerkUser.PrimaryEmailAddressID,
+		}
+		return user, nil
 	}
 }
-
-// type UserClient interface {
-// 	GetUser(context.Context, string) User
-// }
-
-// type userClient struct {}
-
-// func NewUserClient() UserClient {
-// 	return userClient{}
-// }
-
-// func (u userClient) GetUser(ctx context.Context, userID string) User {
-// 	clerkUser, _ := user.Get(ctx, userID)
-// 	return User{
-// 		ID: clerkUser.ID,
-// 		FirstName: clerkUser.FirstName,
-// 		LastName: clerkUser.LastName,
-// 		EmailAddress: clerkUser.PrimaryEmailAddressID,
-// 	}
-// }
-
-// var _ UserClient = userClient{}

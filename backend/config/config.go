@@ -47,7 +47,14 @@ type appConfig struct {
 	db      *dao.Queries
 }
 
-func NewAppConfig() (*appConfig, error) {
+var config AppConfig
+
+func NewAppConfig() (AppConfig, error) {
+	if config != nil {
+		config.Log().Info("Config object is already initialized")
+		return config, nil
+	}
+
 	cfg := &appConfig{}
 
 	if err := cfg.loadEnvironmentVariables(); err != nil {
@@ -64,6 +71,7 @@ func NewAppConfig() (*appConfig, error) {
 
 	clerk.SetKey(cfg.envVars.ClerkApiKey)
 
+	config = cfg
 	return cfg, nil
 }
 
@@ -133,11 +141,9 @@ func (cfg *appConfig) configureLogger() error {
 func (cfg *appConfig) configureDB() error {
 	conn, err := sql.Open("sqlite", "file:dev.db?_foreign_keys=on")
 	if err != nil {
-		cfg.Log().Fatalf("❌ failed to open db: %v", err)
+		cfg.Log().Fatalf("Failed to open db: %v", err)
 	}
 
 	cfg.db = dao.New(conn)
 	return nil
 }
-
-var _ AppConfig = &appConfig{}
