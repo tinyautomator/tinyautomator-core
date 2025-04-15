@@ -42,7 +42,7 @@ func ExecuteWorkflow(cfg cfg.AppConfig, nodes []*dao.WorkflowNode, edges []*dao.
 		if fromOk && toOk {
 			g.Add(from, to)
 		} else {
-			cfg.Log().WithField("edge", edge).Warn("Skipping invalid edge")
+			cfg.GetLogger().WithField("edge", edge).Warn("Skipping invalid edge")
 		}
 	}
 
@@ -51,11 +51,11 @@ func ExecuteWorkflow(cfg cfg.AppConfig, nodes []*dao.WorkflowNode, edges []*dao.
 		return fmt.Errorf("cycle detected in workflow graph")
 	}
 
-	cfg.Log().Info("Executing workflow:")
+	cfg.GetLogger().Info("Executing workflow:")
 	for _, idx := range order {
 		node := indexToNode[idx]
 		// TODO: Plug in actual logic for triggers/actions/custom
-		cfg.Log().WithFields(logrus.Fields{
+		cfg.GetLogger().WithFields(logrus.Fields{
 			"id":       node.ID,
 			"type":     node.Type,
 			"name":     node.Name.ValueOrZero(),

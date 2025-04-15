@@ -15,11 +15,11 @@ func main() {
 		panic("Failed to initialize config " + err.Error())
 	}
 
-	cfg.Log().Info("Initializing worker")
+	cfg.GetLogger().Info("Initializing worker")
 
 	worker, err := worker.NewWorker(10*time.Minute, repo.NewInMemoryRepository())
 	if err != nil {
-		cfg.Log().Fatalf("Failed to create worker: %v", err)
+		cfg.GetLogger().Fatalf("Failed to create worker: %v", err)
 	}
 
 	worker.StartScheduler()
@@ -27,6 +27,6 @@ func main() {
 
 	err = worker.PollAndSchedule()
 	if err != nil {
-		cfg.Log().Fatalf("Polling error in worker: %v", err)
+		cfg.GetLogger().Fatalf("Polling error in worker: %v", err)
 	}
 }
