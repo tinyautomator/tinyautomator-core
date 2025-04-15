@@ -15,6 +15,12 @@ type EnvironmentVariables struct {
 	LogLevel    string `envconfig:"LOG_LEVEL" default:"INFO"`
 	ClerkApiKey string `envconfig:"CLERK_API_KEY"`
 	Port        string `envconfig:"PORT" default:"9000"`
+
+	// Gmail Variables
+	GmailClientID     string   `envconfig:"GMAIL_CLIENT_ID"`
+	GmailClientSecret string   `envconfig:"GMAIL_CLIENT_SECRET"`
+	GmailRedirectURL  string   `envconfig:"GMAIL_REDIRECT_URL"`
+	GmailScopes       []string `envconfig:"GMAIL_SCOPES"`
 }
 
 type AppConfig interface {
