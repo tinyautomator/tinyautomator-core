@@ -4,11 +4,10 @@ import type React from "react";
 import { useRef, useState, useCallback } from "react";
 import {
   ChevronDown,
+  ChevronRight,
   Code,
   Cog,
-  Database,
   Mail,
-  Play,
   Settings,
   Timer,
   Zap,
@@ -20,8 +19,8 @@ import {
   Controls,
   useNodesState,
   useEdgesState,
-  addEdge,
   useReactFlow,
+  MarkerType,
   type Node,
   type Edge,
   type Connection,
@@ -41,58 +40,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
-// Initial nodes and edges for the flow
-const initialNodes: Node<{ label: string }>[] = [
-  {
-    id: "1",
-    type: "input",
-    data: { label: "Time Trigger" },
-    position: { x: 250, y: 25 },
-    style: {
-      background: "#fff",
-      border: "1px solid #ddd",
-      borderRadius: "8px",
-      padding: "10px",
-      width: 180,
-      boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-    },
-  },
-  {
-    id: "2",
-    data: { label: "Send Email" },
-    position: { x: 250, y: 150 },
-    style: {
-      background: "#fff",
-      border: "1px solid #ddd",
-      borderRadius: "8px",
-      padding: "10px",
-      width: 180,
-      boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-    },
-  },
-];
-
-const initialEdges: Edge[] = [
-  {
-    id: "e1-2",
-    source: "1",
-    target: "2",
-    animated: true,
-    style: { stroke: "#6366F1" },
-  },
-];
-
-// Block categories and items
 const blockCategories = [
   {
     name: "Triggers",
     icon: Zap,
     blocks: [
       { id: "time-trigger", name: "Time Trigger", icon: Timer },
-      { id: "email-trigger", name: "Email Received", icon: Mail },
-      { id: "slack-trigger", name: "Slack Message", icon: Zap },
-      { id: "calendar-trigger", name: "Calendar Event", icon: Timer },
-      { id: "form-trigger", name: "Form Submission", icon: Database },
+
+      //{ id: "email-trigger", name: "Email Received", icon: Mail },
+      //{ id: "slack-trigger", name: "Slack Message", icon: Zap },
+      //{ id: "calendar-trigger", name: "Calendar Event", icon: Timer },
+      //{ id: "form-trigger", name: "Form Submission", icon: Database },
     ],
   },
   {
@@ -100,47 +58,50 @@ const blockCategories = [
     icon: Cog,
     blocks: [
       { id: "send-email", name: "Send Email", icon: Mail },
-      { id: "update-database", name: "Update Spreadsheet", icon: Database },
-      { id: "slack-message", name: "Post to Slack", icon: Zap },
-      { id: "create-event", name: "Create Calendar Event", icon: Timer },
-      { id: "http-request", name: "HTTP Request", icon: Zap },
+      //{ id: "update-database", name: "Update Spreadsheet", icon: Database },
+      //{ id: "slack-message", name: "Post to Slack", icon: Zap },
+      //{ id: "create-event", name: "Create Calendar Event", icon: Timer },
+      //{ id: "http-request", name: "HTTP Request", icon: Zap },
     ],
   },
   {
     name: "Logic",
     icon: Code,
     blocks: [
-      { id: "code-block", name: "JavaScript Code", icon: Code },
-      { id: "python-block", name: "Python Code", icon: Code },
-      { id: "condition", name: "Condition", icon: Settings },
-      { id: "filter", name: "Filter Data", icon: Cog },
-      { id: "transform", name: "Transform Data", icon: Cog },
+      // { id: "code-block", name: "JavaScript Code", icon: Code },
+      // { id: "python-block", name: "Python Code", icon: Code },
+      // { id: "condition", name: "Condition", icon: Settings },
+      // { id: "filter", name: "Filter Data", icon: Cog },
+      // { id: "transform", name: "Transform Data", icon: Cog },
     ],
   },
 ];
 
 function InnerFlow() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] =
-    useNodesState<Node<{ label: string }>>(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<
+    Node<{ label: string }>
+  >([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selectedNode, setSelectedNode] = useState<Node<{
     label: string;
   }> | null>(null);
-  const [debugMode, setDebugMode] = useState(false);
-  const [nodeId, setNodeId] = useState(3); // Start from 3 since we already have nodes 1 and 2
-
+  const [nodeId, setNodeId] = useState(1);
   const { screenToFlowPosition } = useReactFlow();
 
-  // Fix: Map over addEdge results so that "animated" is always a boolean.
   const onConnect = useCallback(
     (params: Edge | Connection) => {
-      setEdges((eds) =>
-        addEdge(params, eds).map((edge) => ({
-          ...edge,
-          animated: edge.animated ?? false,
-        })),
-      );
+      const newEdge: Edge = {
+        ...params,
+        id: `e${params.source}-${params.target}`,
+        animated: true,
+        style: { stroke: "#6366F1" },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: "#6366F1",
+        },
+      };
+      setEdges((eds) => [...eds, newEdge]);
     },
     [setEdges],
   );
@@ -154,15 +115,23 @@ function InnerFlow() {
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  // Use the spread operator to add the new node
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
 
       if (!reactFlowWrapper.current) return;
 
-      const type = event.dataTransfer.getData("application/reactflow/type");
       const name = event.dataTransfer.getData("application/reactflow/label");
+
+      let type: Node["type"];
+
+      if (name === "Time Trigger") {
+        type = "input";
+      } else if (name === "Send Email") {
+        type = "output";
+      } else {
+        type = "default";
+      }
 
       if (!type || !name) return;
 
@@ -173,7 +142,7 @@ function InnerFlow() {
 
       const newNode: Node<{ label: string }> = {
         id: `node-${nodeId}`,
-        type: type === "time-trigger" ? "input" : "default",
+        type,
         position,
         data: { label: name },
         style: {
@@ -202,60 +171,74 @@ function InnerFlow() {
     event.dataTransfer.effectAllowed = "move";
   };
 
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
+    {},
+  );
+
+  const toggleCategory = (name: string) => {
+    setOpenCategories((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
+  };
+
   return (
     <div className="flex h-full">
       {/* Left Sidebar - Blocks Panel */}
       <div className="w-64 border-r bg-white">
         <div className="flex items-center justify-between p-4">
           <h2 className="font-semibold">Blocks</h2>
-          <div className="flex items-center gap-2">
-            <Button
-              variant={debugMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => setDebugMode(!debugMode)}
-            >
-              <Play className="mr-1 h-3 w-3" />
-              Debug
-            </Button>
-          </div>
+          <div className="flex items-center gap-2"></div>
         </div>
         <Separator />
         <ScrollArea className="h-[calc(100vh-8.5rem)]">
           <div className="px-2 py-2">
-            {blockCategories.map((category) => (
-              <Collapsible key={category.name} defaultOpen className="mb-2">
-                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-slate-100">
-                  <div className="flex items-center">
-                    <category.icon className="mr-2 h-4 w-4 text-slate-500" />
-                    {category.name}
-                  </div>
-                  <ChevronDown className="h-4 w-4 text-slate-500" />
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="mt-1 space-y-1 px-1">
-                    {category.blocks.map((block) => (
-                      <Card
-                        key={block.id}
-                        className="cursor-grab border border-slate-200 hover:border-slate-300 hover:shadow-sm"
-                        draggable
-                        onDragStart={(event) =>
-                          onDragStart(
-                            event,
-                            block.id === "time-trigger" ? "input" : "default",
-                            block.name,
-                          )
-                        }
-                      >
-                        <CardContent className="flex items-center gap-2 p-3">
-                          <block.icon className="h-4 w-4 text-slate-500" />
-                          <span className="text-sm">{block.name}</span>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
+            {blockCategories.map((category) => {
+              const isOpen = openCategories[category.name] ?? true;
+              return (
+                <Collapsible
+                  key={category.name}
+                  open={isOpen}
+                  onOpenChange={() => toggleCategory(category.name)}
+                  className="mb-2"
+                >
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-slate-100">
+                    <div className="flex items-center">
+                      <category.icon className="mr-2 h-4 w-4 text-slate-500" />
+                      {category.name}
+                    </div>
+                    {isOpen ? (
+                      <ChevronDown className="h-4 w-4 text-slate-500" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-slate-500" />
+                    )}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="mt-1 space-y-1 px-1">
+                      {category.blocks.map((block) => (
+                        <Card
+                          key={block.id}
+                          className="cursor-grab border border-slate-200 hover:border-slate-300 hover:shadow-sm"
+                          draggable
+                          onDragStart={(event) =>
+                            onDragStart(
+                              event,
+                              block.id === "time-trigger" ? "input" : "default",
+                              block.name,
+                            )
+                          }
+                        >
+                          <CardContent className="flex items-center gap-2 p-3">
+                            <block.icon className="h-4 w-4 text-slate-500" />
+                            <span className="text-sm">{block.name}</span>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
           </div>
         </ScrollArea>
       </div>
@@ -289,7 +272,7 @@ function InnerFlow() {
             fitView
           >
             <Controls />
-            <Background color="#aaa" gap={16} />
+            <Background color="#fff" gap={16} />
           </ReactFlow>
         </div>
       </div>
@@ -383,17 +366,7 @@ function InnerFlow() {
                       <Textarea
                         placeholder="// Write your code here..."
                         className="min-h-[200px] font-mono text-sm"
-                        defaultValue={`// Example function
-function processData(input) {
-  // Transform the input data
-  const output = {
-    ...input,
-    processed: true,
-    timestamp: new Date().toISOString()
-  };
-
-  return output;
-}`}
+                        defaultValue={`// Placeholder Func'}`}
                       />
                     </div>
                   )}
