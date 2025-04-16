@@ -9,6 +9,7 @@ import Sidebar from "@/components/sidebar";
 import Dashboard from "@/components/dashboard";
 import WorkflowBuilder from "@/components/workflowbuilder";
 import WorkflowLibrary from "@/components/workflowlibrary";
+import EmailIntegrationView from "@/components/email";
 
 export default function Dash() {
   const [activeView, setActiveView] = useState("Dashboard");
@@ -40,6 +41,7 @@ export default function Dash() {
               {activeView === "Dashboard" && <Dashboard />}
               {activeView === "Workflow Builder" && <WorkflowBuilder />}
               {activeView === "Workflow Library" && <WorkflowLibrary />}
+              {activeView == "Email" && <EmailIntegrationView />}
             </main>
           </div>
         </div>
