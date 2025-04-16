@@ -7,7 +7,23 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/google/gmail"
 )
 
-func GetGmailAuthURL(c *gin.Context) {
-	url := gmail.BuildAuthURL("devtest")
-	c.JSON(http.StatusOK, gin.H{"url": url})
+type GmailController interface {
+	GetGmailAuthURL(ctx *gin.Context)
+}
+
+type gmailController struct {
+}
+
+var _ GmailController = (*gmailController)(nil)
+
+func NewGmailController() GmailController {
+	return &gmailController{}
+}
+
+func (c *gmailController) GetGmailAuthURL(ctx *gin.Context) {
+	authURL := gmail.BuildAuthURL("devtest")
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"url": authURL,
+	})
 }

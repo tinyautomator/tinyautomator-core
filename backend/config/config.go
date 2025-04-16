@@ -65,7 +65,9 @@ func NewAppConfig() (AppConfig, error) {
 	if err := cfg.initExternalServices(); err != nil {
 		return nil, err
 	}
-
+	if err := cfg.initGmailClient(); err != nil {
+		return nil, err
+	}
 	config = cfg
 	return cfg, nil
 }
