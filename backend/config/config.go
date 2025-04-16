@@ -15,12 +15,18 @@ type EnvironmentVariables struct {
 	LogLevel    string `envconfig:"LOG_LEVEL" default:"INFO"`
 	ClerkApiKey string `envconfig:"CLERK_API_KEY"`
 	Port        string `envconfig:"PORT" default:"9000"`
+
+	// Gmail Variables
+	GmailClientID     string   `envconfig:"GMAIL_CLIENT_ID"`
+	GmailClientSecret string   `envconfig:"GMAIL_CLIENT_SECRET"`
+	GmailRedirectURL  string   `envconfig:"GMAIL_REDIRECT_URL"`
+	GmailScopes       []string `envconfig:"GMAIL_SCOPES"`
 }
 
 type AppConfig interface {
 	GetEnv() string
 	GetEnvVars() EnvironmentVariables
-	Log() *logrus.Logger
+	GetLogger() *logrus.Logger
 
 	GetWorkflowRepository() repositories.WorkflowRepository
 }
@@ -38,7 +44,7 @@ var config AppConfig
 
 func NewAppConfig() (AppConfig, error) {
 	if config != nil {
-		config.Log().Info("Config object is already initialized")
+		config.GetLogger().Info("Config object is already initialized")
 		return config, nil
 	}
 
@@ -59,7 +65,9 @@ func NewAppConfig() (AppConfig, error) {
 	if err := cfg.initExternalServices(); err != nil {
 		return nil, err
 	}
-
+	if err := cfg.initGmailClient(); err != nil {
+		return nil, err
+	}
 	config = cfg
 	return cfg, nil
 }
@@ -72,7 +80,7 @@ func (cfg *appConfig) GetEnvVars() EnvironmentVariables {
 	return cfg.envVars
 }
 
-func (cfg *appConfig) Log() *logrus.Logger {
+func (cfg *appConfig) GetLogger() *logrus.Logger {
 	return cfg.log
 }
 

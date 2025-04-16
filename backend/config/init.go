@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/clients/google/gmail"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	_ "modernc.org/sqlite"
@@ -74,7 +75,7 @@ func (cfg *appConfig) initLogger() error {
 func (cfg *appConfig) initRepositories() error {
 	conn, err := sql.Open("sqlite", "file:dev.db?_foreign_keys=on")
 	if err != nil {
-		cfg.Log().Fatalf("Failed to open db: %v", err)
+		cfg.GetLogger().Fatalf("Failed to open db: %v", err)
 	}
 
 	cfg.db = dao.New(conn)
@@ -84,5 +85,16 @@ func (cfg *appConfig) initRepositories() error {
 
 func (cfg *appConfig) initExternalServices() error {
 	clerk.SetKey(cfg.envVars.ClerkApiKey)
+	return nil
+}
+
+// TODO: ERROR HANDLING FOR EMPTY CFG VARS
+func (cfg *appConfig) initGmailClient() error {
+	gmail.GmailClientInit(
+		cfg.envVars.GmailClientID,
+		cfg.envVars.GmailClientSecret,
+		cfg.envVars.GmailRedirectURL,
+		cfg.envVars.GmailScopes,
+	)
 	return nil
 }
