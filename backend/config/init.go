@@ -10,9 +10,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
-	"github.com/tinyautomator/tinyautomator-core/backend/clients/google/gmail"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	_ "modernc.org/sqlite"
 )
 
@@ -73,28 +74,24 @@ func (cfg *appConfig) initLogger() error {
 }
 
 func (cfg *appConfig) initRepositories() error {
-	conn, err := sql.Open("sqlite", "file:dev.db?_foreign_keys=on")
+	db, err := sql.Open("sqlite", "file:dev.db?_foreign_keys=on")
 	if err != nil {
 		cfg.GetLogger().Fatalf("Failed to open db: %v", err)
 	}
 
-	cfg.db = dao.New(conn)
-	cfg.workflowRepository = repositories.NewWorkflowRepository(cfg.db)
+	cfg.workflowRepository = repositories.NewWorkflowRepository(dao.New(db))
 	return nil
 }
 
 func (cfg *appConfig) initExternalServices() error {
-	clerk.SetKey(cfg.envVars.ClerkApiKey)
-	return nil
-}
+	clerk.SetKey(cfg.envVars.ClerkSecretKey)
 
-// TODO: ERROR HANDLING FOR EMPTY CFG VARS
-func (cfg *appConfig) initGmailClient() error {
-	gmail.GmailClientInit(
-		cfg.envVars.GmailClientID,
-		cfg.envVars.GmailClientSecret,
-		cfg.envVars.GmailRedirectURL,
-		cfg.envVars.GmailScopes,
-	)
+	cfg.gmailOAuthConfig = &oauth2.Config{
+		ClientID:     cfg.envVars.GmailClientID,
+		ClientSecret: cfg.envVars.GmailClientSecret,
+		RedirectURL:  cfg.envVars.GmailRedirectURL,
+		Scopes:       cfg.envVars.GmailScopes,
+		Endpoint:     google.Endpoint,
+	}
 	return nil
 }

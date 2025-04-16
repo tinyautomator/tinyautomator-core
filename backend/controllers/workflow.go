@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	repo "github.com/tinyautomator/tinyautomator-core/backend/repositories"
 )
@@ -16,11 +18,15 @@ type WorkflowController interface {
 }
 
 type workflowController struct {
+	log  *logrus.Logger
 	repo repo.WorkflowRepository
 }
 
-func NewWorkflowController(repo repo.WorkflowRepository) *workflowController {
-	return &workflowController{repo}
+func NewWorkflowController(cfg config.AppConfig) *workflowController {
+	return &workflowController{
+		log:  cfg.GetLogger(),
+		repo: cfg.GetWorkflowRepository(),
+	}
 }
 
 func (c *workflowController) GetWorkflow(ctx *gin.Context) {

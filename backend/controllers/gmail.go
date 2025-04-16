@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tinyautomator/tinyautomator-core/backend/clients/google/gmail"
+	"github.com/tinyautomator/tinyautomator-core/backend/clients/google"
+	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"golang.org/x/oauth2"
 )
 
@@ -16,17 +17,18 @@ type GmailController interface {
 }
 
 type gmailController struct {
+	gmailOAuthConfig *oauth2.Config
 }
 
-var _ GmailController = (*gmailController)(nil)
-
-func NewGmailController() GmailController {
-	return &gmailController{}
+func NewGmailController(cfg config.AppConfig) GmailController {
+	return &gmailController{
+		gmailOAuthConfig: cfg.GetGmailOAuthConfig(),
+	}
 }
 
 func (c *gmailController) GetGmailAuthURL(ctx *gin.Context) {
 	// TODO : Introduce a random state for each request for security purposes
-	authURL := gmail.BuildAuthURL("devtest")
+	authURL := c.gmailOAuthConfig.AuthCodeURL("devtest", oauth2.AccessTypeOffline)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"url": authURL,
@@ -41,14 +43,14 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 		return
 	}
 
-	token, err := gmail.ExchangeCodeForToken(ctx, code)
+	token, err := c.gmailOAuthConfig.Exchange(ctx, code)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Token exchange failed", "details": err.Error()})
 		return
 	}
 
 	// SendEmail requires a "from" tag with users email or valid alias so unsure if we need this or not
-	email, err := gmail.GetUserEmail(ctx, token)
+	email, err := google.GetUserEmail(ctx, token, c.gmailOAuthConfig)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch user email", "details": err.Error()})
 		return
@@ -56,7 +58,7 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 
 	// TODO: Save token (email ???, access_token, refresh_token, expiry) to DB for userID
 
-	// 🧪 TEMP: Return token directly so you can plug it into test APIs
+	// TEMP: Return token directly so you can plug it into test APIs
 	ctx.JSON(http.StatusOK, gin.H{
 		"access_token":  token.AccessToken,
 		"refresh_token": token.RefreshToken,
@@ -96,13 +98,13 @@ func (c *gmailController) SendEmail(ctx *gin.Context) {
 		TokenType:    "Bearer",
 	}
 
-	encoded, err := gmail.EncodeSimpleText(req.To, req.From, req.Subject, req.Body)
+	encoded, err := google.EncodeSimpleText(req.To, req.From, req.Subject, req.Body)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to encode email", "details": err.Error()})
 		return
 	}
 
-	err = gmail.SendRawEmail(ctx, token, encoded)
+	err = google.SendRawEmail(ctx, token, c.gmailOAuthConfig, encoded)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send email", "details": err.Error()})
 		return
@@ -110,3 +112,5 @@ func (c *gmailController) SendEmail(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Email sent successfully!"})
 }
+
+var _ GmailController = (*gmailController)(nil)

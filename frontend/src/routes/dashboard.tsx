@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Zap } from "lucide-react";
 // import "reactflow/dist/style.css";
 
@@ -11,6 +11,10 @@ import WorkflowBuilder from "@/components/workflow";
 
 export default function Dash() {
   const [activeView, setActiveView] = useState("Dashboard");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return <h1>Loading...</h1>;
 
   return (
     <TooltipProvider>

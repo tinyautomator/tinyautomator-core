@@ -13,7 +13,7 @@ func RegisterRoutes(r *gin.Engine, cfg config.AppConfig) {
 		})
 	})
 
-	workflowController := controllers.NewWorkflowController(cfg.GetWorkflowRepository())
+	workflowController := controllers.NewWorkflowController(cfg)
 
 	workflowGroup := r.Group("/api/workflow")
 	{
@@ -21,7 +21,7 @@ func RegisterRoutes(r *gin.Engine, cfg config.AppConfig) {
 		workflowGroup.POST("/", workflowController.CreateWorkflow)
 	}
 
-	gmailController := controllers.NewGmailController()
+	gmailController := controllers.NewGmailController(cfg)
 
 	gmailGroup := r.Group("/api/integrations/gmail")
 	{
