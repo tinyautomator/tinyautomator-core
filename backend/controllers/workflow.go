@@ -12,6 +12,7 @@ import (
 type WorkflowController interface {
 	GetWorkflow(ctx *gin.Context)
 	CreateWorkflow(ctx *gin.Context)
+	GetWorkflowRender(ctx *gin.Context)
 }
 
 type workflowController struct {
@@ -53,4 +54,8 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, workflow)
+}
+
+func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
+
 }
