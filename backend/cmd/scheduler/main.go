@@ -1,29 +1,32 @@
 package main
 
 import (
-	"log"
 	"time"
 
+	"github.com/tinyautomator/tinyautomator-core/backend/cmd/scheduler/worker"
+	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	repo "github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
-	"github.com/tinyautomator/tinyautomator-core/backend/services/timetrigger"
 )
 
 func main() {
-	log.Println("🕒 Starting TimeTrigger worker...")
+	cfg, err := config.NewAppConfig()
 
-	// Create the worker with desired polling interval
-	worker, err := timetrigger.NewWorker(10*time.Minute, repo.NewInMemoryRepository())
 	if err != nil {
-		log.Fatalf("❌ Failed to create worker: %v", err)
+		panic("Failed to initialize config " + err.Error())
 	}
 
-	// Start the underlying scheduler (required for gocron to run)
+	cfg.Log().Info("Initializing worker")
+
+	worker, err := worker.NewWorker(10*time.Minute, repo.NewInMemoryRepository())
+	if err != nil {
+		cfg.Log().Fatalf("Failed to create worker: %v", err)
+	}
+
 	worker.StartScheduler()
 	defer worker.StopScheduler()
 
-	// Start polling loop (blocking call)
 	err = worker.PollAndSchedule()
 	if err != nil {
-		log.Printf("❌ Failed to save test trigger: %v", err)
+		cfg.Log().Fatalf("Polling error in worker: %v", err)
 	}
 }
