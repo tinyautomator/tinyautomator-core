@@ -45,14 +45,20 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 
 	token, err := c.gmailOAuthConfig.Exchange(ctx, code)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Token exchange failed", "details": err.Error()})
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Token exchange failed", "details": err.Error()},
+		)
 		return
 	}
 
 	// SendEmail requires a "from" tag with users email or valid alias so unsure if we need this or not
 	email, err := google.GetUserEmail(ctx, token, c.gmailOAuthConfig)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch user email", "details": err.Error()})
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Could not fetch user email", "details": err.Error()},
+		)
 		return
 	}
 
@@ -100,13 +106,19 @@ func (c *gmailController) SendEmail(ctx *gin.Context) {
 
 	encoded, err := google.EncodeSimpleText(req.To, req.From, req.Subject, req.Body)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to encode email", "details": err.Error()})
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "failed to encode email", "details": err.Error()},
+		)
 		return
 	}
 
 	err = google.SendRawEmail(ctx, token, c.gmailOAuthConfig, encoded)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send email", "details": err.Error()})
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "failed to send email", "details": err.Error()},
+		)
 		return
 	}
 

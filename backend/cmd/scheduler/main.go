@@ -10,7 +10,6 @@ import (
 
 func main() {
 	cfg, err := config.NewAppConfig()
-
 	if err != nil {
 		panic("Failed to initialize config " + err.Error())
 	}

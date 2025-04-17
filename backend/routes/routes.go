@@ -29,5 +29,4 @@ func RegisterRoutes(r *gin.Engine, cfg config.AppConfig) {
 		gmailGroup.GET("/callback", gmailController.HandleCallBack)
 		gmailGroup.POST("/send-email", gmailController.SendEmail)
 	}
-
 }

@@ -11,7 +11,11 @@ import (
 	"github.com/yourbasic/graph"
 )
 
-func LoadWorkflowGraph(ctx context.Context, repo repository.WorkflowRepository, workflowID int64) ([]*dao.WorkflowNode, []*dao.WorkflowEdge, error) {
+func LoadWorkflowGraph(
+	ctx context.Context,
+	repo repository.WorkflowRepository,
+	workflowID int64,
+) ([]*dao.WorkflowNode, []*dao.WorkflowEdge, error) {
 	nodes, err := repo.GetWorkflowNodes(ctx, workflowID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load workflow nodes: %w", err)
@@ -25,7 +29,11 @@ func LoadWorkflowGraph(ctx context.Context, repo repository.WorkflowRepository, 
 	return nodes, edges, nil
 }
 
-func ExecuteWorkflow(cfg cfg.AppConfig, nodes []*dao.WorkflowNode, edges []*dao.WorkflowEdge) error {
+func ExecuteWorkflow(
+	cfg cfg.AppConfig,
+	nodes []*dao.WorkflowNode,
+	edges []*dao.WorkflowEdge,
+) error {
 	idToIndex := make(map[int64]int)
 	indexToNode := make(map[int]*dao.WorkflowNode)
 

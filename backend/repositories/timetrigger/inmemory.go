@@ -42,7 +42,9 @@ func (r *inMemoryRepository) GetTriggerByID(id uint) (models.TimeTrigger, error)
 	return trigger, nil
 }
 
-func (r *inMemoryRepository) FetchTriggersScheduledWithinDuration(duration time.Duration) ([]models.TimeTrigger, error) {
+func (r *inMemoryRepository) FetchTriggersScheduledWithinDuration(
+	duration time.Duration,
+) ([]models.TimeTrigger, error) {
 	now := time.Now().UTC()
 	cutoff := now.Add(duration)
 

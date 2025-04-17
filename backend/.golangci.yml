@@ -1,8 +1,19 @@
 version: "2"
-linters:
+# linters:
+#   enable:
+#     - errcheck # Errcheck is a program for checking for unchecked errors in Go code. These unchecked errors can be critical bugs in some cases.
+#     - govet # Vet examines Go source code and reports suspicious constructs. It is roughly the same as 'go vet' and uses its passes. [auto-fix]
+#     - ineffassign # Detects when assignments to existing variables are not used. [fast]
+#     - staticcheck # It's the set of rules from staticcheck. [auto-fix]
+#     - unused # Checks Go code for unused constants, variables, functions and types.
+#     - wsl # Add or remove empty lines. [fast, auto-fix]
+#     - godox # Detects usage of FIXME, TODO and other keywords inside comments. [fast]
+#     - errname # Checks that sentinel errors are prefixed with the `Err` and error types are suffixed with the `Error`.
+#     - unparam # Reports unused function parameters.
+#     - wrapcheck # Checks that errors returned from external packages are wrapped.
+#     - nlreturn # Nlreturn checks for a new line before return and branch statements to increase code clarity. [fast, auto-fix]
+formatters:
   enable:
-    - errcheck # Errcheck is a program for checking for unchecked errors in Go code. These unchecked errors can be critical bugs in some cases.
-    - govet # Vet examines Go source code and reports suspicious constructs. It is roughly the same as 'go vet' and uses its passes. [auto-fix]
-    - ineffassign # Detects when assignments to existing variables are not used. [fast]
-    - staticcheck # It's the set of rules from staticcheck. [auto-fix]
-    - unused # Checks Go code for unused constants, variables, functions and types.
+    - gofumpt
+    - goimports
+    - golines

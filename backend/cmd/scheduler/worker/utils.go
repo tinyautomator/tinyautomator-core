@@ -32,7 +32,16 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 		// calculate date of this week's target weekday
 		daysToAdd := (7 + t.DayOfWeek - int(now.Weekday())) % 7
 		scheduledDay := now.AddDate(0, 0, daysToAdd)
-		baseTime := time.Date(scheduledDay.Year(), scheduledDay.Month(), scheduledDay.Day(), hour, min, 0, 0, time.UTC)
+		baseTime := time.Date(
+			scheduledDay.Year(),
+			scheduledDay.Month(),
+			scheduledDay.Day(),
+			hour,
+			min,
+			0,
+			0,
+			time.UTC,
+		)
 
 		if baseTime.After(now) {
 			return baseTime, nil

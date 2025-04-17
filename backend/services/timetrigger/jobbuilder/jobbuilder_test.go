@@ -16,7 +16,11 @@ func nextFullMinute() time.Time {
 	return now.Add(1 * time.Minute).Truncate(time.Minute)
 }
 
-func makeTrigger(id int, interval, triggerAt, action string, dayOfWeek, dayOfMonth int) models.TimeTrigger {
+func makeTrigger(
+	id int,
+	interval, triggerAt, action string,
+	dayOfWeek, dayOfMonth int,
+) models.TimeTrigger {
 	return models.TimeTrigger{
 		ID:         uint(id),
 		Interval:   interval,

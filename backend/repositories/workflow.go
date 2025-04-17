@@ -25,15 +25,24 @@ func (r *workflowRepo) GetWorkflow(ctx context.Context, id int64) (*dao.Workflow
 	return r.q.GetWorkflow(ctx, id)
 }
 
-func (r *workflowRepo) CreateWorkflow(ctx context.Context, arg *dao.CreateWorkflowParams) (*dao.Workflow, error) {
+func (r *workflowRepo) CreateWorkflow(
+	ctx context.Context,
+	arg *dao.CreateWorkflowParams,
+) (*dao.Workflow, error) {
 	return r.q.CreateWorkflow(ctx, arg)
 }
 
-func (r workflowRepo) GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*dao.WorkflowNode, error) {
+func (r workflowRepo) GetWorkflowNodes(
+	ctx context.Context,
+	workflowID int64,
+) ([]*dao.WorkflowNode, error) {
 	return r.q.GetWorkflowNodes(ctx, workflowID)
 }
 
-func (r workflowRepo) GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*dao.WorkflowEdge, error) {
+func (r workflowRepo) GetWorkflowEdges(
+	ctx context.Context,
+	workflowID int64,
+) ([]*dao.WorkflowEdge, error) {
 	return r.q.GetWorkflowEdges(ctx, workflowID)
 }
 

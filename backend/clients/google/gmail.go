@@ -9,12 +9,20 @@ import (
 	"google.golang.org/api/option"
 )
 
-func RefreshToken(ctx context.Context, refreshToken string, oauthConfig oauth2.Config) (*oauth2.Token, error) {
+func RefreshToken(
+	ctx context.Context,
+	refreshToken string,
+	oauthConfig oauth2.Config,
+) (*oauth2.Token, error) {
 	ts := oauthConfig.TokenSource(ctx, &oauth2.Token{RefreshToken: refreshToken})
 	return ts.Token()
 }
 
-func GetUserEmail(ctx context.Context, token *oauth2.Token, oauthConfig *oauth2.Config) (string, error) {
+func GetUserEmail(
+	ctx context.Context,
+	token *oauth2.Token,
+	oauthConfig *oauth2.Config,
+) (string, error) {
 	tokenSource := oauthConfig.TokenSource(ctx, token)
 
 	service, err := gmail.NewService(ctx, option.WithTokenSource(tokenSource))
@@ -30,8 +38,12 @@ func GetUserEmail(ctx context.Context, token *oauth2.Token, oauthConfig *oauth2.
 	return profile.EmailAddress, nil
 }
 
-func SendRawEmail(ctx context.Context, token *oauth2.Token, oauthConfig *oauth2.Config, encodedMIME string) error {
-
+func SendRawEmail(
+	ctx context.Context,
+	token *oauth2.Token,
+	oauthConfig *oauth2.Config,
+	encodedMIME string,
+) error {
 	tokenSource := oauthConfig.TokenSource(ctx, token)
 
 	gmailService, err := gmail.NewService(ctx, option.WithTokenSource(tokenSource))

@@ -63,5 +63,4 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 }
 
 func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
-
 }

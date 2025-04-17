@@ -9,7 +9,6 @@ import (
 func main() {
 	r := gin.Default()
 	cfg, err := config.NewAppConfig()
-
 	if err != nil {
 		panic("Failed to initialize config " + err.Error())
 	}

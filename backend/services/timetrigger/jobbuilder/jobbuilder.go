@@ -16,7 +16,10 @@ type JobConfig struct {
 
 var TestTaskOverride func(t models.TimeTrigger) gocron.Task
 
-func BuildJobConfig(t models.TimeTrigger, taskFactory func(models.TimeTrigger) gocron.Task) (JobConfig, error) {
+func BuildJobConfig(
+	t models.TimeTrigger,
+	taskFactory func(models.TimeTrigger) gocron.Task,
+) (JobConfig, error) {
 	task := taskFactory(t)
 	if TestTaskOverride != nil {
 		task = TestTaskOverride(t)
@@ -49,17 +52,21 @@ func buildDefinition(t models.TimeTrigger) (gocron.JobDefinition, error) {
 	case "daily":
 		return gocron.DailyJob(1, gocron.NewAtTimes(atTime)), nil
 	case "weekly":
-		var dayOfWeek, err = getWeekDay(t.DayOfWeek)
+		dayOfWeek, err := getWeekDay(t.DayOfWeek)
 		if err != nil {
 			return nil, err
 		}
 		return gocron.WeeklyJob(1, gocron.NewWeekdays(dayOfWeek), gocron.NewAtTimes(atTime)), nil
 	case "monthly":
-		var dayOfMonth, err = getDayOfTheMonth(t.DayOfMonth)
+		dayOfMonth, err := getDayOfTheMonth(t.DayOfMonth)
 		if err != nil {
 			return nil, err
 		}
-		return gocron.MonthlyJob(1, gocron.NewDaysOfTheMonth(dayOfMonth), gocron.NewAtTimes(atTime)), nil
+		return gocron.MonthlyJob(
+			1,
+			gocron.NewDaysOfTheMonth(dayOfMonth),
+			gocron.NewAtTimes(atTime),
+		), nil
 	default:
 		return nil, errors.New("invalid interval: " + t.Interval)
 	}

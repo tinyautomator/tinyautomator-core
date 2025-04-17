@@ -61,8 +61,14 @@ func allTriggerTestCases() map[string]schedulerTestCase {
 			valid:   false,
 		},
 		"invalid/unknown action": {
-			trigger: makeTimeTrigger(6, "daily", "play_league_of_legends", 1*time.Hour, time.Time{}),
-			valid:   false,
+			trigger: makeTimeTrigger(
+				6,
+				"daily",
+				"play_league_of_legends",
+				1*time.Hour,
+				time.Time{},
+			),
+			valid: false,
 		},
 		"invalid/time format": {
 			trigger: models.TimeTrigger{
@@ -132,6 +138,7 @@ func defaultOpts() makeTestTriggerOpt {
 		lastRun:    time.Time{},
 	}
 }
+
 func tr(id int, interval string, time time.Time, opt makeTestTriggerOpt) models.TimeTrigger {
 	if opt.action == "" {
 		opt.action = "send_email"
@@ -189,8 +196,10 @@ func getComputeFirstRunTestCases() []TimeRunCalculationTestCase {
 				dayOfWeek: int(now.Add(-2 * time.Hour).Weekday()),
 			}),
 
-			ExpectedRun: now.Add(-2 * time.Hour).Add(7 * 24 * time.Hour), // next week 2 hours in the past
-			ExpectErr:   false,
+			ExpectedRun: now.Add(-2 * time.Hour).
+				Add(7 * 24 * time.Hour),
+			// next week 2 hours in the past
+			ExpectErr: false,
 		},
 		{
 			Name: "valid/weekly/different future weekday",
@@ -226,16 +235,23 @@ func getComputeFirstRunTestCases() []TimeRunCalculationTestCase {
 			Trigger: tr(6, "monthly", now.Add(-2*time.Hour), makeTestTriggerOpt{
 				dayOfMonth: now.Add(-2 * time.Hour).Day(),
 			}),
-			ExpectedRun: now.Add(-2 * time.Hour).Add(30 * 24 * time.Hour), // next month 2 hours in the past
-			ExpectErr:   false,
+			ExpectedRun: now.Add(-2 * time.Hour).
+				Add(30 * 24 * time.Hour),
+			// next month 2 hours in the past
+			ExpectErr: false,
 		},
 
 		{
 			Name: "invalid/monthly/invalid date (Feb 31)",
 			Now:  time.Date(2025, 2, 1, 10, 0, 0, 0, time.UTC),
-			Trigger: tr(6, "monthly", time.Date(2025, 2, 1, 10, 0, 0, 0, time.UTC), makeTestTriggerOpt{
-				dayOfMonth: 31,
-			}),
+			Trigger: tr(
+				6,
+				"monthly",
+				time.Date(2025, 2, 1, 10, 0, 0, 0, time.UTC),
+				makeTestTriggerOpt{
+					dayOfMonth: 31,
+				},
+			),
 			ExpectErr: true,
 		},
 		{
@@ -279,11 +295,16 @@ func getComputeNextRunTestCases() []TimeRunCalculationTestCase {
 		},
 		{
 			Name: "valid/monthly/feb 29 non-leap year",
-			Now:  time.Date(2025, 2, 01, 10, 0, 0, 0, time.UTC),
-			Trigger: tr(5, "monthly", time.Date(2025, 2, 01, 10, 0, 0, 0, time.UTC), makeTestTriggerOpt{
-				dayOfMonth: 29,
-				lastRun:    time.Date(2025, 1, 29, 1, 0, 0, 0, time.UTC),
-			}),
+			Now:  time.Date(2025, 2, 0o1, 10, 0, 0, 0, time.UTC),
+			Trigger: tr(
+				5,
+				"monthly",
+				time.Date(2025, 2, 0o1, 10, 0, 0, 0, time.UTC),
+				makeTestTriggerOpt{
+					dayOfMonth: 29,
+					lastRun:    time.Date(2025, 1, 29, 1, 0, 0, 0, time.UTC),
+				},
+			),
 			ExpectedRun: time.Date(2025, 3, 29, 1, 0, 0, 0, time.UTC),
 			ExpectErr:   false,
 		},

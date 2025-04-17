@@ -14,7 +14,6 @@ type Worker struct {
 
 func NewWorker(pollingInterval time.Duration, repo timetrigger.Repository) (*Worker, error) {
 	service, err := NewService(repo)
-
 	if err != nil {
 		return nil, fmt.Errorf("repo cannot be empty")
 	}

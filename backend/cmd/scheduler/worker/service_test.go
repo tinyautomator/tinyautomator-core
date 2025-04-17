@@ -127,10 +127,14 @@ func TestScheduleTrigger_SchedulesValidTriggersInScheduler(t *testing.T) {
 	t.Logf("🕒 Current Time: %s", time.Now().UTC().Format(time.DateTime))
 
 	for name, tc := range getSchedulingTestCases() {
-
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			t.Logf("🔎 Case: %s | Interval=%s | TriggerAt=%s", name, tc.trigger.Interval, tc.trigger.TriggerAt)
+			t.Logf(
+				"🔎 Case: %s | Interval=%s | TriggerAt=%s",
+				name,
+				tc.trigger.Interval,
+				tc.trigger.TriggerAt,
+			)
 
 			repo := timetrigger.NewInMemoryRepository()
 			service, err := NewService(repo)
@@ -165,7 +169,11 @@ func TestScheduleTrigger_SchedulesValidTriggersInScheduler(t *testing.T) {
 }
 
 // --- Helpers ---
-func saveTrigger(t *testing.T, repo timetrigger.Repository, trigger models.TimeTrigger) models.TimeTrigger {
+func saveTrigger(
+	t *testing.T,
+	repo timetrigger.Repository,
+	trigger models.TimeTrigger,
+) models.TimeTrigger {
 	t.Helper()
 	saved, err := repo.SaveTrigger(trigger)
 	require.NoError(t, err, "Failed to save trigger")

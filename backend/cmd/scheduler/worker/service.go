@@ -27,7 +27,6 @@ type Service struct {
 func newScheduler() gocron.Scheduler {
 	logger := gocron.NewLogger(gocron.LogLevelDebug)
 	s, err := gocron.NewScheduler(gocron.WithLocation(time.UTC), gocron.WithLogger(logger))
-
 	if err != nil {
 		log.Fatalf("failed to create scheduler: %v", err)
 	}
@@ -63,7 +62,9 @@ func (s *Service) ValidateTrigger(t models.TimeTrigger) error {
 	switch t.Interval {
 	case "daily":
 		if t.DayOfWeek != 0 || t.DayOfMonth != 0 {
-			return errors.New("invalid trigger: daily triggers must not set dayOfWeek or dayOfMonth")
+			return errors.New(
+				"invalid trigger: daily triggers must not set dayOfWeek or dayOfMonth",
+			)
 		}
 
 	case "weekly":
@@ -76,7 +77,9 @@ func (s *Service) ValidateTrigger(t models.TimeTrigger) error {
 
 	case "monthly":
 		if t.DayOfMonth < 1 || t.DayOfMonth > 31 {
-			return errors.New("invalid trigger: monthly triggers must set dayOfMonth between 1 and 31")
+			return errors.New(
+				"invalid trigger: monthly triggers must set dayOfMonth between 1 and 31",
+			)
 		}
 		if t.DayOfWeek != 0 {
 			return errors.New("invalid trigger: monthly triggers must not set dayOfWeek")
@@ -143,7 +146,6 @@ type TaskFactory func(trigger models.TimeTrigger) gocron.Task
 // CreateTaskFactory returns a function that builds tasks with service access
 func (s *Service) CreateTaskFactory() TaskFactory {
 	return func(t models.TimeTrigger) gocron.Task {
-
 		if s.taskOverride != nil {
 			return s.taskOverride(t)
 		}
@@ -205,7 +207,6 @@ func (s *Service) validateJobNextRunMatch(t models.TimeTrigger, j gocron.Job) er
 			t.NextRun.Format(time.DateTime),
 			jobNextRun.Format(time.DateTime),
 		)
-
 	}
 	return nil
 }
@@ -219,7 +220,11 @@ func (s *Service) jobEventOptions(t models.TimeTrigger) gocron.JobOption {
 			log.Printf("🟡 Event: Trigger %d is starting", t.ID)
 		}),
 		gocron.AfterJobRuns(func(id uuid.UUID, name string) {
-			log.Printf("📈 Trigger ID %d executed at %s", t.ID, time.Now().UTC().Format(time.DateTime))
+			log.Printf(
+				"📈 Trigger ID %d executed at %s",
+				t.ID,
+				time.Now().UTC().Format(time.DateTime),
+			)
 		}),
 		gocron.AfterJobRunsWithError(func(id uuid.UUID, name string, err error) {
 			log.Printf("❌ Event: Trigger %d failed with error: %v", t.ID, err)
