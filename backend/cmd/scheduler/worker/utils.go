@@ -2,6 +2,7 @@ package worker
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -26,6 +27,7 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 		if baseTime.After(now) {
 			return baseTime, nil
 		}
+
 		return baseTime.Add(24 * time.Hour), nil
 
 	case "weekly":
@@ -46,6 +48,7 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 		if baseTime.After(now) {
 			return baseTime, nil
 		}
+
 		return baseTime.AddDate(0, 0, 7), nil
 
 	case "monthly":
@@ -54,9 +57,11 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 		if baseTime.Day() != t.DayOfMonth {
 			return time.Time{}, errors.New("invalid day of month: " + strconv.Itoa(t.DayOfMonth))
 		}
+
 		if baseTime.After(now) {
 			return baseTime, nil
 		}
+
 		return baseTime.AddDate(0, 1, 0), nil
 
 	default:
@@ -81,10 +86,12 @@ func (s *Service) computeNextRun(t *models.TimeTrigger) error {
 	switch t.Interval {
 	case "daily":
 		t.NextRun = t.LastRun.Add(24 * time.Hour)
+
 		return nil
 
 	case "weekly":
 		t.NextRun = t.LastRun.Add(7 * 24 * time.Hour)
+
 		return nil
 
 	case "monthly":
@@ -104,6 +111,7 @@ func (s *Service) computeNextRun(t *models.TimeTrigger) error {
 		}
 
 		t.NextRun = candidate
+
 		return nil
 	default:
 		return errors.New("invalid interval: " + t.Interval)
@@ -128,16 +136,18 @@ func parseTriggerAt(triggerAt string) (int, int, error) {
 
 	hour, err := strconv.Atoi(parts[0])
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, fmt.Errorf("unable to parse hour: %w", err)
 	}
+
 	if hour < 0 || hour > 23 {
 		return 0, 0, errors.New("hour must be between 0 and 23")
 	}
 
 	minute, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, fmt.Errorf("unable to parse minute: %w", err)
 	}
+
 	if minute < 0 || minute > 59 {
 		return 0, 0, errors.New("minute must be between 0 and 59")
 	}

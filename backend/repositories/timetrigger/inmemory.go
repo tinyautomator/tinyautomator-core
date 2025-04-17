@@ -23,6 +23,7 @@ func (r *inMemoryRepository) SaveTrigger(t models.TimeTrigger) (models.TimeTrigg
 	t.ID = r.nextID
 	r.triggers[t.ID] = t
 	r.nextID++
+
 	return t, nil
 }
 
@@ -30,7 +31,9 @@ func (r *inMemoryRepository) UpdateTrigger(t models.TimeTrigger) error {
 	if _, exists := r.triggers[t.ID]; !exists {
 		return errors.New("trigger not found")
 	}
+
 	r.triggers[t.ID] = t
+
 	return nil
 }
 
@@ -39,6 +42,7 @@ func (r *inMemoryRepository) GetTriggerByID(id uint) (models.TimeTrigger, error)
 	if !exists {
 		return models.TimeTrigger{}, errors.New("trigger not found")
 	}
+
 	return trigger, nil
 }
 

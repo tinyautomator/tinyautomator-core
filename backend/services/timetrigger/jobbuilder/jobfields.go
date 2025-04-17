@@ -14,6 +14,7 @@ func getWeekDay(dayOfWeek int) (time.Weekday, error) {
 	if dayOfWeek < 0 || dayOfWeek > 6 {
 		return 0, errors.New("dayOfWeek must be between 0 and 6")
 	}
+
 	return time.Weekday(dayOfWeek), nil
 }
 
@@ -23,5 +24,6 @@ func getDayOfTheMonth(dayOfMonth int) (int, error) {
 	if dayOfMonth < 1 || dayOfMonth > 31 {
 		return 0, errors.New("dayOfMonth must be between 1 and 31")
 	}
+
 	return dayOfMonth, nil
 }

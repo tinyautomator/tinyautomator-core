@@ -3,6 +3,7 @@ package config
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -32,17 +33,17 @@ func (cfg *appConfig) loadEnvironmentVariables() error {
 	}
 
 	if err := godotenv.Overload(".env", ".env."+cfg.env); err != nil {
-		return err
+		return fmt.Errorf("unable to load required env files: %w", err)
 	}
 
 	if cfg.env == DEVELOPMENT {
 		if err := godotenv.Overload(".env." + DEVELOPMENT + ".local"); err != nil {
-			return err
+			return fmt.Errorf("unable to load local env file: %w", err)
 		}
 	}
 
 	if err := envconfig.Process("", &cfg.envVars); err != nil {
-		return err
+		return fmt.Errorf("unable to process env vars: %w", err)
 	}
 
 	if err := cfg.envVars.validate(); err != nil {
@@ -57,7 +58,7 @@ func (cfg *appConfig) initLogger() error {
 	cfg.log.SetOutput(os.Stdout)
 
 	if logLevel, err := logrus.ParseLevel(cfg.envVars.LogLevel); err != nil {
-		return err
+		return fmt.Errorf("unable to parse log level: %w", err)
 	} else {
 		cfg.log.SetLevel(logLevel)
 	}
@@ -70,20 +71,22 @@ func (cfg *appConfig) initLogger() error {
 			FullTimestamp: true,
 		})
 	}
+
 	return nil
 }
 
 func (cfg *appConfig) initRepositories() error {
 	db, err := sql.Open("sqlite", "file:dev.db?_foreign_keys=on")
 	if err != nil {
-		cfg.GetLogger().Fatalf("Failed to open db: %v", err)
+		return fmt.Errorf("failed to open db: %w", err)
 	}
 
 	cfg.workflowRepository = repositories.NewWorkflowRepository(dao.New(db))
+
 	return nil
 }
 
-func (cfg *appConfig) initExternalServices() error {
+func (cfg *appConfig) initExternalServices() {
 	clerk.SetKey(cfg.envVars.ClerkSecretKey)
 
 	cfg.gmailOAuthConfig = &oauth2.Config{
@@ -93,5 +96,4 @@ func (cfg *appConfig) initExternalServices() error {
 		Scopes:       cfg.envVars.GmailScopes,
 		Endpoint:     google.Endpoint,
 	}
-	return nil
 }

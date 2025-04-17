@@ -26,6 +26,7 @@ func TestValidateTrigger(t *testing.T) {
 	for name, tc := range getTriggerValidationCases() {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			err := service.ValidateTrigger(tc.trigger)
 			assertValidation(t, err, tc.valid, name)
 		})
@@ -59,6 +60,7 @@ func TestComputeFirstRun(t *testing.T) {
 
 			if tc.ExpectErr {
 				require.Error(t, err, "expected an error but got none")
+
 				return
 			}
 
@@ -94,6 +96,7 @@ func TestComputeNextRun(t *testing.T) {
 			err := service.computeNextRun(&tc.Trigger)
 			if tc.ExpectErr {
 				require.Error(t, err, "expected an error but got none")
+
 				return
 			}
 
@@ -152,6 +155,7 @@ func TestScheduleTrigger_SchedulesValidTriggersInScheduler(t *testing.T) {
 				require.NotNil(t, job, "expected job to be returned for valid trigger")
 
 				time.Sleep(10 * time.Millisecond)
+
 				nextRun, err := job.NextRun()
 				require.NoError(t, err, "NextRun should be available for valid scheduled job")
 
@@ -175,13 +179,16 @@ func saveTrigger(
 	trigger models.TimeTrigger,
 ) models.TimeTrigger {
 	t.Helper()
+
 	saved, err := repo.SaveTrigger(trigger)
 	require.NoError(t, err, "Failed to save trigger")
+
 	return saved
 }
 
 func assertValidation(t *testing.T, err error, valid bool, name string) {
 	t.Helper()
+
 	if valid {
 		require.NoError(t, err, "Expected valid for %q", name)
 	} else {

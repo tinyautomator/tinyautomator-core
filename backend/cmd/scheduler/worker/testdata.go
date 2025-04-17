@@ -11,7 +11,7 @@ func makeTimeTrigger(
 	interval string,
 	action string,
 	offset time.Duration,
-	lastRun time.Time,
+	lastRun *time.Time,
 ) models.TimeTrigger {
 	scheduled := time.Now().UTC().Add(offset).Truncate(time.Minute)
 
@@ -33,7 +33,7 @@ func makeTimeTrigger(
 		DayOfMonth: dayOfMonth,
 		TriggerAt:  scheduled.Format("15:04"),
 		NextRun:    scheduled,
-		LastRun:    lastRun,
+		LastRun:    *lastRun,
 	}
 }
 
@@ -45,19 +45,19 @@ type schedulerTestCase struct {
 func allTriggerTestCases() map[string]schedulerTestCase {
 	return map[string]schedulerTestCase{
 		"valid/daily/in-30-min": {
-			trigger: makeTimeTrigger(2, "daily", "send_email", 30*time.Minute, time.Time{}),
+			trigger: makeTimeTrigger(2, "daily", "send_email", 30*time.Minute, &time.Time{}),
 			valid:   true,
 		},
 		"valid/weekly/in-2-hours": {
-			trigger: makeTimeTrigger(3, "weekly", "send_email", 2*time.Hour, time.Time{}),
+			trigger: makeTimeTrigger(3, "weekly", "send_email", 2*time.Hour, &time.Time{}),
 			valid:   true,
 		},
 		"valid/monthly/in-1-day": {
-			trigger: makeTimeTrigger(4, "monthly", "send_email", 24*time.Hour, time.Time{}),
+			trigger: makeTimeTrigger(4, "monthly", "send_email", 24*time.Hour, &time.Time{}),
 			valid:   true,
 		},
 		"invalid/unknown interval": {
-			trigger: makeTimeTrigger(5, "yearly", "send_email", 45*time.Minute, time.Time{}),
+			trigger: makeTimeTrigger(5, "yearly", "send_email", 45*time.Minute, &time.Time{}),
 			valid:   false,
 		},
 		"invalid/unknown action": {
@@ -66,7 +66,7 @@ func allTriggerTestCases() map[string]schedulerTestCase {
 				"daily",
 				"play_league_of_legends",
 				1*time.Hour,
-				time.Time{},
+				&time.Time{},
 			),
 			valid: false,
 		},
@@ -143,9 +143,11 @@ func tr(id int, interval string, time time.Time, opt makeTestTriggerOpt) models.
 	if opt.action == "" {
 		opt.action = "send_email"
 	}
+
 	if opt.dayOfWeek == -1 {
 		opt.dayOfWeek = int(time.Weekday())
 	}
+
 	if opt.dayOfMonth == -1 {
 		opt.dayOfMonth = time.Day()
 	}

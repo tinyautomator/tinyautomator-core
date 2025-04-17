@@ -17,6 +17,7 @@ func NewWorker(pollingInterval time.Duration, repo timetrigger.Repository) (*Wor
 	if err != nil {
 		return nil, fmt.Errorf("repo cannot be empty")
 	}
+
 	return &Worker{
 		service:      service,
 		pollInterval: pollingInterval,
@@ -45,7 +46,6 @@ func (w *Worker) PollAndSchedule() error {
 			}
 
 			_ = job
-
 		}
 
 		time.Sleep(w.pollInterval)

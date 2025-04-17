@@ -47,6 +47,7 @@ func ExecuteWorkflow(
 	for _, edge := range edges {
 		from, fromOk := idToIndex[edge.SourceNodeID]
 		to, toOk := idToIndex[edge.TargetNodeID]
+
 		if fromOk && toOk {
 			g.Add(from, to)
 		} else {
@@ -60,6 +61,7 @@ func ExecuteWorkflow(
 	}
 
 	cfg.GetLogger().Info("Executing workflow:")
+
 	for _, idx := range order {
 		node := indexToNode[idx]
 		// TODO: Plug in actual logic for triggers/actions/custom

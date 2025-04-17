@@ -26,10 +26,12 @@ type Service struct {
 // Return error here
 func newScheduler() gocron.Scheduler {
 	logger := gocron.NewLogger(gocron.LogLevelDebug)
+
 	s, err := gocron.NewScheduler(gocron.WithLocation(time.UTC), gocron.WithLogger(logger))
 	if err != nil {
 		log.Fatalf("failed to create scheduler: %v", err)
 	}
+
 	return s
 }
 
@@ -39,6 +41,7 @@ func NewService(r timetrigger.Repository) (*Service, error) {
 	}
 
 	s := newScheduler()
+
 	return &Service{
 		repo:      r,
 		scheduler: s,
@@ -71,6 +74,7 @@ func (s *Service) ValidateTrigger(t models.TimeTrigger) error {
 		if t.DayOfWeek < 0 || t.DayOfWeek > 6 {
 			return errors.New("invalid trigger: weekly triggers must set dayOfWeek between 0 and 6")
 		}
+
 		if t.DayOfMonth != 0 {
 			return errors.New("invalid trigger: weekly triggers must not set dayOfMonth")
 		}
@@ -81,6 +85,7 @@ func (s *Service) ValidateTrigger(t models.TimeTrigger) error {
 				"invalid trigger: monthly triggers must set dayOfMonth between 1 and 31",
 			)
 		}
+
 		if t.DayOfWeek != 0 {
 			return errors.New("invalid trigger: monthly triggers must not set dayOfWeek")
 		}
@@ -116,25 +121,28 @@ func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job, error) {
 	err := s.ValidateTrigger(t)
 	if err != nil {
 		log.Printf("Error validating trigger ID %d: %v", t.ID, err)
+
 		return nil, err
 	}
+
 	taskFactory := s.CreateTaskFactory()
 
 	jobCfg, err := jobbuilder.BuildJobConfig(t, taskFactory)
 	if err != nil {
-		log.Printf("Error building job config for trigger ID %d: %v", t.ID, err)
-		return nil, err
+		return nil, fmt.Errorf("error building job config for trigger ID %d: %w", t.ID, err)
 	}
+
 	jobCfg.Options = append(jobCfg.Options, s.jobEventOptions(t))
 
 	job, err := s.scheduler.NewJob(jobCfg.Definition, jobCfg.Task, jobCfg.Options...)
 	if err != nil {
-		log.Printf("Error creating job for trigger ID %d: %v", t.ID, err)
-		return nil, err
+		return nil, fmt.Errorf("error creating job for trigger ID %d: %w", t.ID, err)
 	}
+
 	err = s.validateJobNextRunMatch(t, job)
 	if err != nil {
 		log.Printf("⚠️ NextRun mismatch for trigger ID %d: %v", t.ID, err)
+
 		return nil, err
 	}
 
@@ -199,8 +207,9 @@ func (s *Service) completeTriggerCycle(t *models.TimeTrigger) error {
 func (s *Service) validateJobNextRunMatch(t models.TimeTrigger, j gocron.Job) error {
 	jobNextRun, err := j.NextRun()
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get the time of the next scheduled run: %w", err)
 	}
+
 	if !t.NextRun.Truncate(time.Minute).Equal(jobNextRun.Truncate(time.Minute)) {
 		return fmt.Errorf(
 			"trigger NextRun %s and job NextRun do not match %s",
@@ -208,6 +217,7 @@ func (s *Service) validateJobNextRunMatch(t models.TimeTrigger, j gocron.Job) er
 			jobNextRun.Format(time.DateTime),
 		)
 	}
+
 	return nil
 }
 

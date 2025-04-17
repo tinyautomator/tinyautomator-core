@@ -51,6 +51,7 @@ var config *appConfig
 func NewAppConfig() (AppConfig, error) {
 	if config != nil {
 		config.GetLogger().Info("Config object is already initialized")
+
 		return config, nil
 	}
 
@@ -68,11 +69,10 @@ func NewAppConfig() (AppConfig, error) {
 		return nil, err
 	}
 
-	if err := cfg.initExternalServices(); err != nil {
-		return nil, err
-	}
+	cfg.initExternalServices()
 
 	config = cfg
+
 	return cfg, nil
 }
 

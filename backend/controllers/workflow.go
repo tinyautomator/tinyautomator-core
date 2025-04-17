@@ -31,15 +31,18 @@ func NewWorkflowController(cfg config.AppConfig) *workflowController {
 
 func (c *workflowController) GetWorkflow(ctx *gin.Context) {
 	idStr := ctx.Param("id")
+
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+
 		return
 	}
 
 	workflow, err := c.repo.GetWorkflow(ctx.Request.Context(), int64(id))
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "workflow not found"})
+
 		return
 	}
 
@@ -50,12 +53,14 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 	var req dao.CreateWorkflowParams
 	if err := ctx.BindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+
 		return
 	}
 
 	workflow, err := c.repo.CreateWorkflow(ctx.Request.Context(), &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create workflow"})
+
 		return
 	}
 

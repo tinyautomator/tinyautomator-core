@@ -15,7 +15,13 @@ func RefreshToken(
 	oauthConfig oauth2.Config,
 ) (*oauth2.Token, error) {
 	ts := oauthConfig.TokenSource(ctx, &oauth2.Token{RefreshToken: refreshToken})
-	return ts.Token()
+
+	token, err := ts.Token()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get token: %w", err)
+	}
+
+	return token, nil
 }
 
 func GetUserEmail(
@@ -27,12 +33,12 @@ func GetUserEmail(
 
 	service, err := gmail.NewService(ctx, option.WithTokenSource(tokenSource))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to init gmail service: %w", err)
 	}
 
 	profile, err := service.Users.GetProfile("me").Do()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to get the user's profile: %w", err)
 	}
 
 	return profile.EmailAddress, nil

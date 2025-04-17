@@ -24,15 +24,13 @@ func BuildJobConfig(
 	if TestTaskOverride != nil {
 		task = TestTaskOverride(t)
 	}
+
 	def, err := buildDefinition(t)
 	if err != nil {
 		return JobConfig{}, err
 	}
 
-	opts, err := buildOptions(t)
-	if err != nil {
-		return JobConfig{}, err
-	}
+	opts := buildOptions(t)
 
 	return JobConfig{
 		Task:       task,
@@ -56,12 +54,14 @@ func buildDefinition(t models.TimeTrigger) (gocron.JobDefinition, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		return gocron.WeeklyJob(1, gocron.NewWeekdays(dayOfWeek), gocron.NewAtTimes(atTime)), nil
 	case "monthly":
 		dayOfMonth, err := getDayOfTheMonth(t.DayOfMonth)
 		if err != nil {
 			return nil, err
 		}
+
 		return gocron.MonthlyJob(
 			1,
 			gocron.NewDaysOfTheMonth(dayOfMonth),
@@ -72,11 +72,12 @@ func buildDefinition(t models.TimeTrigger) (gocron.JobDefinition, error) {
 	}
 }
 
-func buildOptions(t models.TimeTrigger) ([]gocron.JobOption, error) {
+func buildOptions(t models.TimeTrigger) []gocron.JobOption {
 	typeTag := "trigger-" + strconv.FormatUint(uint64(t.ID), 10)
 	actionTag := "action-" + t.Action
 	opts := []gocron.JobOption{
 		gocron.WithTags(typeTag, actionTag),
 	}
-	return opts, nil
+
+	return opts
 }

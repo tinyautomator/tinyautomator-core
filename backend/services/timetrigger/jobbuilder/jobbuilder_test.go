@@ -13,6 +13,7 @@ import (
 
 func nextFullMinute() time.Time {
 	now := time.Now().UTC()
+
 	return now.Add(1 * time.Minute).Truncate(time.Minute)
 }
 
@@ -72,6 +73,7 @@ func TestBuildJobConfig_ValidTriggers(t *testing.T) {
 			t.Log(strings.Repeat("-", 30))
 		})
 	}
+
 	t.Log("\n\n\n")
 }
 

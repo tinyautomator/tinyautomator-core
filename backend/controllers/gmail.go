@@ -40,6 +40,7 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 
 	if code == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Missing code"})
+
 		return
 	}
 
@@ -49,6 +50,7 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 			http.StatusInternalServerError,
 			gin.H{"error": "Token exchange failed", "details": err.Error()},
 		)
+
 		return
 	}
 
@@ -59,6 +61,7 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 			http.StatusInternalServerError,
 			gin.H{"error": "Could not fetch user email", "details": err.Error()},
 		)
+
 		return
 	}
 
@@ -94,6 +97,7 @@ func (c *gmailController) SendEmail(ctx *gin.Context) {
 	expiryTime, err := time.Parse(time.RFC3339Nano, req.Expiry)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid expiry format"})
+
 		return
 	}
 
@@ -110,6 +114,7 @@ func (c *gmailController) SendEmail(ctx *gin.Context) {
 			http.StatusInternalServerError,
 			gin.H{"error": "failed to encode email", "details": err.Error()},
 		)
+
 		return
 	}
 
@@ -119,6 +124,7 @@ func (c *gmailController) SendEmail(ctx *gin.Context) {
 			http.StatusInternalServerError,
 			gin.H{"error": "failed to send email", "details": err.Error()},
 		)
+
 		return
 	}
 
