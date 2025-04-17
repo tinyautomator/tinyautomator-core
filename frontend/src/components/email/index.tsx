@@ -51,13 +51,22 @@ export default function EmailIntegration() {
 
       <div className="flex-1 overflow-auto p-6">
         {connectionStatus === "error" && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Connection Error</AlertTitle>
-            <AlertDescription>
-              {errorMessage || "There was an error connecting to Gmail."}
-            </AlertDescription>
-          </Alert>
+          <div className="max-w-xl mx-auto mb-6">
+            <Alert
+              variant="destructive"
+              className="mb-6 flex flex-col items-center text-center space-y-1.5"
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive" />
+                <AlertTitle className="text-destructive font-semibold">
+                  Connection Error
+                </AlertTitle>
+              </div>
+              <AlertDescription className="text-destructive/80 text-sm">
+                {errorMessage || "There was an error connecting to Gmail."}
+              </AlertDescription>
+            </Alert>
+          </div>
         )}
 
         <div className="max-w-5xl mx-auto">
