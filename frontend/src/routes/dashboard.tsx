@@ -11,10 +11,13 @@ import WorkflowBuilder from "@/components/workflowbuilder";
 import WorkflowLibrary from "@/components/workflowlibrary";
 import EmailIntegrationView from "@/components/email";
 
-import { usePersistentView } from "@/hooks/usePersistentView";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export default function Dash() {
-  const [activeView, setActiveView] = usePersistentView("Dashboard");
+  const [activeView, setActiveView] = useLocalStorage(
+    "activeView",
+    "Dashboard",
+  );
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
