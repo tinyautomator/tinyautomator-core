@@ -27,7 +27,7 @@ type CreateWorkflowRequest struct {
 	Name  string              `json:"name"`
 	Nodes []WorkflowNodeInput `json:"nodes"`
 	Edges []WorkflowEdgeInput `json:"edges"`
-}
+} // TODO: Look up validation libraries for the backend
 
 type WorkflowNodeInput struct {
 	ID       string `json:"id"`
@@ -85,7 +85,7 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 	workflow, err := c.repo.CreateWorkflow(ctx.Request.Context(), &dao.CreateWorkflowParams{
 		Name:        req.Name,
 		Description: null.NewString("", false),
-		UserID:      "test-user",
+		UserID:      "test-user", // TODO: Update this in the future!
 	})
 	if err != nil {
 		c.log.Errorf("Workflow insert error: %v", err)
@@ -100,10 +100,10 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		node, err := c.repo.CreateWorkflowNode(ctx.Request.Context(), &dao.CreateWorkflowNodeParams{
 			WorkflowID: workflow.ID,
 			Name:       null.StringFrom(n.Data.Label),
-			Type:       n.Type,
+			Type:       "default", // Hard coded default value for now
 			Category:   n.Data.Category,
 			Service:    null.NewString("", false),
-			Config:     "{}",
+			Config:     `{"Key":"Value"}`, // Hard coded JSON string for now
 		})
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to insert node"})
@@ -118,7 +118,7 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 			XPosition:  n.Position.X,
 			YPosition:  n.Position.Y,
 			NodeLabel:  null.StringFrom(n.Data.Label),
-			NodeType:   n.Type,
+			NodeType:   "default", // Hard coded default value for now
 		})
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to insert node UI"})
