@@ -6,7 +6,6 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-
 type ScheduleRepository interface {
 	GetTriggerByID(id uint) (models.TimeTrigger, error)
 	SaveTrigger(trigger models.TimeTrigger) (models.TimeTrigger, error)

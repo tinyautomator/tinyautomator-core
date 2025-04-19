@@ -41,7 +41,6 @@ func main() {
 
 	err = w.PollAndSchedule()
 	if err != nil {
-		logger.Errorf("polling error in worker: %v", err)
-		panic(err)
+		panic(fmt.Errorf("error while polling || scheduling: %v", err))
 	}
 }

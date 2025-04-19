@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
+	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 )
 
 type inMemoryRepository struct {
@@ -12,7 +13,7 @@ type inMemoryRepository struct {
 	nextID   uint
 }
 
-func NewInMemoryRepository() Repository {
+func NewInMemoryRepository() repositories.ScheduleRepository {
 	return &inMemoryRepository{
 		triggers: make(map[uint]models.TimeTrigger),
 		nextID:   1,

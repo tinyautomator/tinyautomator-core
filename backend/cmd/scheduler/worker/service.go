@@ -149,6 +149,15 @@ func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job, error) {
 	return job, nil
 }
 
+func (s *Service) GetDueTriggers(within time.Duration) ([]models.TimeTrigger, error) {
+	triggers, err := s.repo.FetchTriggersScheduledWithinDuration(within)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch due triggers from repo: %w", err)
+	}
+
+	return triggers, nil
+}
+
 type TaskFactory func(trigger models.TimeTrigger) gocron.Task
 
 // CreateTaskFactory returns a function that builds tasks with service access
