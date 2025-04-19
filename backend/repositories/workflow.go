@@ -12,8 +12,6 @@ type WorkflowRepository interface {
 	CreateWorkflow(ctx context.Context, arg *dao.CreateWorkflowParams) (*dao.Workflow, error)
 	GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*dao.WorkflowNode, error)
 	GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*dao.WorkflowEdge, error)
-
-	// Additions
 	CreateWorkflowNode(
 		ctx context.Context,
 		arg *dao.CreateWorkflowNodeParams,

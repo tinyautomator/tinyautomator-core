@@ -30,10 +30,16 @@ type CreateWorkflowRequest struct {
 }
 
 type WorkflowNodeInput struct {
-	ID       string             `json:"id"`
-	Type     string             `json:"type"`
-	Position map[string]float64 `json:"position"`
-	Data     map[string]string  `json:"data"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Position struct {
+		X float64 `json:"x"`
+		Y float64 `json:"y"`
+	} `json:"position"`
+	Data struct {
+		Label    string `json:"label"`
+		Category string `json:"category"`
+	} `json:"data"`
 }
 
 type WorkflowEdgeInput struct {
@@ -69,23 +75,10 @@ func (c *workflowController) GetWorkflow(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, workflow)
 }
 
-func inferCategory(nodeType string) string {
-	switch nodeType {
-	case "input":
-		return "trigger"
-	case "output":
-		return "action"
-	default:
-		return "logic"
-	}
-}
-
 func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 	var req CreateWorkflowRequest
-
 	if err := ctx.BindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
-
 		return
 	}
 
@@ -95,20 +88,20 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		UserID:      "test-user",
 	})
 	if err != nil {
-		c.log.Error("Workflow insert error: %w", err)
+		c.log.Errorf("Workflow insert error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create workflow"})
 
 		return
 	}
 
-	nodeIdMap := make(map[string]int64)
+	nodeIdMap := make(map[string]int64, len(req.Nodes))
 
 	for _, n := range req.Nodes {
 		node, err := c.repo.CreateWorkflowNode(ctx.Request.Context(), &dao.CreateWorkflowNodeParams{
 			WorkflowID: workflow.ID,
-			Name:       null.StringFrom(n.Data["label"]),
+			Name:       null.StringFrom(n.Data.Label),
 			Type:       n.Type,
-			Category:   inferCategory(n.Type),
+			Category:   n.Data.Category,
 			Service:    null.NewString("", false),
 			Config:     "{}",
 		})
@@ -119,13 +112,12 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 
 		nodeIdMap[n.ID] = node.ID
 
-		// Insert layout
 		_, err = c.repo.CreateWorkflowNodeUi(ctx.Request.Context(), &dao.CreateWorkflowNodeUiParams{
 			ID:         node.ID,
 			WorkflowID: workflow.ID,
-			XPosition:  n.Position["x"],
-			YPosition:  n.Position["y"],
-			NodeLabel:  null.StringFrom(n.Data["label"]),
+			XPosition:  n.Position.X,
+			YPosition:  n.Position.Y,
+			NodeLabel:  null.StringFrom(n.Data.Label),
 			NodeType:   n.Type,
 		})
 		if err != nil {
@@ -134,7 +126,6 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		}
 	}
 
-	// 3. Create edges
 	for _, e := range req.Edges {
 		fromID, ok1 := nodeIdMap[e.Source]
 		toID, ok2 := nodeIdMap[e.Target]
@@ -155,10 +146,7 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		}
 	}
 
-	// 4. Done
-	ctx.JSON(http.StatusCreated, gin.H{
-		"id": workflow.ID,
-	})
+	ctx.JSON(http.StatusCreated, gin.H{"id": workflow.ID})
 }
 
 func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {

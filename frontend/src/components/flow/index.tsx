@@ -28,12 +28,14 @@ export default function WorkflowBuilder() {
     const { nodes, edges } = getWorkflowData.current();
 
     const payload = {
-      name: "Untitled Workflow", // Make this dynamic later
+      name: "Untitled Workflow", // TODO: Make this dynamic later
       nodes: nodes.map((n) => ({
         id: n.id,
-        type: n.type,
         position: n.position,
-        data: n.data,
+        data: {
+          label: n.data.label,
+          category: n.data.category,
+        },
       })),
       edges: edges.map((e) => ({
         id: e.id,
@@ -59,7 +61,7 @@ export default function WorkflowBuilder() {
         console.error("Save failed:", data);
       }
     } catch (err) {
-      console.error("🔥 Save error:", err);
+      console.error("Save error:", err);
     }
   };
 

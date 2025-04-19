@@ -9,6 +9,7 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
+  Position,
   type Connection,
   type Edge,
   type Node,
@@ -28,6 +29,11 @@ interface FlowCanvasProps {
   >;
 }
 
+export interface WorkflowRenderResponse {
+  nodes: Node<{ label: string; category: string }>[];
+  edges: Edge[];
+}
+
 export default function FlowCanvas({
   onSelectNode,
   nodeId,
@@ -37,7 +43,7 @@ export default function FlowCanvas({
 }: FlowCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<
-    Node<{ label: string }>
+    Node<{ label: string; category: string }>
   >([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const { screenToFlowPosition } = useReactFlow();
@@ -78,13 +84,7 @@ export default function FlowCanvas({
       const name = event.dataTransfer.getData("application/reactflow/label");
       if (!name) return;
 
-      const type: Node["type"] =
-        name === "Time Trigger"
-          ? "input"
-          : name === "Send Email"
-            ? "output"
-            : "default";
-
+      const category = name === "Time Trigger" ? "trigger" : "action";
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
@@ -94,9 +94,14 @@ export default function FlowCanvas({
         ...nds,
         {
           id: `node-${nodeId}`,
-          type,
           position,
-          data: { label: name },
+          type: "default",
+          sourcePosition: category === "trigger" ? Position.Bottom : undefined,
+          targetPosition: category === "action" ? Position.Top : undefined,
+          data: {
+            label: name,
+            category,
+          },
           style: {
             background: "#fff",
             border: "1px solid #ddd",
@@ -114,15 +119,26 @@ export default function FlowCanvas({
   );
 
   useEffect(() => {
-    if (!workflowId) return; // New/unsaved workflow — skip loading
+    if (!workflowId) return;
 
     const fetchWorkflow = async () => {
       try {
         const res = await fetch(`/api/workflows/${workflowId}/render`);
-        const data = await res.json();
+        const data: WorkflowRenderResponse = await res.json();
         if (!data.nodes || !data.edges) throw new Error("Invalid response");
 
-        setNodes(data.nodes);
+        const convertCategoryToType = (category: string): Node["type"] => {
+          if (category === "trigger") return "input";
+          if (category === "action") return "output";
+          return "default";
+        };
+
+        const formattedNodes = data.nodes.map((n) => ({
+          ...n,
+          type: convertCategoryToType(n.data.category),
+        }));
+
+        setNodes(formattedNodes);
         setEdges(data.edges);
       } catch (err) {
         console.error("Failed to load workflow graph:", err);
