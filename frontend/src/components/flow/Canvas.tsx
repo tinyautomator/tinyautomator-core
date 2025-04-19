@@ -83,7 +83,6 @@ export default function FlowCanvas({
       const name = event.dataTransfer.getData("application/reactflow/label");
       if (!name) return;
 
-      // decide category & node type
       const category = name === "Time Trigger" ? "trigger" : "action";
       const nodeType = category === "trigger" ? "input" : "output";
       const position = screenToFlowPosition({
