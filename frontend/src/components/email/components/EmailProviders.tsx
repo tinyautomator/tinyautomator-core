@@ -1,5 +1,5 @@
 import { Settings2 } from "lucide-react";
-import ProviderCard from "./ProviderCard";
+import ProviderCard from "./EmailProviderCard";
 import { GmailIcon, OutlookIcon } from "@/components/icons/EmailIcons";
 
 interface ProvidersProps {
@@ -9,7 +9,7 @@ interface ProvidersProps {
   disconnectGmail: () => Promise<void>;
 }
 
-export const Providers = ({
+export const EmailProviders = ({
   connectionStatus,
   isLoading,
   connectGmail,

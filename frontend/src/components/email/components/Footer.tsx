@@ -1,5 +1,5 @@
 import { Progress } from "@/components/ui/progress";
-import { PrivacyNote } from "../shared/PrivacyNote";
+import { PrivacyNote } from "@/components/shared/PrivacyNote";
 
 interface FooterProps {
   connectionStatus: "connected" | "not_connected" | "error" | string;

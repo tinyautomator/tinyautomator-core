@@ -1,12 +1,11 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Footer } from "@/components/email/Footer";
-import { Providers } from "@/components/email/Providers";
-import { HowItWorks } from "@/components/email/HowItWorks";
+import { Footer } from "@/components/email/components/Footer";
+import { EmailProviders } from "@/components/email/components/EmailProviders";
+import { HowItWorks } from "@/components/email/components/HowItWorks";
 import { useEmailIntegration } from "./hook";
+import { ErrorAlert } from "../shared/ErrorAlert";
 
 export default function EmailIntegration() {
   const {
@@ -44,24 +43,17 @@ export default function EmailIntegration() {
       <div className="flex-1 overflow-auto p-6">
         {connectionStatus === "error" && (
           <div className="max-w-xl mx-auto mb-6">
-            <Alert
-              variant="destructive"
-              className="mb-6 flex flex-col items-center text-center space-y-1.5"
-            >
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-destructive" />
-                <AlertTitle className="text-destructive font-semibold">
-                  Connection Error
-                </AlertTitle>
-              </div>
-              <AlertDescription className="text-destructive/80 text-sm">
-                {errorMessage || "There was an error connecting to Gmail."}
-              </AlertDescription>
-            </Alert>
+            <ErrorAlert
+              title="Connection Error"
+              message={
+                errorMessage || "There was an error connecting to Gmail."
+              }
+              centered
+            />
           </div>
         )}
 
-        <Providers
+        <EmailProviders
           connectionStatus={connectionStatus}
           isLoading={isLoading}
           connectGmail={connectGmail}

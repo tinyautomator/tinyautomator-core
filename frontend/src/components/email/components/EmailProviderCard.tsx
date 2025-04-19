@@ -13,7 +13,7 @@ export type ProviderCardProps = {
   onDisconnect?: () => Promise<void>;
 };
 
-export default function ProviderCard({
+export default function EmailProviderCard({
   name,
   description,
   icon,
