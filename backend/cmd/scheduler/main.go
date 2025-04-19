@@ -1,31 +1,46 @@
 package main
 
 import (
-	"time"
+	"fmt"
+	"os"
+	"runtime/debug"
 
 	"github.com/tinyautomator/tinyautomator-core/backend/cmd/scheduler/worker"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
-	repo "github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
 )
 
 func main() {
+	var w *worker.Worker
+
+	defer func() {
+		if r := recover(); r != nil {
+			if w != nil {
+				w.StopScheduler()
+			}
+
+			fmt.Fprintf(os.Stderr, "fatal error: %v\n", r)
+			debug.PrintStack()
+			os.Exit(1)
+		}
+	}()
+
 	cfg, err := config.NewAppConfig()
 	if err != nil {
-		panic("Failed to initialize config " + err.Error())
+		panic("failed to initialize config: " + err.Error())
 	}
 
-	cfg.GetLogger().Info("Initializing worker")
+	logger := cfg.GetLogger()
+	logger.Info("initializing worker")
 
-	worker, err := worker.NewWorker(10*time.Minute, repo.NewInMemoryRepository())
+	w, err = worker.NewWorker(cfg)
 	if err != nil {
-		cfg.GetLogger().Fatalf("Failed to create worker: %v", err)
+		panic(fmt.Errorf("failed to create worker: %w", err))
 	}
 
-	worker.StartScheduler()
-	defer worker.StopScheduler()
+	w.StartScheduler()
 
-	err = worker.PollAndSchedule()
+	err = w.PollAndSchedule()
 	if err != nil {
-		cfg.GetLogger().Fatalf("Polling error in worker: %v", err)
+		panic(fmt.Errorf("error while polling || scheduling: %v", err))
 	}
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
+	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
 )
 
@@ -175,7 +176,7 @@ func TestScheduleTrigger_SchedulesValidTriggersInScheduler(t *testing.T) {
 // --- Helpers ---
 func saveTrigger(
 	t *testing.T,
-	repo timetrigger.Repository,
+	repo repositories.ScheduleRepository,
 	trigger models.TimeTrigger,
 ) models.TimeTrigger {
 	t.Helper()

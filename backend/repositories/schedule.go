@@ -1,4 +1,4 @@
-package timetrigger
+package repositories
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-type Repository interface {
+type ScheduleRepository interface {
 	GetTriggerByID(id uint) (models.TimeTrigger, error)
 	SaveTrigger(trigger models.TimeTrigger) (models.TimeTrigger, error)
 	UpdateTrigger(trigger models.TimeTrigger) error
