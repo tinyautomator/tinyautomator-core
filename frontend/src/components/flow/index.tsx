@@ -19,6 +19,7 @@ export default function WorkflowBuilder() {
   const [nodeId, setNodeId] = useState(1);
   const [successOpen, setSuccessOpen] = useState(false);
   const [savedWorkflowId, setSavedWorkflowId] = useState<string | undefined>();
+  const [workflowName, setWorkflowName] = useState("Untitled Workflow");
 
   const getWorkflowData = useRef<() => { nodes: Node[]; edges: Edge[] }>(
     () => ({
@@ -31,7 +32,7 @@ export default function WorkflowBuilder() {
     const { nodes, edges } = getWorkflowData.current();
 
     const payload = {
-      name: "Untitled Workflow", // TODO: Make this dynamic later
+      name: workflowName,
       nodes: nodes.map((n) => ({
         id: n.id,
         position: n.position,
@@ -88,7 +89,13 @@ export default function WorkflowBuilder() {
         <div className="flex-1 bg-slate-50">
           <div className="flex h-12 items-center justify-between border-b bg-white px-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-medium">Untitled Workflow</h2>
+              <input
+                type="text"
+                value={workflowName}
+                onChange={(e) => setWorkflowName(e.target.value)}
+                placeholder="Enter workflow name..."
+                className="text-base font-semibold text-slate-800 bg-transparent border border-slate-300 rounded-md px-3 py-1 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 hover:border-slate-400 hover:shadow-md transition-all"
+              />
               <Badge variant="outline" className="text-xs">
                 Draft
               </Badge>
