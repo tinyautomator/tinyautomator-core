@@ -29,7 +29,7 @@ type EnvironmentVariables struct {
 type AppConfig interface {
 	GetEnv() string
 	GetEnvVars() EnvironmentVariables
-	GetLogger() *logrus.Logger
+	GetLogger() logrus.FieldLogger
 
 	GetWorkflowRepository() repositories.WorkflowRepository
 	GetScheduleRepository() repositories.ScheduleRepository
@@ -41,7 +41,7 @@ type appConfig struct {
 	// app
 	env     string
 	envVars EnvironmentVariables
-	log     *logrus.Logger
+	logger  logrus.FieldLogger
 
 	// repositories
 	workflowRepository repositories.WorkflowRepository
@@ -87,8 +87,8 @@ func (cfg *appConfig) GetEnvVars() EnvironmentVariables {
 	return cfg.envVars
 }
 
-func (cfg *appConfig) GetLogger() *logrus.Logger {
-	return cfg.log
+func (cfg *appConfig) GetLogger() logrus.FieldLogger {
+	return cfg.logger
 }
 
 func (cfg *appConfig) GetWorkflowRepository() repositories.WorkflowRepository {

@@ -18,14 +18,14 @@ type WorkflowController interface {
 }
 
 type workflowController struct {
-	log  *logrus.Logger
-	repo repo.WorkflowRepository
+	logger logrus.FieldLogger
+	repo   repo.WorkflowRepository
 }
 
 func NewWorkflowController(cfg config.AppConfig) *workflowController {
 	return &workflowController{
-		log:  cfg.GetLogger(),
-		repo: cfg.GetWorkflowRepository(),
+		logger: cfg.GetLogger(),
+		repo:   cfg.GetWorkflowRepository(),
 	}
 }
 
