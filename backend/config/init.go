@@ -55,23 +55,25 @@ func (cfg *appConfig) loadEnvironmentVariables() error {
 }
 
 func (cfg *appConfig) initLogger() error {
-	cfg.log = logrus.New()
-	cfg.log.SetOutput(os.Stdout)
+	logger := logrus.New()
+	logger.SetOutput(os.Stdout)
 
 	if logLevel, err := logrus.ParseLevel(cfg.envVars.LogLevel); err != nil {
 		return fmt.Errorf("unable to parse log level: %w", err)
 	} else {
-		cfg.log.SetLevel(logLevel)
+		logger.SetLevel(logLevel)
 	}
 
 	if cfg.env == PRODUCTION {
-		cfg.log.SetFormatter(&logrus.JSONFormatter{})
-		cfg.log.SetReportCaller(true)
+		logger.SetFormatter(&logrus.JSONFormatter{})
+		logger.SetReportCaller(true)
 	} else {
-		cfg.log.SetFormatter(&logrus.TextFormatter{
+		logger.SetFormatter(&logrus.TextFormatter{
 			FullTimestamp: true,
 		})
 	}
+
+	cfg.logger = logger
 
 	return nil
 }
