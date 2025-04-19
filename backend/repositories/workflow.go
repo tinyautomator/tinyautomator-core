@@ -12,6 +12,18 @@ type WorkflowRepository interface {
 	CreateWorkflow(ctx context.Context, arg *dao.CreateWorkflowParams) (*dao.Workflow, error)
 	GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*dao.WorkflowNode, error)
 	GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*dao.WorkflowEdge, error)
+	CreateWorkflowNode(
+		ctx context.Context,
+		arg *dao.CreateWorkflowNodeParams,
+	) (*dao.WorkflowNode, error)
+	CreateWorkflowNodeUi(
+		ctx context.Context,
+		arg *dao.CreateWorkflowNodeUiParams,
+	) (*dao.WorkflowNodeUi, error)
+	CreateWorkflowEdge(
+		ctx context.Context,
+		arg *dao.CreateWorkflowEdgeParams,
+	) (*dao.WorkflowEdge, error)
 }
 
 type workflowRepo struct {
@@ -65,6 +77,42 @@ func (r workflowRepo) GetWorkflowEdges(
 	}
 
 	return w, nil
+}
+
+func (r *workflowRepo) CreateWorkflowNode(
+	ctx context.Context,
+	arg *dao.CreateWorkflowNodeParams,
+) (*dao.WorkflowNode, error) {
+	n, err := r.q.CreateWorkflowNode(ctx, arg)
+	if err != nil {
+		return nil, fmt.Errorf("db error create workflow nodes: %w", err)
+	}
+
+	return n, nil
+}
+
+func (r *workflowRepo) CreateWorkflowNodeUi(
+	ctx context.Context,
+	arg *dao.CreateWorkflowNodeUiParams,
+) (*dao.WorkflowNodeUi, error) {
+	nu, err := r.q.CreateWorkflowNodeUi(ctx, arg)
+	if err != nil {
+		return nil, fmt.Errorf("db error create workflow node ui: %w", err)
+	}
+
+	return nu, nil
+}
+
+func (r *workflowRepo) CreateWorkflowEdge(
+	ctx context.Context,
+	arg *dao.CreateWorkflowEdgeParams,
+) (*dao.WorkflowEdge, error) {
+	e, err := r.q.CreateWorkflowEdge(ctx, arg)
+	if err != nil {
+		return nil, fmt.Errorf("db error create workflow edges: %w", err)
+	}
+
+	return e, nil
 }
 
 var _ WorkflowRepository = (*workflowRepo)(nil)
