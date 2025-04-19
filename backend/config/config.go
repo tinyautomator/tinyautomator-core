@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"golang.org/x/oauth2"
@@ -12,9 +14,10 @@ const (
 )
 
 type EnvironmentVariables struct {
-	LogLevel       string `envconfig:"LOG_LEVEL"        default:"INFO"`
-	ClerkSecretKey string `envconfig:"CLERK_SECRET_KEY"`
-	Port           string `envconfig:"PORT"             default:"9000"`
+	LogLevel                  string        `envconfig:"LOG_LEVEL"                       default:"INFO"`
+	ClerkSecretKey            string        `envconfig:"CLERK_SECRET_KEY"`
+	Port                      string        `envconfig:"PORT"                            default:"9000"`
+	WorkerPollIntervalMinutes time.Duration `envconfig:"WORKER_POLLING_INTERVAL_MINUTES" default:"10"`
 
 	// Gmail Variables
 	GmailClientID     string   `envconfig:"GMAIL_CLIENT_ID"`
@@ -46,13 +49,13 @@ type appConfig struct {
 	gmailOAuthConfig *oauth2.Config
 }
 
-var config *appConfig
+var cfg *appConfig
 
 func NewAppConfig() (AppConfig, error) {
-	if config != nil {
-		config.GetLogger().Info("Config object is already initialized")
+	if cfg != nil {
+		cfg.GetLogger().Info("Config object is already initialized")
 
-		return config, nil
+		return cfg, nil
 	}
 
 	cfg := &appConfig{}
@@ -70,8 +73,6 @@ func NewAppConfig() (AppConfig, error) {
 	}
 
 	cfg.initExternalServices()
-
-	config = cfg
 
 	return cfg, nil
 }
