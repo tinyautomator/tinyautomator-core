@@ -8,60 +8,101 @@ import (
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"github.com/tinyautomator/tinyautomator-core/backend/services/timetrigger/jobbuilder"
 )
 
-// Service manages the scheduling and execution of time-based triggers.
-// It coordinates between the repository, job builder, and scheduler.
-type Service struct {
+type WorkerService struct {
 	repo      repositories.ScheduleRepository
 	scheduler gocron.Scheduler
+	logger    logrus.FieldLogger
 
 	taskOverride      func(models.TimeTrigger) gocron.Task
 	onTriggerComplete func(models.TimeTrigger)
 }
 
-// Return error here
-func newScheduler() gocron.Scheduler {
-	logger := gocron.NewLogger(gocron.LogLevelDebug)
+func initScheduler(logger logrus.FieldLogger) (gocron.Scheduler, error) {
+	adapter := NewGoCronLoggerAdapter(logger)
 
-	s, err := gocron.NewScheduler(gocron.WithLocation(time.UTC), gocron.WithLogger(logger))
+	// TODO: explore timeout option as well as instrumentation options
+	s, err := gocron.NewScheduler(gocron.WithLocation(time.UTC), gocron.WithLogger(adapter))
 	if err != nil {
-		log.Fatalf("failed to create scheduler: %v", err)
+		return nil, fmt.Errorf("failed to init gocron scheduler: %w", err)
 	}
 
-	return s
+	return s, nil
 }
 
-func NewService(r repositories.ScheduleRepository) (*Service, error) {
-	if r == nil {
-		return nil, errors.New("repository cannot be nil")
+func NewWorkerService(cfg config.AppConfig) (*WorkerService, error) {
+	l := cfg.GetLogger()
+
+	s, err := initScheduler(l)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create worker service: %w", err)
 	}
 
-	s := newScheduler()
-
-	return &Service{
-		repo:      r,
+	return &WorkerService{
+		repo:      cfg.GetScheduleRepository(),
 		scheduler: s,
+		logger:    l,
 	}, nil
 }
 
-func (s *Service) Start() {
+func (s *WorkerService) Start() {
 	s.scheduler.Start()
 }
 
-func (s *Service) Shutdown() {
+func (s *WorkerService) Shutdown() {
 	if err := s.scheduler.Shutdown(); err != nil {
 		panic(err)
 	}
 }
 
-// ValidateTrigger checks that the given TimeTrigger has a valid configuration.
-// It ensures the interval, timing, and action fields are consistent and safe to schedule.
-func (s *Service) ValidateTrigger(t models.TimeTrigger) error {
-	// Check if the interval is valid
+func (s *WorkerService) ScheduleTrigger(t models.TimeTrigger) (gocron.Job, error) {
+	err := s.validateTrigger(t)
+	if err != nil {
+		s.logger.WithField("trigger_id", t.ID).Error("error validating trigger")
+		return nil, err
+	}
+
+	taskFactory := s.CreateTaskFactory()
+
+	jobCfg, err := jobbuilder.BuildJobConfig(t, taskFactory)
+	if err != nil {
+		return nil, fmt.Errorf("error building job config for trigger ID %d: %w", t.ID, err)
+	}
+
+	jobCfg.Options = append(jobCfg.Options, s.jobEventOptions(t))
+
+	job, err := s.scheduler.NewJob(jobCfg.Definition, jobCfg.Task, jobCfg.Options...)
+	if err != nil {
+		return nil, fmt.Errorf("error creating job for trigger ID %d: %w", t.ID, err)
+	}
+
+	err = s.validateJobNextRunMatch(t, job)
+	if err != nil {
+		s.logger.WithField("trigger_id", t.ID).Errorf("next run mismatch for: %v", err)
+
+		return nil, err
+	}
+
+	return job, nil
+}
+
+func (s *WorkerService) GetDueTriggers(within time.Duration) ([]models.TimeTrigger, error) {
+	triggers, err := s.repo.FetchTriggersScheduledWithinDuration(within)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch due triggers from repo: %w", err)
+	}
+
+	return triggers, nil
+}
+
+// TODO: do we validate on read/write? validate job type?
+func (s *WorkerService) validateTrigger(t models.TimeTrigger) error {
 	switch t.Interval {
 	case "daily":
 		if t.DayOfWeek != 0 || t.DayOfMonth != 0 {
@@ -93,75 +134,23 @@ func (s *Service) ValidateTrigger(t models.TimeTrigger) error {
 	default:
 		return errors.New("invalid interval: " + t.Interval)
 	}
-	// Check if the trigger time is valid
+
 	_, _, err := parseTriggerAt(t.TriggerAt)
 	if err != nil {
 		return errors.New("invalid trigger: " + t.TriggerAt + " is not a valid time format")
 	}
 
-	// Check if the next run time is valid
 	if t.NextRun.IsZero() {
 		return errors.New("invalid trigger: next run time is not set")
-	}
-
-	// Check if the action is valid
-	switch t.Action {
-	case "send_email":
-		// OK
-	default:
-		return errors.New("unsupported action: " + t.Action)
 	}
 
 	return nil
 }
 
-// ScheduleTrigger validates and schedules a new trigger for execution.
-// Returns the scheduled job or an error if validation or scheduling fails.
-func (s *Service) ScheduleTrigger(t models.TimeTrigger) (gocron.Job, error) {
-	err := s.ValidateTrigger(t)
-	if err != nil {
-		log.Printf("Error validating trigger ID %d: %v", t.ID, err)
-
-		return nil, err
-	}
-
-	taskFactory := s.CreateTaskFactory()
-
-	jobCfg, err := jobbuilder.BuildJobConfig(t, taskFactory)
-	if err != nil {
-		return nil, fmt.Errorf("error building job config for trigger ID %d: %w", t.ID, err)
-	}
-
-	jobCfg.Options = append(jobCfg.Options, s.jobEventOptions(t))
-
-	job, err := s.scheduler.NewJob(jobCfg.Definition, jobCfg.Task, jobCfg.Options...)
-	if err != nil {
-		return nil, fmt.Errorf("error creating job for trigger ID %d: %w", t.ID, err)
-	}
-
-	err = s.validateJobNextRunMatch(t, job)
-	if err != nil {
-		log.Printf("⚠️ NextRun mismatch for trigger ID %d: %v", t.ID, err)
-
-		return nil, err
-	}
-
-	return job, nil
-}
-
-func (s *Service) GetDueTriggers(within time.Duration) ([]models.TimeTrigger, error) {
-	triggers, err := s.repo.FetchTriggersScheduledWithinDuration(within)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch due triggers from repo: %w", err)
-	}
-
-	return triggers, nil
-}
-
 type TaskFactory func(trigger models.TimeTrigger) gocron.Task
 
 // CreateTaskFactory returns a function that builds tasks with service access
-func (s *Service) CreateTaskFactory() TaskFactory {
+func (s *WorkerService) CreateTaskFactory() TaskFactory {
 	return func(t models.TimeTrigger) gocron.Task {
 		if s.taskOverride != nil {
 			return s.taskOverride(t)
@@ -179,7 +168,7 @@ func (s *Service) CreateTaskFactory() TaskFactory {
 			// After execution, update the trigger state
 			err := s.completeTriggerCycle(&t)
 			if err != nil {
-				log.Printf("⚠️ Failed to update trigger lifecycle for ID %d: %v", t.ID, err)
+				log.Printf("failed to update trigger lifecycle for ID %d: %v", t.ID, err)
 			}
 		})
 	}
@@ -188,7 +177,7 @@ func (s *Service) CreateTaskFactory() TaskFactory {
 // completeTriggerCycle handles the full post-execution lifecycle of a trigger.
 // It marks the trigger as executed, computes the next scheduled run, updates
 // the repository, and notifies the optional onTriggerComplete test hook.
-func (s *Service) completeTriggerCycle(t *models.TimeTrigger) error {
+func (s *WorkerService) completeTriggerCycle(t *models.TimeTrigger) error {
 	log.Printf("Completing trigger cycle for ID %d (Action: %s)", t.ID, t.Action)
 
 	s.markTriggerExecuted(t)
@@ -213,7 +202,7 @@ func (s *Service) completeTriggerCycle(t *models.TimeTrigger) error {
 // validateJobNextRunMatch compares the expected NextRun time from the trigger
 // with the actual scheduled NextRun time of the gocron job. It returns an error
 // if the values do not match (to the nearest minute), ensuring scheduling consistency.
-func (s *Service) validateJobNextRunMatch(t models.TimeTrigger, j gocron.Job) error {
+func (s *WorkerService) validateJobNextRunMatch(t models.TimeTrigger, j gocron.Job) error {
 	jobNextRun, err := j.NextRun()
 	if err != nil {
 		return fmt.Errorf("unable to get the time of the next scheduled run: %w", err)
@@ -233,7 +222,7 @@ func (s *Service) validateJobNextRunMatch(t models.TimeTrigger, j gocron.Job) er
 // jobEventOptions returns a JobOption that attaches event listeners to a gocron job.
 // These listeners log job lifecycle events: start, success, and failure.
 // Useful for observability and lightweight debugging.
-func (s *Service) jobEventOptions(t models.TimeTrigger) gocron.JobOption {
+func (s *WorkerService) jobEventOptions(t models.TimeTrigger) gocron.JobOption {
 	return gocron.WithEventListeners(
 		gocron.BeforeJobRuns(func(id uuid.UUID, name string) {
 			log.Printf("🟡 Event: Trigger %d is starting", t.ID)
