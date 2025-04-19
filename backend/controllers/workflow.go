@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -90,20 +89,18 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		return
 	}
 
-	// 1. Create the workflow
 	workflow, err := c.repo.CreateWorkflow(ctx.Request.Context(), &dao.CreateWorkflowParams{
 		Name:        req.Name,
 		Description: null.NewString("", false),
 		UserID:      "test-user",
 	})
 	if err != nil {
-		fmt.Println("🔥 Workflow insert error:", err)
+		c.log.Error("Workflow insert error: %w", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create workflow"})
 
 		return
 	}
 
-	// 2. Create each node and node UI
 	nodeIdMap := make(map[string]int64)
 
 	for _, n := range req.Nodes {
