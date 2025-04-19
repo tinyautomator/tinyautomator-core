@@ -10,7 +10,6 @@ export const useEmailIntegration = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Replace with real check later
     setConnectionStatus("disconnected");
   }, []);
 

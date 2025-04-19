@@ -1,4 +1,3 @@
-// src/components/Providers.tsx
 import { Settings2 } from "lucide-react";
 import ProviderCard from "./ProviderCard";
 import { GmailIcon, OutlookIcon } from "@/components/icons/EmailIcons";

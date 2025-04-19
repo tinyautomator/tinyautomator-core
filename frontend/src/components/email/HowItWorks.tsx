@@ -1,4 +1,3 @@
-// src/components/email/HowItWorks.tsx
 import {
   Card,
   CardContent,

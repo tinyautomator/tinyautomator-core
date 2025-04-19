@@ -1,4 +1,3 @@
-// src/components/Footer.tsx
 import { Shield } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -10,7 +9,6 @@ export const Footer = ({ connectionStatus }: FooterProps) => {
   return (
     <div className="border-t">
       <div className="max-w-5xl mx-auto p-4 space-y-6">
-        {/* Privacy Note */}
         <div className="p-4 bg-amber-50 rounded-lg text-sm text-amber-800 flex items-start gap-2">
           <Shield className="h-4 w-4 mt-0.5 text-amber-600 flex-shrink-0" />
           <div>
@@ -22,7 +20,6 @@ export const Footer = ({ connectionStatus }: FooterProps) => {
           </div>
         </div>
 
-        {/* Connection Status */}
         <div>
           <div className="text-xs text-muted-foreground mb-2">
             Connection Status

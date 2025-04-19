@@ -19,7 +19,6 @@ export default function EmailIntegration() {
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header */}
       <div className="bg-white border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
@@ -42,7 +41,6 @@ export default function EmailIntegration() {
         </div>
       </div>
 
-      {/* Body */}
       <div className="flex-1 overflow-auto p-6">
         {connectionStatus === "error" && (
           <div className="max-w-xl mx-auto mb-6">
@@ -73,7 +71,6 @@ export default function EmailIntegration() {
         <HowItWorks />
       </div>
 
-      {/* Footer */}
       <Footer connectionStatus={connectionStatus} />
     </div>
   );
