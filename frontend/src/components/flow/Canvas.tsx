@@ -1,7 +1,6 @@
-// components/flow/FlowCanvas.tsx
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   Background,
   Controls,
@@ -20,12 +19,21 @@ interface FlowCanvasProps {
   onSelectNode: (node: Node<{ label: string }>) => void;
   nodeId: number;
   setNodeId: (cb: (prev: number) => number) => void;
+  workflowId?: number;
+  getWorkflowData?: React.MutableRefObject<
+    () => {
+      nodes: Node[];
+      edges: Edge[];
+    }
+  >;
 }
 
 export default function FlowCanvas({
   onSelectNode,
   nodeId,
   setNodeId,
+  workflowId,
+  getWorkflowData,
 }: FlowCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<
@@ -104,6 +112,34 @@ export default function FlowCanvas({
     },
     [nodeId, screenToFlowPosition, setNodes, setNodeId],
   );
+
+  useEffect(() => {
+    if (!workflowId) return; // New/unsaved workflow — skip loading
+
+    const fetchWorkflow = async () => {
+      try {
+        const res = await fetch(`/api/workflows/${workflowId}/render`);
+        const data = await res.json();
+        if (!data.nodes || !data.edges) throw new Error("Invalid response");
+
+        setNodes(data.nodes);
+        setEdges(data.edges);
+      } catch (err) {
+        console.error("Failed to load workflow graph:", err);
+      }
+    };
+
+    fetchWorkflow();
+  }, [workflowId, setNodes, setEdges]);
+
+  useEffect(() => {
+    if (!getWorkflowData) return;
+
+    getWorkflowData.current = () => ({
+      nodes,
+      edges,
+    });
+  }, [getWorkflowData, nodes, edges]);
 
   return (
     <div className="h-[calc(100%-3rem)] w-full" ref={reactFlowWrapper}>

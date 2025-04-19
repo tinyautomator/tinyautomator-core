@@ -13,18 +13,20 @@ import (
 
 const createWorkflow = `-- name: CreateWorkflow :one
 INSERT INTO workflow (
+  user_id,
   name,
   description,
   created_at,
   updated_at
 )
 VALUES (
-  ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+  ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
 RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
 `
 
 type CreateWorkflowParams struct {
+	UserID      string      `json:"user_id"`
 	Name        string      `json:"name"`
 	Description null.String `json:"description"`
 }
@@ -32,17 +34,18 @@ type CreateWorkflowParams struct {
 // CreateWorkflow
 //
 //	INSERT INTO workflow (
+//	  user_id,
 //	  name,
 //	  description,
 //	  created_at,
 //	  updated_at
 //	)
 //	VALUES (
-//	  ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+//	  ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 //	)
 //	RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
 func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error) {
-	row := q.db.QueryRowContext(ctx, createWorkflow, arg.Name, arg.Description)
+	row := q.db.QueryRowContext(ctx, createWorkflow, arg.UserID, arg.Name, arg.Description)
 	var i Workflow
 	err := row.Scan(
 		&i.ID,
@@ -53,6 +56,161 @@ func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.LastRunAt,
+	)
+	return &i, err
+}
+
+const createWorkflowEdge = `-- name: CreateWorkflowEdge :one
+INSERT INTO workflow_edge (
+  workflow_id,
+  source_node_id,
+  target_node_id
+)
+VALUES (
+  ?, ?, ?
+)
+RETURNING workflow_id, source_node_id, target_node_id
+`
+
+type CreateWorkflowEdgeParams struct {
+	WorkflowID   int64 `json:"workflow_id"`
+	SourceNodeID int64 `json:"source_node_id"`
+	TargetNodeID int64 `json:"target_node_id"`
+}
+
+// CreateWorkflowEdge
+//
+//	INSERT INTO workflow_edge (
+//	  workflow_id,
+//	  source_node_id,
+//	  target_node_id
+//	)
+//	VALUES (
+//	  ?, ?, ?
+//	)
+//	RETURNING workflow_id, source_node_id, target_node_id
+func (q *Queries) CreateWorkflowEdge(ctx context.Context, arg *CreateWorkflowEdgeParams) (*WorkflowEdge, error) {
+	row := q.db.QueryRowContext(ctx, createWorkflowEdge, arg.WorkflowID, arg.SourceNodeID, arg.TargetNodeID)
+	var i WorkflowEdge
+	err := row.Scan(&i.WorkflowID, &i.SourceNodeID, &i.TargetNodeID)
+	return &i, err
+}
+
+const createWorkflowNode = `-- name: CreateWorkflowNode :one
+INSERT INTO workflow_node (
+  workflow_id,
+  name,
+  type,
+  category,
+  service,
+  config
+)
+VALUES (
+  ?, ?, ?, ?, ?, ?
+)
+RETURNING id, workflow_id, name, type, category, service, config
+`
+
+type CreateWorkflowNodeParams struct {
+	WorkflowID int64       `json:"workflow_id"`
+	Name       null.String `json:"name"`
+	Type       string      `json:"type"`
+	Category   string      `json:"category"`
+	Service    null.String `json:"service"`
+	Config     string      `json:"config"`
+}
+
+// CreateWorkflowNode
+//
+//	INSERT INTO workflow_node (
+//	  workflow_id,
+//	  name,
+//	  type,
+//	  category,
+//	  service,
+//	  config
+//	)
+//	VALUES (
+//	  ?, ?, ?, ?, ?, ?
+//	)
+//	RETURNING id, workflow_id, name, type, category, service, config
+func (q *Queries) CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNodeParams) (*WorkflowNode, error) {
+	row := q.db.QueryRowContext(ctx, createWorkflowNode,
+		arg.WorkflowID,
+		arg.Name,
+		arg.Type,
+		arg.Category,
+		arg.Service,
+		arg.Config,
+	)
+	var i WorkflowNode
+	err := row.Scan(
+		&i.ID,
+		&i.WorkflowID,
+		&i.Name,
+		&i.Type,
+		&i.Category,
+		&i.Service,
+		&i.Config,
+	)
+	return &i, err
+}
+
+const createWorkflowNodeUi = `-- name: CreateWorkflowNodeUi :one
+INSERT INTO workflow_node_ui (
+  id,
+  workflow_id,
+  x_position,
+  y_position,
+  node_label,
+  node_type
+)
+VALUES (
+  ?, ?, ?, ?, ?, ?
+)
+RETURNING id, workflow_id, x_position, y_position, node_label, node_type
+`
+
+type CreateWorkflowNodeUiParams struct {
+	ID         int64       `json:"id"`
+	WorkflowID int64       `json:"workflow_id"`
+	XPosition  float64     `json:"x_position"`
+	YPosition  float64     `json:"y_position"`
+	NodeLabel  null.String `json:"node_label"`
+	NodeType   string      `json:"node_type"`
+}
+
+// CreateWorkflowNodeUi
+//
+//	INSERT INTO workflow_node_ui (
+//	  id,
+//	  workflow_id,
+//	  x_position,
+//	  y_position,
+//	  node_label,
+//	  node_type
+//	)
+//	VALUES (
+//	  ?, ?, ?, ?, ?, ?
+//	)
+//	RETURNING id, workflow_id, x_position, y_position, node_label, node_type
+func (q *Queries) CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error) {
+	row := q.db.QueryRowContext(ctx, createWorkflowNodeUi,
+		arg.ID,
+		arg.WorkflowID,
+		arg.XPosition,
+		arg.YPosition,
+		arg.NodeLabel,
+		arg.NodeType,
+	)
+	var i WorkflowNodeUi
+	err := row.Scan(
+		&i.ID,
+		&i.WorkflowID,
+		&i.XPosition,
+		&i.YPosition,
+		&i.NodeLabel,
+		&i.NodeType,
 	)
 	return &i, err
 }

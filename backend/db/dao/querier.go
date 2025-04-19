@@ -12,16 +12,59 @@ type Querier interface {
 	//CreateWorkflow
 	//
 	//  INSERT INTO workflow (
+	//    user_id,
 	//    name,
 	//    description,
 	//    created_at,
 	//    updated_at
 	//  )
 	//  VALUES (
-	//    ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+	//    ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 	//  )
 	//  RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
 	CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error)
+	//CreateWorkflowEdge
+	//
+	//  INSERT INTO workflow_edge (
+	//    workflow_id,
+	//    source_node_id,
+	//    target_node_id
+	//  )
+	//  VALUES (
+	//    ?, ?, ?
+	//  )
+	//  RETURNING workflow_id, source_node_id, target_node_id
+	CreateWorkflowEdge(ctx context.Context, arg *CreateWorkflowEdgeParams) (*WorkflowEdge, error)
+	//CreateWorkflowNode
+	//
+	//  INSERT INTO workflow_node (
+	//    workflow_id,
+	//    name,
+	//    type,
+	//    category,
+	//    service,
+	//    config
+	//  )
+	//  VALUES (
+	//    ?, ?, ?, ?, ?, ?
+	//  )
+	//  RETURNING id, workflow_id, name, type, category, service, config
+	CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNodeParams) (*WorkflowNode, error)
+	//CreateWorkflowNodeUi
+	//
+	//  INSERT INTO workflow_node_ui (
+	//    id,
+	//    workflow_id,
+	//    x_position,
+	//    y_position,
+	//    node_label,
+	//    node_type
+	//  )
+	//  VALUES (
+	//    ?, ?, ?, ?, ?, ?
+	//  )
+	//  RETURNING id, workflow_id, x_position, y_position, node_label, node_type
+	CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error)
 	//GetWorkflow
 	//
 	//  SELECT id, user_id, name, description, is_active, created_at, updated_at, last_run_at FROM workflow
