@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
-	"github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
 )
 
 // --- Unit Tests ---
@@ -20,7 +20,8 @@ import (
 // - supported action types
 // - proper NextRun value set
 func TestValidateTrigger(t *testing.T) {
-	service, err := NewService(timetrigger.NewInMemoryRepository())
+	cfg, _ := config.NewAppConfig()
+	service, err := NewWorkerService(cfg)
 
 	require.NoError(t, err)
 
@@ -28,7 +29,7 @@ func TestValidateTrigger(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := service.ValidateTrigger(tc.trigger)
+			err := service.validateTrigger(tc.trigger)
 			assertValidation(t, err, tc.valid, name)
 		})
 	}
@@ -81,7 +82,8 @@ func TestComputeNextRun(t *testing.T) {
 
 	testCases := getComputeNextRunTestCases()
 
-	service, err := NewService(timetrigger.NewInMemoryRepository())
+	cfg, _ := config.NewAppConfig()
+	service, err := NewWorkerService(cfg)
 	require.NoError(t, err)
 
 	defer func() {
@@ -140,8 +142,8 @@ func TestScheduleTrigger_SchedulesValidTriggersInScheduler(t *testing.T) {
 				tc.trigger.TriggerAt,
 			)
 
-			repo := timetrigger.NewInMemoryRepository()
-			service, err := NewService(repo)
+			cfg, _ := config.NewAppConfig()
+			service, err := NewWorkerService(cfg)
 			require.NoError(t, err)
 
 			service.Start()

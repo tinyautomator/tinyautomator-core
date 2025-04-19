@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -9,19 +10,19 @@ import (
 )
 
 type Worker struct {
-	service      *Service
+	service      *WorkerService
 	pollInterval time.Duration
 	logger       logrus.FieldLogger
 }
 
 func NewWorker(cfg config.AppConfig) (*Worker, error) {
-	service, err := NewService(cfg.GetScheduleRepository())
+	s, err := NewWorkerService(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init worker service: %w", err)
 	}
 
 	return &Worker{
-		service:      service,
+		service:      s,
 		pollInterval: cfg.GetEnvVars().WorkerPollIntervalMinutes,
 		logger:       cfg.GetLogger(),
 	}, nil
@@ -35,7 +36,7 @@ func (w *Worker) StopScheduler() {
 	w.service.Shutdown()
 }
 
-func (w *Worker) PollAndSchedule() error {
+func (w *Worker) PollAndSchedule(ctx context.Context) error {
 	for {
 		triggersDueSoon, err := w.service.GetDueTriggers(w.pollInterval)
 		if err != nil {
@@ -52,7 +53,7 @@ func (w *Worker) PollAndSchedule() error {
 			// TODO: wire executor logic and update the log to have job specific fields for monitoring
 			_ = job
 
-			w.logger.WithField("trigger_id", trigger.ID).Info("Trigger scheduled successfully")
+			w.logger.WithField("trigger_id", trigger.ID).Info("trigger scheduled successfully")
 		}
 
 		time.Sleep(w.pollInterval)

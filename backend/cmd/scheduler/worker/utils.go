@@ -73,7 +73,7 @@ func ComputeFirstRun(t models.TimeTrigger) (time.Time, error) {
 // It uses the LastRun value to determine the next interval.
 // This function is only called after a trigger has been executed,
 // so it assumes LastRun is set and accurate.
-func (s *Service) computeNextRun(t *models.TimeTrigger) error {
+func (s *WorkerService) computeNextRun(t *models.TimeTrigger) error {
 	now := time.Now().UTC()
 
 	if t.LastRun.After(now.Add(1 * time.Minute)) {
@@ -121,7 +121,7 @@ func (s *Service) computeNextRun(t *models.TimeTrigger) error {
 // updateLastRun updates the LastRun field of a TimeTrigger to the current NextRun value.
 // Since this function is called after the trigger has been executed,
 // it sets LastRun to the time when the trigger was last executed.
-func (s *Service) markTriggerExecuted(t *models.TimeTrigger) {
+func (s *WorkerService) markTriggerExecuted(t *models.TimeTrigger) {
 	// Promote current NextRun to LastRun for rescheduling
 	t.LastRun = t.NextRun
 }
