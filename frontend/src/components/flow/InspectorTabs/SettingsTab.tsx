@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,8 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Eye, Plus } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { Eye } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -16,59 +17,59 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
-import {
-  replaceVariables,
-  emailTemplates,
-  availableVariables,
-} from "../utils/emailTemplates";
+import { replaceVariables, emailTemplates } from "./email/utils/emailTemplates";
 import type { Node } from "@xyflow/react";
+
+import { ManualEmailInput } from "./email/ManualEmailInput";
+import { CsvEmailInput } from "./email/CsvEmailInput";
+import { EmailComposerFields } from "./email/EmailComposerFields";
+import { useEmailManager } from "./email/hooks/useEmailManager";
+import { useEmailComposer } from "./email/hooks/useEmailComposer";
 
 interface SettingsTabProps {
   node: Node<{ label: string }>;
 }
 
-const MAX_CHARS = 2500;
+const MAX_PREVIEW_EMAILS = 3;
 
 export default function SettingsTab({ node }: SettingsTabProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("custom");
-  const [EmailTo, setEmailTo] = useState("");
-  const [emailSubject, setEmailSubject] = useState("");
-  const [emailBody, setEmailBody] = useState("");
+  const {
+    isLoading,
+    isDragging,
+    error,
+    setIsDragging,
+    handleCsvFile,
+    emails,
+    emailString,
+    inputMode,
+    setInputModeWithReset,
+    addEmails,
+    clearEmails,
+  } = useEmailManager();
+
+  const { subject, setSubject, body, setBody, template, setTemplate } =
+    useEmailComposer();
+
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleTemplateChange = (id: string) => {
-    const template = emailTemplates.find((t) => t.id === id);
-    if (!template) return;
-    setSelectedTemplate(id);
-    setEmailTo(template.to);
-    setEmailSubject(template.subject);
-    setEmailBody(template.body);
+    const templateData = emailTemplates.find((t) => t.id === id);
+    if (!templateData) return;
+
+    setTemplate(id);
+    clearEmails();
+    addEmails(templateData.to.split(","));
+    setSubject(templateData.subject);
+    setBody(templateData.body);
   };
 
-  const insertVariable = (variableId: string) => {
-    const variable = `{{${variableId}}}`;
-    const textarea = document.getElementById(
-      "email-body",
-    ) as HTMLTextAreaElement;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newText =
-        textarea.value.slice(0, start) + variable + textarea.value.slice(end);
-      setEmailBody(newText);
-      setTimeout(() => {
-        textarea.focus();
-        textarea.selectionStart = textarea.selectionEnd =
-          start + variable.length;
-      }, 0);
-    } else {
-      setEmailBody((prev) => prev + variable);
-    }
+  const formatPreviewEmails = (emails: string): string => {
+    const emailList = emails.split(/,\s*/).filter(Boolean);
+    if (emailList.length <= MAX_PREVIEW_EMAILS) return emails;
+
+    return `${emailList.slice(0, MAX_PREVIEW_EMAILS).join(", ")} ... (${
+      emailList.length - MAX_PREVIEW_EMAILS
+    } more)`;
   };
 
   return (
@@ -78,10 +79,7 @@ export default function SettingsTab({ node }: SettingsTabProps) {
           {/* Template dropdown */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Template</label>
-            <Select
-              value={selectedTemplate}
-              onValueChange={handleTemplateChange}
-            >
+            <Select value={template} onValueChange={handleTemplateChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a template" />
               </SelectTrigger>
@@ -94,68 +92,67 @@ export default function SettingsTab({ node }: SettingsTabProps) {
               </SelectContent>
             </Select>
           </div>
-          {/* To input */}
+
+          {/* Recipient Input Mode */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">To</label>
-            <input
-              type="email"
-              value={EmailTo}
-              onChange={(e) => setEmailTo(e.target.value)}
-              className="w-full border p-2 rounded-md text-sm"
-              placeholder="recipient@example.com"
-            />
+            <label className="text-sm font-medium">Recipient Input Mode</label>
+            <Select value={inputMode} onValueChange={setInputModeWithReset}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select input mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manual">Manual Entry</SelectItem>
+                <SelectItem value="csv">Upload CSV</SelectItem>
+                <SelectItem value="google" disabled>
+                  Import from Google Sheets (coming soon)
+                </SelectItem>
+                <SelectItem value="contacts" disabled>
+                  Use Saved Contact List (coming soon)
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Subject input + Preview */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex justify-between">
-              Subject
-            </label>
-            <input
-              type="text"
-              value={emailSubject}
-              onChange={(e) => setEmailSubject(e.target.value)}
-              className="w-full border p-2 rounded-md text-sm"
-              placeholder="Email subject"
+          {/* Conditional input based on selected mode */}
+          {inputMode === "manual" && (
+            <ManualEmailInput
+              emails={emails.map((e) => e.email)}
+              onEmailsChange={(newList) => {
+                clearEmails();
+                addEmails(newList);
+              }}
             />
-          </div>
+          )}
 
-          {/* Body with variable insert */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex justify-between">
-              Body
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-6 gap-1">
-                    <Plus className="h-3.5 w-3.5" />
-                    Add Variable
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56">
-                  {availableVariables.map((v) => (
-                    <button
-                      key={v.id}
-                      onClick={() => insertVariable(v.id)}
-                      className="block w-full text-left px-3 py-1 hover:bg-slate-100 text-sm"
-                    >
-                      {v.name}
-                      <span className="text-xs text-muted-foreground ml-1">{`{{${v.id}}}`}</span>
-                    </button>
-                  ))}
-                </PopoverContent>
-              </Popover>
-            </label>
-            <Textarea
-              id="email-body"
-              className="w-full min-h-[150px] text-sm font-mono"
-              maxLength={MAX_CHARS}
-              value={emailBody}
-              onChange={(e) => setEmailBody(e.target.value)}
+          {inputMode === "csv" && (
+            <CsvEmailInput
+              emails={emails.map((e) => e.email)}
+              addEmails={addEmails}
+              clearEmails={clearEmails}
+              isLoading={isLoading}
+              error={error}
+              isDragging={isDragging}
+              setIsDragging={setIsDragging}
+              handleCsvFile={handleCsvFile}
             />
-            <p className="text-xs text-right text-muted-foreground">
-              {MAX_CHARS - emailBody.length} characters remaining
+          )}
+
+          {inputMode === "google" && (
+            <p className="text-sm text-slate-500 italic">
+              Import from Google Sheets will be available soon.
             </p>
-          </div>
+          )}
+
+          {inputMode === "contacts" && (
+            <p className="text-sm text-slate-500 italic">
+              Saved Contact Lists will be available soon.
+            </p>
+          )}
+
+          {/* Subject + Body input */}
+          <EmailComposerFields />
+
+          {/* Preview Dialog */}
           <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="h-6">
@@ -169,12 +166,13 @@ export default function SettingsTab({ node }: SettingsTabProps) {
               </DialogHeader>
               <div className="p-4 bg-white border rounded-md space-y-2 text-sm">
                 <p>
-                  <strong>To:</strong> {replaceVariables(EmailTo)}
+                  <strong>To:</strong>{" "}
+                  {formatPreviewEmails(replaceVariables(emailString))}
                 </p>
                 <p>
-                  <strong>Subject:</strong> {replaceVariables(emailSubject)}
+                  <strong>Subject:</strong> {replaceVariables(subject)}
                 </p>
-                <p>{replaceVariables(emailBody)}</p>
+                <p>{replaceVariables(body)}</p>
               </div>
             </DialogContent>
           </Dialog>
