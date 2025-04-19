@@ -9,14 +9,14 @@ import (
 	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
-	"github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
+	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"github.com/tinyautomator/tinyautomator-core/backend/services/timetrigger/jobbuilder"
 )
 
 // Service manages the scheduling and execution of time-based triggers.
 // It coordinates between the repository, job builder, and scheduler.
 type Service struct {
-	repo      timetrigger.Repository
+	repo      repositories.ScheduleRepository
 	scheduler gocron.Scheduler
 
 	taskOverride      func(models.TimeTrigger) gocron.Task
@@ -35,7 +35,7 @@ func newScheduler() gocron.Scheduler {
 	return s
 }
 
-func NewService(r timetrigger.Repository) (*Service, error) {
+func NewService(r repositories.ScheduleRepository) (*Service, error) {
 	if r == nil {
 		return nil, errors.New("repository cannot be nil")
 	}

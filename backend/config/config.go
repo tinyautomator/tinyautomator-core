@@ -32,6 +32,7 @@ type AppConfig interface {
 	GetLogger() *logrus.Logger
 
 	GetWorkflowRepository() repositories.WorkflowRepository
+	GetScheduleRepository() repositories.ScheduleRepository
 
 	GetGmailOAuthConfig() *oauth2.Config
 }
@@ -44,6 +45,7 @@ type appConfig struct {
 
 	// repositories
 	workflowRepository repositories.WorkflowRepository
+	scheduleRepository repositories.ScheduleRepository
 
 	// oauth
 	gmailOAuthConfig *oauth2.Config
@@ -91,6 +93,10 @@ func (cfg *appConfig) GetLogger() *logrus.Logger {
 
 func (cfg *appConfig) GetWorkflowRepository() repositories.WorkflowRepository {
 	return cfg.workflowRepository
+}
+
+func (cfg *appConfig) GetScheduleRepository() repositories.ScheduleRepository {
+	return cfg.scheduleRepository
 }
 
 func (cfg *appConfig) GetGmailOAuthConfig() *oauth2.Config {

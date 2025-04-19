@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
+	"github.com/tinyautomator/tinyautomator-core/backend/config"
 )
 
 type Worker struct {
@@ -12,15 +12,15 @@ type Worker struct {
 	pollInterval time.Duration
 }
 
-func NewWorker(pollingInterval time.Duration, repo timetrigger.Repository) (*Worker, error) {
-	service, err := NewService(repo)
+func NewWorker(cfg config.AppConfig) (*Worker, error) {
+	service, err := NewService(cfg.GetScheduleRepository())
 	if err != nil {
 		return nil, fmt.Errorf("repo cannot be empty")
 	}
 
 	return &Worker{
 		service:      service,
-		pollInterval: pollingInterval,
+		pollInterval: cfg.GetEnvVars().WorkerPollIntervalMinutes,
 	}, nil
 }
 

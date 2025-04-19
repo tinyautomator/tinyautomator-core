@@ -7,7 +7,6 @@ import (
 
 	"github.com/tinyautomator/tinyautomator-core/backend/cmd/scheduler/worker"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
-	repo "github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
 )
 
 func main() {
@@ -33,10 +32,7 @@ func main() {
 	logger := cfg.GetLogger()
 	logger.Info("initializing worker")
 
-	w, err = worker.NewWorker(
-		cfg.GetEnvVars().WorkerPollIntervalMinutes,
-		repo.NewInMemoryRepository(),
-	)
+	w, err = worker.NewWorker(cfg)
 	if err != nil {
 		panic(fmt.Errorf("failed to create worker: %w", err))
 	}
