@@ -17,7 +17,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { replaceVariables, emailTemplates } from "./email/utils/emailTemplates";
+import { replaceVariables } from "./email/utils/emailTemplates";
 import type { Node } from "@xyflow/react";
 
 import { ManualEmailInput } from "./email/ManualEmailInput";
@@ -47,21 +47,9 @@ export default function SettingsTab({ node }: SettingsTabProps) {
     clearEmails,
   } = useEmailManager();
 
-  const { subject, setSubject, body, setBody, template, setTemplate } =
-    useEmailComposer();
+  const { subject, body } = useEmailComposer();
 
   const [previewOpen, setPreviewOpen] = useState(false);
-
-  const handleTemplateChange = (id: string) => {
-    const templateData = emailTemplates.find((t) => t.id === id);
-    if (!templateData) return;
-
-    setTemplate(id);
-    clearEmails();
-    addEmails(templateData.to.split(","));
-    setSubject(templateData.subject);
-    setBody(templateData.body);
-  };
 
   const formatPreviewEmails = (emails: string): string => {
     const emailList = emails.split(/,\s*/).filter(Boolean);
@@ -76,23 +64,6 @@ export default function SettingsTab({ node }: SettingsTabProps) {
     <div className="space-y-4">
       {node.data.label === "Send Email" && (
         <>
-          {/* Template dropdown */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Template</label>
-            <Select value={template} onValueChange={handleTemplateChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a template" />
-              </SelectTrigger>
-              <SelectContent>
-                {emailTemplates.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>
-                    {template.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Recipient Input Mode */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Recipient Input Mode</label>
