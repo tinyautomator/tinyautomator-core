@@ -2,9 +2,9 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Node } from "@xyflow/react";
-import SettingsTab from "./InspectorTabs/SettingsTab";
-import AdvancedTab from "./InspectorTabs/AdvancedTab";
-import LogsTab from "./InspectorTabs/LogsTab";
+import SettingsTab from "./tabs/settings/SettingsTab";
+import AdvancedTab from "./tabs/AdvancedTab";
+import LogsTab from "./tabs/LogsTab";
 import { ChevronsLeftIcon } from "lucide-react";
 import { useState } from "react";
 

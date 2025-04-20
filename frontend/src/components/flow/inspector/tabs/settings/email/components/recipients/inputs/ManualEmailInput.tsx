@@ -1,6 +1,7 @@
 "use client";
 
-import { EmailChips } from "./EmailChips";
+import { EmailChips } from "../shared/EmailChips";
+import { validateEmail } from "../../../utils/emailValidation";
 
 interface ManualEmailInputProps {
   emails: string[];
@@ -18,6 +19,7 @@ export function ManualEmailInput({
         emails={emails}
         onEmailsChange={onEmailsChange}
         placeholder="Add recipients (comma separated)"
+        validateEmail={validateEmail}
       />
     </div>
   );

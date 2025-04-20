@@ -1,13 +1,13 @@
-// hooks/useEmailManager.ts
+"use client";
+
 import { useState, useCallback } from "react";
-import { parseEmailCsv } from "../utils/csvParser";
 import { validateEmail } from "../utils/emailValidation";
 
 export type InputMode = "manual" | "csv" | "google" | "contacts";
 export type EmailItem = { email: string; isValid: boolean; isNew?: boolean };
 
-export function useEmailManager(initialEmails = "") {
-  const [emails, setEmails] = useState<EmailItem[]>(
+export function useRecipientList(initialEmails = "") {
+  const [recipientList, setRecipientList] = useState<EmailItem[]>(
     initialEmails
       .split(",")
       .map((e) => e.trim())
@@ -18,19 +18,16 @@ export function useEmailManager(initialEmails = "") {
       })),
   );
   const [inputMode, setInputMode] = useState<InputMode>("manual");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   const getValidEmailString = useCallback(() => {
-    return emails
+    return recipientList
       .filter((e) => e.isValid)
       .map((e) => e.email)
       .join(", ");
-  }, [emails]);
+  }, [recipientList]);
 
-  const addEmails = useCallback((newEmails: string[]) => {
-    setEmails((prev) => {
+  const addRecipients = useCallback((newEmails: string[]) => {
+    setRecipientList((prev) => {
       const existingEmails = new Set(prev.map((e) => e.email));
 
       const cleanedNew = newEmails
@@ -52,57 +49,43 @@ export function useEmailManager(initialEmails = "") {
     });
   }, []);
 
-  const removeEmail = useCallback((emailToRemove: string) => {
+  const removeRecipient = useCallback((emailToRemove: string) => {
     const normalized = emailToRemove.trim().toLowerCase();
-    setEmails((prev) => prev.filter((e) => e.email !== normalized));
+    setRecipientList((prev) => prev.filter((e) => e.email !== normalized));
   }, []);
 
-  const clearEmails = useCallback(() => {
-    setEmails([]);
+  const clearRecipients = useCallback(() => {
+    setRecipientList([]);
   }, []);
 
-  const handleCsvFile = useCallback(
-    async (file: File) => {
-      setIsLoading(true);
-      setError(null);
-
-      const result = await parseEmailCsv(file);
-
-      if (result.error) {
-        setError(result.error);
-      } else if (result.emails.length) {
-        addEmails(result.emails);
-      }
-
-      setIsLoading(false);
+  const updateRecipients = useCallback(
+    (emails: string[]) => {
+      clearRecipients();
+      addRecipients(emails);
     },
-    [addEmails],
+    [clearRecipients, addRecipients],
   );
 
   // Change input mode with automatic cleanup
   const setInputModeWithReset = useCallback(
     (mode: InputMode) => {
       if (mode !== inputMode) {
-        clearEmails();
+        clearRecipients();
       }
       setInputMode(mode);
     },
-    [inputMode, clearEmails],
+    [inputMode, clearRecipients],
   );
 
   return {
-    emails,
+    recipientList,
     emailString: getValidEmailString(),
     inputMode,
-    isLoading,
-    error,
-    isDragging,
-    setEmails,
-    addEmails,
-    removeEmail,
-    clearEmails,
-    handleCsvFile,
+    setRecipientList,
+    addRecipients,
+    removeRecipient,
+    clearRecipients,
+    updateRecipients,
     setInputModeWithReset,
-    setIsDragging,
   };
 }

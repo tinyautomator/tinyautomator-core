@@ -1,4 +1,3 @@
-// components/EmailChips.tsx
 "use client";
 
 import type React from "react";
@@ -7,7 +6,7 @@ import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useCallback, useState, useRef, useEffect } from "react";
-import { validateEmail as defaultValidateEmail } from "./utils/emailValidation";
+import { validateEmail as defaultValidateEmail } from "../../../utils/emailValidation";
 
 interface EmailChipsProps {
   emails: string[];
