@@ -6,6 +6,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 )
 
 type Querier interface {
@@ -67,21 +68,38 @@ type Querier interface {
 	CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error)
 	//GetWorkflow
 	//
-	//  SELECT id, user_id, name, description, is_active, created_at, updated_at, last_run_at FROM workflow
+	//  SELECT id, user_id, name, description, is_active, created_at, updated_at
+	//  FROM workflow
 	//  WHERE id = ?
 	GetWorkflow(ctx context.Context, id int64) (*Workflow, error)
 	//GetWorkflowEdges
 	//
-	//  SELECT workflow_id, source_node_id, target_node_id
+	//  SELECT workflow_id,
+	//    source_node_id,
+	//    target_node_id
 	//  FROM workflow_edge
 	//  WHERE workflow_id = ?
 	GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*WorkflowEdge, error)
 	//GetWorkflowNodes
 	//
-	//  SELECT id, workflow_id, name, type, category, service, config
+	//  SELECT id,
+	//    workflow_id,
+	//    name,
+	//    type,
+	//    category,
+	//    service,
+	//    config
 	//  FROM workflow_node
 	//  WHERE workflow_id = ?
 	GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*WorkflowNode, error)
+	//UpdateScheduleTimes
+	//
+	//  UPDATE workflow_schedule
+	//  SET next_run_at = ?,
+	//      last_run_at = ?,
+	//      updated_at = ?
+	//  WHERE id = ?
+	UpdateScheduleTimes(ctx context.Context, arg *UpdateScheduleTimesParams) error
 }
 
 var _ Querier = (*Queries)(nil)

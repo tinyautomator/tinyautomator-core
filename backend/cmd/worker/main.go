@@ -9,12 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/tinyautomator/tinyautomator-core/backend/cmd/scheduler/worker"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 )
 
 func main() {
-	var w *worker.Worker
+	var w *Worker
 
 	// TODO: this was a good idea from claude; figure it out better
 	ctx, cancel := context.WithCancel(context.Background())
@@ -58,11 +57,7 @@ func main() {
 	logger := cfg.GetLogger()
 	logger.Info("initializing worker")
 
-	w, err = worker.NewWorker(cfg)
-	if err != nil {
-		panic(fmt.Errorf("failed to create worker: %w", err))
-	}
-
+	w = NewWorker(cfg)
 	w.StartScheduler()
 
 	err = w.PollAndSchedule(ctx)

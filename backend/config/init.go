@@ -13,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
-	"github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	_ "modernc.org/sqlite"
@@ -85,7 +84,7 @@ func (cfg *appConfig) initRepositories() error {
 	}
 
 	cfg.workflowRepository = repositories.NewWorkflowRepository(dao.New(db))
-	cfg.scheduleRepository = timetrigger.NewInMemoryRepository()
+	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(dao.New(db))
 
 	return nil
 }

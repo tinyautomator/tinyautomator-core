@@ -1,5 +1,6 @@
 -- name: GetWorkflow :one
-SELECT * FROM workflow
+SELECT *
+FROM workflow
 WHERE id = ?;
 
 -- name: CreateWorkflow :one
@@ -17,12 +18,20 @@ RETURNING id, user_id, name, description, is_active, created_at, updated_at, las
 
 
 -- name: GetWorkflowNodes :many
-SELECT id, workflow_id, name, type, category, service, config
+SELECT id,
+  workflow_id,
+  name,
+  type,
+  category,
+  service,
+  config
 FROM workflow_node
 WHERE workflow_id = ?;
 
 -- name: GetWorkflowEdges :many
-SELECT workflow_id, source_node_id, target_node_id
+SELECT workflow_id,
+  source_node_id,
+  target_node_id
 FROM workflow_edge
 WHERE workflow_id = ?;
 
