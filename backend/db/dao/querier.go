@@ -22,7 +22,7 @@ type Querier interface {
 	//  VALUES (
 	//    ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 	//  )
-	//  RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
+	//  RETURNING id, user_id, name, description, is_active, created_at, updated_at
 	CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error)
 	//CreateWorkflowEdge
 	//
@@ -66,6 +66,34 @@ type Querier interface {
 	//  )
 	//  RETURNING id, workflow_id, x_position, y_position, node_label, node_type
 	CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error)
+	//CreateWorkflowSchedule
+	//
+	//  INSERT INTO workflow_schedule (
+	//          id,
+	//          workflow_id,
+	//          schedule_type,
+	//          next_run_at,
+	//          last_run_at,
+	//          status,
+	//          created_at,
+	//          updated_at
+	//      )
+	//  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	//  RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
+	CreateWorkflowSchedule(ctx context.Context, arg *CreateWorkflowScheduleParams) (*WorkflowSchedule, error)
+	//DeleteWorkflowSchedule
+	//
+	//  DELETE FROM workflow_schedule
+	//  WHERE id = ?
+	DeleteWorkflowSchedule(ctx context.Context, id string) error
+	//GetDueWorkflowSchedules
+	//
+	//  SELECT id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
+	//  FROM workflow_schedule
+	//  WHERE next_run_at IS NOT NULL
+	//      AND next_run_at <= ?
+	//      AND status = 'active'
+	GetDueWorkflowSchedules(ctx context.Context, nextRunAt sql.NullInt64) ([]*WorkflowSchedule, error)
 	//GetWorkflow
 	//
 	//  SELECT id, user_id, name, description, is_active, created_at, updated_at

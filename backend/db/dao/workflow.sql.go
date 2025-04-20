@@ -13,7 +13,6 @@ import (
 
 const createWorkflow = `-- name: CreateWorkflow :one
 INSERT INTO workflow (
-<<<<<<< HEAD
   user_id,
   name,
   description,
@@ -23,16 +22,7 @@ INSERT INTO workflow (
 VALUES (
   ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
-=======
-    name,
-    description,
-    created_at,
-    updated_at
-  )
-VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 RETURNING id, user_id, name, description, is_active, created_at, updated_at
->>>>>>> 4cf8a88 (refactor worker)
 `
 
 type CreateWorkflowParams struct {
@@ -44,7 +34,6 @@ type CreateWorkflowParams struct {
 // CreateWorkflow
 //
 //	INSERT INTO workflow (
-<<<<<<< HEAD
 //	  user_id,
 //	  name,
 //	  description,
@@ -54,16 +43,7 @@ type CreateWorkflowParams struct {
 //	VALUES (
 //	  ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 //	)
-//	RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
-=======
-//	    name,
-//	    description,
-//	    created_at,
-//	    updated_at
-//	  )
-//	VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 //	RETURNING id, user_id, name, description, is_active, created_at, updated_at
->>>>>>> 4cf8a88 (refactor worker)
 func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error) {
 	row := q.db.QueryRowContext(ctx, createWorkflow, arg.UserID, arg.Name, arg.Description)
 	var i Workflow

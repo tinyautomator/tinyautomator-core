@@ -14,7 +14,7 @@ INSERT INTO workflow (
 VALUES (
   ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at;
+RETURNING id, user_id, name, description, is_active, created_at, updated_at;
 
 
 -- name: GetWorkflowNodes :many
