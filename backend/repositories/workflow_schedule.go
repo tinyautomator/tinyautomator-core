@@ -12,7 +12,7 @@ import (
 
 type WorkflowScheduleRepository interface {
 	GetWorkflowSchedules(ctx context.Context, within time.Duration) ([]*dao.WorkflowSchedule, error)
-	UpdateNextRun(ctx context.Context, id string, nextRun int64, lastRun int64) error
+	UpdateNextRun(ctx context.Context, id string, nextRun *int64, lastRun int64) error
 	Create(
 		ctx context.Context,
 		arg *dao.CreateWorkflowScheduleParams,
@@ -35,7 +35,7 @@ func (r *workflowScheduleRepo) GetWorkflowSchedules(
 	now := time.Now().UTC()
 	cutoff := now.Add(within).UnixMilli()
 
-	s, err := r.q.GetDueWorkflowSchedules(ctx, sql.NullInt64{Int64: cutoff})
+	s, err := r.q.GetDueWorkflowSchedules(ctx, sql.NullInt64{Int64: cutoff, Valid: true})
 	if err != nil {
 		return nil, fmt.Errorf("db error get workflow schedules: %w", err)
 	}
@@ -46,14 +46,31 @@ func (r *workflowScheduleRepo) GetWorkflowSchedules(
 func (r *workflowScheduleRepo) UpdateNextRun(
 	ctx context.Context,
 	id string,
-	nextRunAt int64,
+	nextRunAt *int64,
 	lastRunAt int64,
 ) error {
-	if err := r.q.UpdateScheduleTimes(ctx, &dao.UpdateScheduleTimesParams{
+	status := "active"
+
+	var nextRunAtNullable sql.NullInt64
+
+	if nextRunAt != nil {
+		nextRunAtNullable = sql.NullInt64{
+			Int64: *nextRunAt,
+			Valid: true,
+		}
+	} else {
+		status = "completed"
+		nextRunAtNullable = sql.NullInt64{
+			Valid: false,
+		}
+	}
+
+	if err := r.q.UpdateWorkflowSchedule(ctx, &dao.UpdateWorkflowScheduleParams{
 		ID:        id,
-		NextRunAt: sql.NullInt64{Int64: nextRunAt},
-		LastRunAt: sql.NullInt64{Int64: lastRunAt},
+		NextRunAt: nextRunAtNullable,
+		LastRunAt: sql.NullInt64{Int64: lastRunAt, Valid: true},
 		UpdatedAt: time.Now().UTC().UnixMilli(),
+		Status:    status,
 	}); err != nil {
 		return fmt.Errorf("db error update workflow schedule: %w", err)
 	}
@@ -66,6 +83,7 @@ func (r *workflowScheduleRepo) Create(
 	arg *dao.CreateWorkflowScheduleParams,
 ) (*dao.WorkflowSchedule, error) {
 	arg.ID = uuid.New().String()
+	arg.Status = "active"
 	arg.CreatedAt = time.Now().UTC().UnixMilli()
 	arg.UpdatedAt = time.Now().UTC().UnixMilli()
 

@@ -1,9 +1,13 @@
 package scheduler
 
-import "github.com/tinyautomator/tinyautomator-core/backend/db/dao"
+import (
+	"context"
+
+	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
+)
 
 type WorkflowScheduler interface {
-	Schedule(schedule *dao.WorkflowSchedule) error
+	Schedule(ctx context.Context, ws *dao.WorkflowSchedule) error
 	Unschedule(scheduleID int64) error
 	Start() error
 	Shutdown() error

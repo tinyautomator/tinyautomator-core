@@ -136,33 +136,37 @@ func (q *Queries) GetDueWorkflowSchedules(ctx context.Context, nextRunAt sql.Nul
 	return items, nil
 }
 
-const updateScheduleTimes = `-- name: UpdateScheduleTimes :exec
+const updateWorkflowSchedule = `-- name: UpdateWorkflowSchedule :exec
 UPDATE workflow_schedule
 SET next_run_at = ?,
     last_run_at = ?,
-    updated_at = ?
+    updated_at = ?,
+    status = ?
 WHERE id = ?
 `
 
-type UpdateScheduleTimesParams struct {
+type UpdateWorkflowScheduleParams struct {
 	NextRunAt sql.NullInt64 `json:"next_run_at"`
 	LastRunAt sql.NullInt64 `json:"last_run_at"`
 	UpdatedAt int64         `json:"updated_at"`
+	Status    string        `json:"status"`
 	ID        string        `json:"id"`
 }
 
-// UpdateScheduleTimes
+// UpdateWorkflowSchedule
 //
 //	UPDATE workflow_schedule
 //	SET next_run_at = ?,
 //	    last_run_at = ?,
-//	    updated_at = ?
+//	    updated_at = ?,
+//	    status = ?
 //	WHERE id = ?
-func (q *Queries) UpdateScheduleTimes(ctx context.Context, arg *UpdateScheduleTimesParams) error {
-	_, err := q.db.ExecContext(ctx, updateScheduleTimes,
+func (q *Queries) UpdateWorkflowSchedule(ctx context.Context, arg *UpdateWorkflowScheduleParams) error {
+	_, err := q.db.ExecContext(ctx, updateWorkflowSchedule,
 		arg.NextRunAt,
 		arg.LastRunAt,
 		arg.UpdatedAt,
+		arg.Status,
 		arg.ID,
 	)
 	return err

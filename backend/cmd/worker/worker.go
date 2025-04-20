@@ -38,8 +38,12 @@ func (w *Worker) PollAndSchedule(ctx context.Context) error {
 			return fmt.Errorf("error getting due triggers: %w", err)
 		}
 
+		w.logger.WithField("length", len(ws)).Info("fetched workflows to schedule")
+
 		for _, ws := range ws {
-			if err := w.service.ScheduleWorkflow(ws); err != nil {
+			w.logger.WithField("workflow_schedule_id", ws.ID).Info("scheduling workflow")
+
+			if err := w.service.ScheduleWorkflow(ctx, ws); err != nil {
 				w.logger.WithField("workflow_schedule_id", ws.ID).
 					Errorf("failed to schedule workflow: %v", err)
 			}

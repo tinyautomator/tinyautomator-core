@@ -58,14 +58,14 @@ func (s *WorkerService) GetWorkflowsToSchedule(
 	return ws, nil
 }
 
-func (s *WorkerService) ScheduleWorkflow(ws *dao.WorkflowSchedule) error {
+func (s *WorkerService) ScheduleWorkflow(ctx context.Context, ws *dao.WorkflowSchedule) error {
 	err := s.validateSchedule(ws)
 	if err != nil {
 		s.logger.WithField("schedule_id", ws.ID).WithError(err).Error("failed to validate schedule")
 		return err
 	}
 
-	if err := s.scheduler.Schedule(ws); err != nil {
+	if err := s.scheduler.Schedule(ctx, ws); err != nil {
 		return fmt.Errorf("error scheduling workflow: %w", err)
 	}
 

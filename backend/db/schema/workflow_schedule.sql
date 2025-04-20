@@ -7,7 +7,7 @@ CREATE TABLE workflow_schedule (
     next_run_at INTEGER,
     last_run_at INTEGER,
     status TEXT NOT NULL DEFAULT 'active' CHECK (
-        status IN ('active', 'paused', 'archived')
+        status IN ('active', 'paused', 'completed')
     ),
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL

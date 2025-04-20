@@ -33,7 +33,6 @@ func (l *gocronLoggerAdapter) Error(msg string, args ...any) {
 	l.Logger.WithFields(toLogrusFields(args...)).Error(msg)
 }
 
-// toLogrusFields converts flat key/value pairs into logrus.Fields
 func toLogrusFields(args ...any) logrus.Fields {
 	fields := logrus.Fields{}
 

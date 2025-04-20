@@ -120,14 +120,15 @@ type Querier interface {
 	//  FROM workflow_node
 	//  WHERE workflow_id = ?
 	GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*WorkflowNode, error)
-	//UpdateScheduleTimes
+	//UpdateWorkflowSchedule
 	//
 	//  UPDATE workflow_schedule
 	//  SET next_run_at = ?,
 	//      last_run_at = ?,
-	//      updated_at = ?
+	//      updated_at = ?,
+	//      status = ?
 	//  WHERE id = ?
-	UpdateScheduleTimes(ctx context.Context, arg *UpdateScheduleTimesParams) error
+	UpdateWorkflowSchedule(ctx context.Context, arg *UpdateWorkflowScheduleParams) error
 }
 
 var _ Querier = (*Queries)(nil)

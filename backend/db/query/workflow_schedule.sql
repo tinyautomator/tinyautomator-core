@@ -5,11 +5,12 @@ WHERE next_run_at IS NOT NULL
     AND next_run_at <= ?
     AND status = 'active';
 
--- name: UpdateScheduleTimes :exec
+-- name: UpdateWorkflowSchedule :exec
 UPDATE workflow_schedule
 SET next_run_at = ?,
     last_run_at = ?,
-    updated_at = ?
+    updated_at = ?,
+    status = ?
 WHERE id = ?;
 
 -- name: CreateWorkflowSchedule :one

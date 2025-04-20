@@ -41,15 +41,32 @@ func (r *inMemoryRepository) GetWorkflowSchedules(
 func (r *inMemoryRepository) UpdateNextRun(
 	ctx context.Context,
 	id string,
-	nextRun int64,
-	lastRun int64,
+	nextRunAt *int64,
+	lastRunAt int64,
 ) error {
+	status := "active"
+
+	var nextRunAtNullable sql.NullInt64
+
+	if nextRunAt != nil {
+		nextRunAtNullable = sql.NullInt64{
+			Int64: *nextRunAt,
+			Valid: true,
+		}
+	} else {
+		status = "completed"
+		nextRunAtNullable = sql.NullInt64{
+			Valid: false,
+		}
+	}
+
 	if _, exists := r.schedules[id]; !exists {
 		return errors.New("update: schedule not found")
 	}
 
-	r.schedules[id].NextRunAt = sql.NullInt64{Int64: nextRun}
-	r.schedules[id].LastRunAt = sql.NullInt64{Int64: lastRun}
+	r.schedules[id].Status = status
+	r.schedules[id].NextRunAt = nextRunAtNullable
+	r.schedules[id].LastRunAt = sql.NullInt64{Int64: lastRunAt}
 	r.schedules[id].UpdatedAt = time.Now().UTC().UnixMilli()
 
 	return nil

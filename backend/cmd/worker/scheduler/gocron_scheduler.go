@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -9,11 +10,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
+	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 )
 
 type GocronScheduler struct {
-	scheduler gocron.Scheduler
-	logger    logrus.FieldLogger
+	scheduler            gocron.Scheduler
+	logger               logrus.FieldLogger
+	workflowScheduleRepo repositories.WorkflowScheduleRepository
 }
 
 // TODO: explore timeout option as well as instrumentation options
@@ -29,8 +32,9 @@ func NewGoCronScheduler(cfg config.AppConfig) (*GocronScheduler, error) {
 	}
 
 	return &GocronScheduler{
-		scheduler: s,
-		logger:    cfg.GetLogger(),
+		scheduler:            s,
+		logger:               cfg.GetLogger(),
+		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
 	}, nil
 }
 
@@ -48,16 +52,17 @@ func (g *GocronScheduler) Shutdown() error {
 	return nil
 }
 
-func (g *GocronScheduler) Schedule(ws *dao.WorkflowSchedule) error {
+func (g *GocronScheduler) Schedule(ctx context.Context, ws *dao.WorkflowSchedule) error {
 	def, err := g.buildJobDefinitionFromSchedule(ws)
 	if err != nil {
 		return err
 	}
 
-	opts := g.buildJobOptionsFromSchedule(ws)
+	opts := g.buildJobOptionsFromSchedule(ctx, ws)
 
 	task := gocron.NewTask(func() {
 		// TODO: implement executor logic here
+		g.logger.Info("fake calling executor here")
 	})
 
 	_, err = g.scheduler.NewJob(def, task, opts...)
@@ -108,7 +113,10 @@ func (g *GocronScheduler) buildJobDefinitionFromSchedule(
 	}
 }
 
-func (g *GocronScheduler) buildJobOptionsFromSchedule(ws *dao.WorkflowSchedule) []gocron.JobOption {
+func (g *GocronScheduler) buildJobOptionsFromSchedule(
+	ctx context.Context,
+	ws *dao.WorkflowSchedule,
+) []gocron.JobOption {
 	u, err := uuid.Parse(ws.ID)
 	if err != nil {
 		// TODO: do we surface an error here?
@@ -119,10 +127,10 @@ func (g *GocronScheduler) buildJobOptionsFromSchedule(ws *dao.WorkflowSchedule) 
 
 	eventListenerOpt := gocron.WithEventListeners(
 		gocron.BeforeJobRuns(func(id uuid.UUID, name string) {
-			g.logger.Info("event: workflow id %d is starting", ws.WorkflowID)
+			g.logger.Infof("event: workflow id %d is starting", ws.WorkflowID)
 		}),
 		gocron.AfterJobRuns(func(id uuid.UUID, name string) {
-			g.logger.Info(
+			g.logger.Infof(
 				"workflow id %d executed at %s",
 				ws.WorkflowID,
 				time.Now().UTC().Format(time.DateTime),
@@ -135,7 +143,37 @@ func (g *GocronScheduler) buildJobOptionsFromSchedule(ws *dao.WorkflowSchedule) 
 				}
 
 				if j.ID() == u {
-					// do something
+					var nextRunMs *int64
+
+					nextRun, err := j.NextRun()
+					if err != nil {
+						g.logger.WithError(err).Error("next run error from gocron job")
+					}
+
+					lastRun, err := j.LastRun()
+					if err != nil {
+						g.logger.WithError(err).Error("last run error from gocron job")
+					}
+
+					g.logger.WithFields(logrus.Fields{
+						"nextRun":     nextRun.Format(time.DateTime),
+						"nextRuntoMs": nextRun.UnixMilli(),
+						"lastRun":     lastRun.Format(time.DateTime),
+						"lastRuntoMs": lastRun.UnixMilli(),
+					}).Info("post processing job")
+
+					if !nextRun.IsZero() {
+						ms := nextRun.UnixMilli()
+						nextRunMs = &ms
+					}
+
+					g.logger.WithFields(logrus.Fields{
+						"nextRunIsNil": nextRun.IsZero(),
+					}).Debug("debug logs")
+
+					if err := g.workflowScheduleRepo.UpdateNextRun(ctx, u.String(), nextRunMs, lastRun.UnixMilli()); err != nil {
+						g.logger.WithError(err).Error("wut")
+					}
 				}
 			}
 		}),
