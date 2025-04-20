@@ -9,9 +9,15 @@ import Sidebar from "@/components/sidebar";
 import Dashboard from "@/components/dashboard";
 import WorkflowBuilder from "@/components/workflowbuilder";
 import WorkflowLibrary from "@/components/workflowlibrary";
+import EmailIntegrationView from "@/components/email-integration";
+
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export default function Dash() {
-  const [activeView, setActiveView] = useState("Dashboard");
+  const [activeView, setActiveView] = useLocalStorage(
+    "activeView",
+    "Dashboard",
+  );
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -40,6 +46,7 @@ export default function Dash() {
               {activeView === "Dashboard" && <Dashboard />}
               {activeView === "Workflow Builder" && <WorkflowBuilder />}
               {activeView === "Workflow Library" && <WorkflowLibrary />}
+              {activeView == "Email" && <EmailIntegrationView />}
             </main>
           </div>
         </div>
