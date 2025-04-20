@@ -4,7 +4,6 @@ CREATE TABLE workflow (
     name TEXT NOT NULL,
     description TEXT,
     is_active BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_run_at DATETIME
+    created_at INTEGER,
+    updated_at INTEGER
 );
