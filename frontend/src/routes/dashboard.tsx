@@ -9,7 +9,7 @@ import Sidebar from "@/components/sidebar";
 import Dashboard from "@/components/dashboard";
 import WorkflowBuilder from "@/components/workflowbuilder";
 import WorkflowLibrary from "@/components/workflowlibrary";
-import EmailIntegrationView from "@/components/email";
+import EmailIntegrationView from "@/components/email-integration";
 
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
