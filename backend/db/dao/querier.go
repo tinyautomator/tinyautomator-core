@@ -20,7 +20,7 @@ type Querier interface {
 	//    updated_at
 	//  )
 	//  VALUES (
-	//    ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+	//    ?, ?, ?, ?, ?
 	//  )
 	//  RETURNING id, user_id, name, description, is_active, created_at, updated_at
 	CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error)
@@ -54,17 +54,15 @@ type Querier interface {
 	//CreateWorkflowNodeUi
 	//
 	//  INSERT INTO workflow_node_ui (
-	//    id,
-	//    workflow_id,
 	//    x_position,
 	//    y_position,
 	//    node_label,
 	//    node_type
 	//  )
 	//  VALUES (
-	//    ?, ?, ?, ?, ?, ?
+	//    ?, ?, ?, ?
 	//  )
-	//  RETURNING id, workflow_id, x_position, y_position, node_label, node_type
+	//  RETURNING id, x_position, y_position, node_label, node_type
 	CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error)
 	//CreateWorkflowSchedule
 	//

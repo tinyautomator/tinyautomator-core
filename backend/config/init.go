@@ -83,7 +83,7 @@ func (cfg *appConfig) initRepositories() error {
 		return fmt.Errorf("failed to open db: %w", err)
 	}
 
-	cfg.workflowRepository = repositories.NewWorkflowRepository(dao.New(db))
+	cfg.workflowRepository = repositories.NewWorkflowRepository(dao.New(db), db)
 	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(dao.New(db))
 
 	return nil

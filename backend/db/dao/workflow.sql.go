@@ -7,6 +7,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 
 	null "github.com/guregu/null/v6"
 )
@@ -20,15 +21,17 @@ INSERT INTO workflow (
   updated_at
 )
 VALUES (
-  ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+  ?, ?, ?, ?, ?
 )
 RETURNING id, user_id, name, description, is_active, created_at, updated_at
 `
 
 type CreateWorkflowParams struct {
-	UserID      string      `json:"user_id"`
-	Name        string      `json:"name"`
-	Description null.String `json:"description"`
+	UserID      string        `json:"user_id"`
+	Name        string        `json:"name"`
+	Description null.String   `json:"description"`
+	CreatedAt   sql.NullInt64 `json:"created_at"`
+	UpdatedAt   sql.NullInt64 `json:"updated_at"`
 }
 
 // CreateWorkflow
@@ -41,11 +44,17 @@ type CreateWorkflowParams struct {
 //	  updated_at
 //	)
 //	VALUES (
-//	  ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+//	  ?, ?, ?, ?, ?
 //	)
 //	RETURNING id, user_id, name, description, is_active, created_at, updated_at
 func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error) {
-	row := q.db.QueryRowContext(ctx, createWorkflow, arg.UserID, arg.Name, arg.Description)
+	row := q.db.QueryRowContext(ctx, createWorkflow,
+		arg.UserID,
+		arg.Name,
+		arg.Description,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
 	var i Workflow
 	err := row.Scan(
 		&i.ID,
@@ -157,46 +166,38 @@ func (q *Queries) CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNod
 
 const createWorkflowNodeUi = `-- name: CreateWorkflowNodeUi :one
 INSERT INTO workflow_node_ui (
-  id,
-  workflow_id,
   x_position,
   y_position,
   node_label,
   node_type
 )
 VALUES (
-  ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?
 )
-RETURNING id, workflow_id, x_position, y_position, node_label, node_type
+RETURNING id, x_position, y_position, node_label, node_type
 `
 
 type CreateWorkflowNodeUiParams struct {
-	ID         int64       `json:"id"`
-	WorkflowID int64       `json:"workflow_id"`
-	XPosition  float64     `json:"x_position"`
-	YPosition  float64     `json:"y_position"`
-	NodeLabel  null.String `json:"node_label"`
-	NodeType   string      `json:"node_type"`
+	XPosition float64     `json:"x_position"`
+	YPosition float64     `json:"y_position"`
+	NodeLabel null.String `json:"node_label"`
+	NodeType  string      `json:"node_type"`
 }
 
 // CreateWorkflowNodeUi
 //
 //	INSERT INTO workflow_node_ui (
-//	  id,
-//	  workflow_id,
 //	  x_position,
 //	  y_position,
 //	  node_label,
 //	  node_type
 //	)
 //	VALUES (
-//	  ?, ?, ?, ?, ?, ?
+//	  ?, ?, ?, ?
 //	)
-//	RETURNING id, workflow_id, x_position, y_position, node_label, node_type
+//	RETURNING id, x_position, y_position, node_label, node_type
 func (q *Queries) CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error) {
 	row := q.db.QueryRowContext(ctx, createWorkflowNodeUi,
-		arg.ID,
-		arg.WorkflowID,
 		arg.XPosition,
 		arg.YPosition,
 		arg.NodeLabel,
@@ -205,7 +206,6 @@ func (q *Queries) CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowN
 	var i WorkflowNodeUi
 	err := row.Scan(
 		&i.ID,
-		&i.WorkflowID,
 		&i.XPosition,
 		&i.YPosition,
 		&i.NodeLabel,
