@@ -9,7 +9,6 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
-  Position,
   type Connection,
   type Edge,
   type Node,
@@ -85,6 +84,7 @@ export default function FlowCanvas({
       if (!name) return;
 
       const category = name === "Time Trigger" ? "trigger" : "action";
+      const nodeType = category === "trigger" ? "input" : "output";
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
@@ -94,10 +94,8 @@ export default function FlowCanvas({
         ...nds,
         {
           id: `node-${nodeId}`,
+          type: nodeType,
           position,
-          type: "default",
-          sourcePosition: category === "trigger" ? Position.Bottom : undefined,
-          targetPosition: category === "action" ? Position.Top : undefined,
           data: {
             label: name,
             category,
