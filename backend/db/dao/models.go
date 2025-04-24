@@ -11,14 +11,13 @@ import (
 )
 
 type Workflow struct {
-	ID          int64        `json:"id"`
-	UserID      string       `json:"user_id"`
-	Name        string       `json:"name"`
-	Description null.String  `json:"description"`
-	IsActive    sql.NullBool `json:"is_active"`
-	CreatedAt   null.String  `json:"created_at"`
-	UpdatedAt   null.String  `json:"updated_at"`
-	LastRunAt   null.String  `json:"last_run_at"`
+	ID          int64         `json:"id"`
+	UserID      string        `json:"user_id"`
+	Name        string        `json:"name"`
+	Description null.String   `json:"description"`
+	IsActive    sql.NullBool  `json:"is_active"`
+	CreatedAt   sql.NullInt64 `json:"created_at"`
+	UpdatedAt   sql.NullInt64 `json:"updated_at"`
 }
 
 type WorkflowEdge struct {
@@ -44,4 +43,15 @@ type WorkflowNodeUi struct {
 	YPosition  float64     `json:"y_position"`
 	NodeLabel  null.String `json:"node_label"`
 	NodeType   string      `json:"node_type"`
+}
+
+type WorkflowSchedule struct {
+	ID           string        `json:"id"`
+	WorkflowID   int64         `json:"workflow_id"`
+	ScheduleType string        `json:"schedule_type"`
+	NextRunAt    sql.NullInt64 `json:"next_run_at"`
+	LastRunAt    sql.NullInt64 `json:"last_run_at"`
+	Status       string        `json:"status"`
+	CreatedAt    int64         `json:"created_at"`
+	UpdatedAt    int64         `json:"updated_at"`
 }

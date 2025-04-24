@@ -22,7 +22,7 @@ INSERT INTO workflow (
 VALUES (
   ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
+RETURNING id, user_id, name, description, is_active, created_at, updated_at
 `
 
 type CreateWorkflowParams struct {
@@ -43,7 +43,7 @@ type CreateWorkflowParams struct {
 //	VALUES (
 //	  ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 //	)
-//	RETURNING id, user_id, name, description, is_active, created_at, updated_at, last_run_at
+//	RETURNING id, user_id, name, description, is_active, created_at, updated_at
 func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error) {
 	row := q.db.QueryRowContext(ctx, createWorkflow, arg.UserID, arg.Name, arg.Description)
 	var i Workflow
@@ -55,7 +55,6 @@ func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams)
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.LastRunAt,
 	)
 	return &i, err
 }
@@ -216,13 +215,15 @@ func (q *Queries) CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowN
 }
 
 const getWorkflow = `-- name: GetWorkflow :one
-SELECT id, user_id, name, description, is_active, created_at, updated_at, last_run_at FROM workflow
+SELECT id, user_id, name, description, is_active, created_at, updated_at
+FROM workflow
 WHERE id = ?
 `
 
 // GetWorkflow
 //
-//	SELECT id, user_id, name, description, is_active, created_at, updated_at, last_run_at FROM workflow
+//	SELECT id, user_id, name, description, is_active, created_at, updated_at
+//	FROM workflow
 //	WHERE id = ?
 func (q *Queries) GetWorkflow(ctx context.Context, id int64) (*Workflow, error) {
 	row := q.db.QueryRowContext(ctx, getWorkflow, id)
@@ -235,20 +236,23 @@ func (q *Queries) GetWorkflow(ctx context.Context, id int64) (*Workflow, error) 
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.LastRunAt,
 	)
 	return &i, err
 }
 
 const getWorkflowEdges = `-- name: GetWorkflowEdges :many
-SELECT workflow_id, source_node_id, target_node_id
+SELECT workflow_id,
+  source_node_id,
+  target_node_id
 FROM workflow_edge
 WHERE workflow_id = ?
 `
 
 // GetWorkflowEdges
 //
-//	SELECT workflow_id, source_node_id, target_node_id
+//	SELECT workflow_id,
+//	  source_node_id,
+//	  target_node_id
 //	FROM workflow_edge
 //	WHERE workflow_id = ?
 func (q *Queries) GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*WorkflowEdge, error) {
@@ -275,14 +279,26 @@ func (q *Queries) GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*Wo
 }
 
 const getWorkflowNodes = `-- name: GetWorkflowNodes :many
-SELECT id, workflow_id, name, type, category, service, config
+SELECT id,
+  workflow_id,
+  name,
+  type,
+  category,
+  service,
+  config
 FROM workflow_node
 WHERE workflow_id = ?
 `
 
 // GetWorkflowNodes
 //
-//	SELECT id, workflow_id, name, type, category, service, config
+//	SELECT id,
+//	  workflow_id,
+//	  name,
+//	  type,
+//	  category,
+//	  service,
+//	  config
 //	FROM workflow_node
 //	WHERE workflow_id = ?
 func (q *Queries) GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*WorkflowNode, error) {
