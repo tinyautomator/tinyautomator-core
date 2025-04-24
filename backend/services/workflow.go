@@ -16,6 +16,7 @@ func LoadWorkflowGraph(
 	repo repository.WorkflowRepository,
 	workflowID int64,
 ) ([]*dao.WorkflowNode, []*dao.WorkflowEdge, error) {
+	// TODO: this can be one query to get both nodes and edges
 	nodes, err := repo.GetWorkflowNodes(ctx, workflowID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load workflow nodes: %w", err)

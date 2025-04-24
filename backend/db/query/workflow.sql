@@ -12,7 +12,7 @@ INSERT INTO workflow (
   updated_at
 )
 VALUES (
-  ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+  ?, ?, ?, ?, ?
 )
 RETURNING id, user_id, name, description, is_active, created_at, updated_at;
 
@@ -51,15 +51,13 @@ RETURNING *;
 
 -- name: CreateWorkflowNodeUi :one
 INSERT INTO workflow_node_ui (
-  id,
-  workflow_id,
   x_position,
   y_position,
   node_label,
   node_type
 )
 VALUES (
-  ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?
 )
 RETURNING *;
 
