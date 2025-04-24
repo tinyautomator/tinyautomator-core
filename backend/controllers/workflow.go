@@ -19,8 +19,8 @@ type WorkflowController interface {
 }
 
 type workflowController struct {
-	log  *logrus.Logger
-	repo repo.WorkflowRepository
+	logger logrus.FieldLogger
+	repo   repo.WorkflowRepository
 }
 
 type CreateWorkflowRequest struct {
@@ -50,8 +50,8 @@ type WorkflowEdgeInput struct {
 
 func NewWorkflowController(cfg config.AppConfig) *workflowController {
 	return &workflowController{
-		log:  cfg.GetLogger(),
-		repo: cfg.GetWorkflowRepository(),
+		logger: cfg.GetLogger(),
+		repo:   cfg.GetWorkflowRepository(),
 	}
 }
 
@@ -88,7 +88,7 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		UserID:      "test-user", // TODO: Update this in the future!
 	})
 	if err != nil {
-		c.log.Errorf("Workflow insert error: %v", err)
+		c.logger.Errorf("Workflow insert error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create workflow"})
 
 		return

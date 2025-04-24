@@ -7,10 +7,17 @@ import { UserButton } from "@clerk/react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "@/components/sidebar";
 import Dashboard from "@/components/dashboard";
-import WorkflowBuilder from "@/components/workflow";
+import WorkflowBuilder from "@/components/workflowbuilder";
+import WorkflowLibrary from "@/components/workflowlibrary";
+import EmailIntegrationView from "@/components/email-integration";
+
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export default function Dash() {
-  const [activeView, setActiveView] = useState("Dashboard");
+  const [activeView, setActiveView] = useLocalStorage(
+    "activeView",
+    "Dashboard",
+  );
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -35,9 +42,11 @@ export default function Dash() {
           <div className="flex flex-1 overflow-hidden">
             <Sidebar activeView={activeView} setActiveView={setActiveView} />
 
-            <main className="flex-1 overflow-hidden">
+            <main className="flex-1 min-h-0 overflow-auto">
               {activeView === "Dashboard" && <Dashboard />}
               {activeView === "Workflow Builder" && <WorkflowBuilder />}
+              {activeView === "Workflow Library" && <WorkflowLibrary />}
+              {activeView == "Email" && <EmailIntegrationView />}
             </main>
           </div>
         </div>

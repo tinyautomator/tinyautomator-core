@@ -29,10 +29,10 @@ type EnvironmentVariables struct {
 type AppConfig interface {
 	GetEnv() string
 	GetEnvVars() EnvironmentVariables
-	GetLogger() *logrus.Logger
+	GetLogger() logrus.FieldLogger
 
 	GetWorkflowRepository() repositories.WorkflowRepository
-	GetScheduleRepository() repositories.ScheduleRepository
+	GetWorkflowScheduleRepository() repositories.WorkflowScheduleRepository
 
 	GetGmailOAuthConfig() *oauth2.Config
 }
@@ -41,11 +41,11 @@ type appConfig struct {
 	// app
 	env     string
 	envVars EnvironmentVariables
-	log     *logrus.Logger
+	logger  logrus.FieldLogger
 
 	// repositories
-	workflowRepository repositories.WorkflowRepository
-	scheduleRepository repositories.ScheduleRepository
+	workflowRepository         repositories.WorkflowRepository
+	workflowScheduleRepository repositories.WorkflowScheduleRepository
 
 	// oauth
 	gmailOAuthConfig *oauth2.Config
@@ -87,16 +87,16 @@ func (cfg *appConfig) GetEnvVars() EnvironmentVariables {
 	return cfg.envVars
 }
 
-func (cfg *appConfig) GetLogger() *logrus.Logger {
-	return cfg.log
+func (cfg *appConfig) GetLogger() logrus.FieldLogger {
+	return cfg.logger
 }
 
 func (cfg *appConfig) GetWorkflowRepository() repositories.WorkflowRepository {
 	return cfg.workflowRepository
 }
 
-func (cfg *appConfig) GetScheduleRepository() repositories.ScheduleRepository {
-	return cfg.scheduleRepository
+func (cfg *appConfig) GetWorkflowScheduleRepository() repositories.WorkflowScheduleRepository {
+	return cfg.workflowScheduleRepository
 }
 
 func (cfg *appConfig) GetGmailOAuthConfig() *oauth2.Config {

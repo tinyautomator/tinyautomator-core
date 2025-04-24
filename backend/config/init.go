@@ -13,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
-	"github.com/tinyautomator/tinyautomator-core/backend/repositories/timetrigger"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	_ "modernc.org/sqlite"
@@ -55,23 +54,25 @@ func (cfg *appConfig) loadEnvironmentVariables() error {
 }
 
 func (cfg *appConfig) initLogger() error {
-	cfg.log = logrus.New()
-	cfg.log.SetOutput(os.Stdout)
+	logger := logrus.New()
+	logger.SetOutput(os.Stdout)
 
 	if logLevel, err := logrus.ParseLevel(cfg.envVars.LogLevel); err != nil {
 		return fmt.Errorf("unable to parse log level: %w", err)
 	} else {
-		cfg.log.SetLevel(logLevel)
+		logger.SetLevel(logLevel)
 	}
 
 	if cfg.env == PRODUCTION {
-		cfg.log.SetFormatter(&logrus.JSONFormatter{})
-		cfg.log.SetReportCaller(true)
+		logger.SetFormatter(&logrus.JSONFormatter{})
+		logger.SetReportCaller(true)
 	} else {
-		cfg.log.SetFormatter(&logrus.TextFormatter{
+		logger.SetFormatter(&logrus.TextFormatter{
 			FullTimestamp: true,
 		})
 	}
+
+	cfg.logger = logger
 
 	return nil
 }
@@ -83,7 +84,7 @@ func (cfg *appConfig) initRepositories() error {
 	}
 
 	cfg.workflowRepository = repositories.NewWorkflowRepository(dao.New(db))
-	cfg.scheduleRepository = timetrigger.NewInMemoryRepository()
+	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(dao.New(db))
 
 	return nil
 }
