@@ -7,7 +7,6 @@ package dao
 
 import (
 	"context"
-	"database/sql"
 
 	null "github.com/guregu/null/v6"
 )
@@ -21,17 +20,17 @@ INSERT INTO workflow (
   updated_at
 )
 VALUES (
-  ?, ?, ?, ?, ?
+  $1, $2, $3, $4, $5
 )
 RETURNING id, user_id, name, description, is_active, created_at, updated_at
 `
 
 type CreateWorkflowParams struct {
-	UserID      string        `json:"user_id"`
-	Name        string        `json:"name"`
-	Description null.String   `json:"description"`
-	CreatedAt   sql.NullInt64 `json:"created_at"`
-	UpdatedAt   sql.NullInt64 `json:"updated_at"`
+	UserID      string      `json:"user_id"`
+	Name        string      `json:"name"`
+	Description null.String `json:"description"`
+	CreatedAt   null.Int    `json:"created_at"`
+	UpdatedAt   null.Int    `json:"updated_at"`
 }
 
 // CreateWorkflow
@@ -44,11 +43,11 @@ type CreateWorkflowParams struct {
 //	  updated_at
 //	)
 //	VALUES (
-//	  ?, ?, ?, ?, ?
+//	  $1, $2, $3, $4, $5
 //	)
 //	RETURNING id, user_id, name, description, is_active, created_at, updated_at
 func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error) {
-	row := q.db.QueryRowContext(ctx, createWorkflow,
+	row := q.db.QueryRow(ctx, createWorkflow,
 		arg.UserID,
 		arg.Name,
 		arg.Description,
@@ -75,15 +74,15 @@ INSERT INTO workflow_edge (
   target_node_id
 )
 VALUES (
-  ?, ?, ?
+  $1, $2, $3
 )
 RETURNING workflow_id, source_node_id, target_node_id
 `
 
 type CreateWorkflowEdgeParams struct {
-	WorkflowID   int64 `json:"workflow_id"`
-	SourceNodeID int64 `json:"source_node_id"`
-	TargetNodeID int64 `json:"target_node_id"`
+	WorkflowID   int32 `json:"workflow_id"`
+	SourceNodeID int32 `json:"source_node_id"`
+	TargetNodeID int32 `json:"target_node_id"`
 }
 
 // CreateWorkflowEdge
@@ -94,11 +93,11 @@ type CreateWorkflowEdgeParams struct {
 //	  target_node_id
 //	)
 //	VALUES (
-//	  ?, ?, ?
+//	  $1, $2, $3
 //	)
 //	RETURNING workflow_id, source_node_id, target_node_id
 func (q *Queries) CreateWorkflowEdge(ctx context.Context, arg *CreateWorkflowEdgeParams) (*WorkflowEdge, error) {
-	row := q.db.QueryRowContext(ctx, createWorkflowEdge, arg.WorkflowID, arg.SourceNodeID, arg.TargetNodeID)
+	row := q.db.QueryRow(ctx, createWorkflowEdge, arg.WorkflowID, arg.SourceNodeID, arg.TargetNodeID)
 	var i WorkflowEdge
 	err := row.Scan(&i.WorkflowID, &i.SourceNodeID, &i.TargetNodeID)
 	return &i, err
@@ -114,13 +113,13 @@ INSERT INTO workflow_node (
   config
 )
 VALUES (
-  ?, ?, ?, ?, ?, ?
+  $1, $2, $3, $4, $5, $6
 )
 RETURNING id, workflow_id, name, type, category, service, config
 `
 
 type CreateWorkflowNodeParams struct {
-	WorkflowID int64       `json:"workflow_id"`
+	WorkflowID int32       `json:"workflow_id"`
 	Name       null.String `json:"name"`
 	Type       string      `json:"type"`
 	Category   string      `json:"category"`
@@ -139,11 +138,11 @@ type CreateWorkflowNodeParams struct {
 //	  config
 //	)
 //	VALUES (
-//	  ?, ?, ?, ?, ?, ?
+//	  $1, $2, $3, $4, $5, $6
 //	)
 //	RETURNING id, workflow_id, name, type, category, service, config
 func (q *Queries) CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNodeParams) (*WorkflowNode, error) {
-	row := q.db.QueryRowContext(ctx, createWorkflowNode,
+	row := q.db.QueryRow(ctx, createWorkflowNode,
 		arg.WorkflowID,
 		arg.Name,
 		arg.Type,
@@ -166,18 +165,20 @@ func (q *Queries) CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNod
 
 const createWorkflowNodeUi = `-- name: CreateWorkflowNodeUi :one
 INSERT INTO workflow_node_ui (
+  id,
   x_position,
   y_position,
   node_label,
   node_type
 )
 VALUES (
-  ?, ?, ?, ?
+  $1, $2, $3, $4, $5
 )
 RETURNING id, x_position, y_position, node_label, node_type
 `
 
 type CreateWorkflowNodeUiParams struct {
+	ID        int32       `json:"id"`
 	XPosition float64     `json:"x_position"`
 	YPosition float64     `json:"y_position"`
 	NodeLabel null.String `json:"node_label"`
@@ -187,17 +188,19 @@ type CreateWorkflowNodeUiParams struct {
 // CreateWorkflowNodeUi
 //
 //	INSERT INTO workflow_node_ui (
+//	  id,
 //	  x_position,
 //	  y_position,
 //	  node_label,
 //	  node_type
 //	)
 //	VALUES (
-//	  ?, ?, ?, ?
+//	  $1, $2, $3, $4, $5
 //	)
 //	RETURNING id, x_position, y_position, node_label, node_type
 func (q *Queries) CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error) {
-	row := q.db.QueryRowContext(ctx, createWorkflowNodeUi,
+	row := q.db.QueryRow(ctx, createWorkflowNodeUi,
+		arg.ID,
 		arg.XPosition,
 		arg.YPosition,
 		arg.NodeLabel,
@@ -217,16 +220,16 @@ func (q *Queries) CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowN
 const getWorkflow = `-- name: GetWorkflow :one
 SELECT id, user_id, name, description, is_active, created_at, updated_at
 FROM workflow
-WHERE id = ?
+WHERE id = $1
 `
 
 // GetWorkflow
 //
 //	SELECT id, user_id, name, description, is_active, created_at, updated_at
 //	FROM workflow
-//	WHERE id = ?
-func (q *Queries) GetWorkflow(ctx context.Context, id int64) (*Workflow, error) {
-	row := q.db.QueryRowContext(ctx, getWorkflow, id)
+//	WHERE id = $1
+func (q *Queries) GetWorkflow(ctx context.Context, id int32) (*Workflow, error) {
+	row := q.db.QueryRow(ctx, getWorkflow, id)
 	var i Workflow
 	err := row.Scan(
 		&i.ID,
@@ -245,7 +248,7 @@ SELECT workflow_id,
   source_node_id,
   target_node_id
 FROM workflow_edge
-WHERE workflow_id = ?
+WHERE workflow_id = $1
 `
 
 // GetWorkflowEdges
@@ -254,9 +257,9 @@ WHERE workflow_id = ?
 //	  source_node_id,
 //	  target_node_id
 //	FROM workflow_edge
-//	WHERE workflow_id = ?
-func (q *Queries) GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*WorkflowEdge, error) {
-	rows, err := q.db.QueryContext(ctx, getWorkflowEdges, workflowID)
+//	WHERE workflow_id = $1
+func (q *Queries) GetWorkflowEdges(ctx context.Context, workflowID int32) ([]*WorkflowEdge, error) {
+	rows, err := q.db.Query(ctx, getWorkflowEdges, workflowID)
 	if err != nil {
 		return nil, err
 	}
@@ -268,9 +271,6 @@ func (q *Queries) GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*Wo
 			return nil, err
 		}
 		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -287,7 +287,7 @@ SELECT id,
   service,
   config
 FROM workflow_node
-WHERE workflow_id = ?
+WHERE workflow_id = $1
 `
 
 // GetWorkflowNodes
@@ -300,9 +300,9 @@ WHERE workflow_id = ?
 //	  service,
 //	  config
 //	FROM workflow_node
-//	WHERE workflow_id = ?
-func (q *Queries) GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*WorkflowNode, error) {
-	rows, err := q.db.QueryContext(ctx, getWorkflowNodes, workflowID)
+//	WHERE workflow_id = $1
+func (q *Queries) GetWorkflowNodes(ctx context.Context, workflowID int32) ([]*WorkflowNode, error) {
+	rows, err := q.db.Query(ctx, getWorkflowNodes, workflowID)
 	if err != nil {
 		return nil, err
 	}
@@ -322,9 +322,6 @@ func (q *Queries) GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*Wo
 			return nil, err
 		}
 		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

@@ -45,7 +45,7 @@ func (c *workflowController) GetWorkflow(ctx *gin.Context) {
 		return
 	}
 
-	workflow, err := c.repo.GetWorkflow(ctx.Request.Context(), int64(id))
+	workflow, err := c.repo.GetWorkflow(ctx.Request.Context(), int32(id))
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "workflow not found"})
 

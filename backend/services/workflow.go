@@ -14,7 +14,7 @@ import (
 func LoadWorkflowGraph(
 	ctx context.Context,
 	repo repository.WorkflowRepository,
-	workflowID int64,
+	workflowID int32,
 ) ([]*dao.WorkflowNode, []*dao.WorkflowEdge, error) {
 	// TODO: this can be one query to get both nodes and edges
 	nodes, err := repo.GetWorkflowNodes(ctx, workflowID)
@@ -35,7 +35,7 @@ func ExecuteWorkflow(
 	nodes []*dao.WorkflowNode,
 	edges []*dao.WorkflowEdge,
 ) error {
-	idToIndex := make(map[int64]int)
+	idToIndex := make(map[int32]int)
 	indexToNode := make(map[int]*dao.WorkflowNode)
 
 	for i, node := range nodes {

@@ -2,11 +2,12 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
 	"github.com/guregu/null/v6"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 )
 
@@ -32,7 +33,7 @@ type WorkflowEdge struct {
 }
 
 type WorkflowRepository interface {
-	GetWorkflow(ctx context.Context, id int64) (*dao.Workflow, error)
+	GetWorkflow(ctx context.Context, id int32) (*dao.Workflow, error)
 	CreateWorkflow(
 		ctx context.Context,
 		userID string,
@@ -41,20 +42,20 @@ type WorkflowRepository interface {
 		nodes []WorkflowNode,
 		edges []WorkflowEdge,
 	) (*dao.Workflow, error)
-	GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*dao.WorkflowNode, error)
-	GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*dao.WorkflowEdge, error)
+	GetWorkflowNodes(ctx context.Context, workflowID int32) ([]*dao.WorkflowNode, error)
+	GetWorkflowEdges(ctx context.Context, workflowID int32) ([]*dao.WorkflowEdge, error)
 }
 
 type workflowRepo struct {
 	q  *dao.Queries
-	db *sql.DB
+	db *pgxpool.Pool
 }
 
-func NewWorkflowRepository(q *dao.Queries, db *sql.DB) WorkflowRepository {
-	return &workflowRepo{q, db}
+func NewWorkflowRepository(q *dao.Queries, pool *pgxpool.Pool) WorkflowRepository {
+	return &workflowRepo{q, pool}
 }
 
-func (r *workflowRepo) GetWorkflow(ctx context.Context, id int64) (*dao.Workflow, error) {
+func (r *workflowRepo) GetWorkflow(ctx context.Context, id int32) (*dao.Workflow, error) {
 	w, err := r.q.GetWorkflow(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("db error get workflow: %w", err)
@@ -71,7 +72,7 @@ func (r *workflowRepo) CreateWorkflow(
 	nodes []WorkflowNode,
 	edges []WorkflowEdge,
 ) (*dao.Workflow, error) {
-	tx, err := r.db.BeginTx(ctx, nil)
+	tx, err := r.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction in create workflow: %w", err)
 	}
@@ -80,7 +81,7 @@ func (r *workflowRepo) CreateWorkflow(
 
 	defer func() {
 		if err != nil {
-			_ = tx.Rollback()
+			_ = tx.Rollback(ctx)
 		}
 	}()
 
@@ -90,14 +91,14 @@ func (r *workflowRepo) CreateWorkflow(
 		UserID:      userID,
 		Name:        name,
 		Description: null.StringFrom(description),
-		CreatedAt:   sql.NullInt64{Int64: now, Valid: true},
-		UpdatedAt:   sql.NullInt64{Int64: now, Valid: true},
+		CreatedAt:   null.IntFrom(now),
+		UpdatedAt:   null.IntFrom(now),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("db error create workflow: %w", err)
 	}
 
-	createdNodeIDMap := make(map[string]int64)
+	createdNodeIDMap := make(map[string]int32)
 
 	for _, node := range nodes {
 		n, err := qtx.CreateWorkflowNode(ctx, &dao.CreateWorkflowNodeParams{
@@ -114,6 +115,7 @@ func (r *workflowRepo) CreateWorkflow(
 		createdNodeIDMap[node.TempID] = n.ID
 
 		_, err = qtx.CreateWorkflowNodeUi(ctx, &dao.CreateWorkflowNodeUiParams{
+			ID:        n.ID,
 			XPosition: node.Position.X,
 			YPosition: node.Position.Y,
 			NodeLabel: null.StringFrom(node.Data.Label),
@@ -135,7 +137,7 @@ func (r *workflowRepo) CreateWorkflow(
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("failed to commit transaction in create workflow: %w", err)
 	}
 
@@ -144,7 +146,7 @@ func (r *workflowRepo) CreateWorkflow(
 
 func (r workflowRepo) GetWorkflowNodes(
 	ctx context.Context,
-	workflowID int64,
+	workflowID int32,
 ) ([]*dao.WorkflowNode, error) {
 	w, err := r.q.GetWorkflowNodes(ctx, workflowID)
 	if err != nil {
@@ -156,7 +158,7 @@ func (r workflowRepo) GetWorkflowNodes(
 
 func (r workflowRepo) GetWorkflowEdges(
 	ctx context.Context,
-	workflowID int64,
+	workflowID int32,
 ) ([]*dao.WorkflowEdge, error) {
 	w, err := r.q.GetWorkflowEdges(ctx, workflowID)
 	if err != nil {

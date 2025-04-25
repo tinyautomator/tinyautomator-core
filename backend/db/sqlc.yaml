@@ -1,27 +1,34 @@
 version: "2"
 sql:
-  - engine: "sqlite"
+  - engine: "postgresql"
     queries: "query/"
     schema: "schema/"
     gen:
       go:
         package: "dao"
         out: "dao"
+        sql_package: "pgx/v5"
         emit_json_tags: true
         emit_sql_as_comment: true
         emit_interface: true
         emit_result_struct_pointers: true #  TODO: think about this
         emit_params_struct_pointers: true #  TODO: think about this
         overrides:
-          - db_type: "TEXT"
+          - db_type: "text"
             nullable: true
             go_type:
               import: "github.com/guregu/null/v6"
               package: "null"
               type: "String"
-          - db_type: "DATETIME"
+          - db_type: "pg_catalog.int8"
             nullable: true
             go_type:
               import: "github.com/guregu/null/v6"
               package: "null"
-              type: "String"
+              type: "Int"
+          - db_type: "pg_catalog.bool"
+            nullable: true
+            go_type:
+              import: "github.com/guregu/null/v6"
+              package: "null"
+              type: "Bool"

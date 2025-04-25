@@ -32,32 +32,41 @@ func (w *Worker) StopScheduler() {
 }
 
 func (w *Worker) PollAndSchedule(ctx context.Context) error {
+	ticker := time.NewTicker(w.pollInterval)
+	defer ticker.Stop()
+
+	w.logger.Info("start polling for scheduled workflows")
+
 	for {
-		ws, err := w.service.GetWorkflowsToSchedule(ctx, w.pollInterval)
-		if err != nil {
-			return fmt.Errorf("error getting due triggers: %w", err)
-		}
-
-		w.logger.WithField("length", len(ws)).Info("fetched workflows to schedule")
-
-		for _, ws := range ws {
-			w.logger.WithField("workflow_schedule_id", ws.ID).Info("scheduling workflow")
-
-			if err := w.service.ScheduleWorkflow(ctx, ws); err != nil {
-				w.logger.WithField("workflow_schedule_id", ws.ID).
-					Errorf("failed to schedule workflow: %v", err)
+		select {
+		case <-ctx.Done():
+			w.logger.Info("ctx cancelled - stopping polling loop")
+			return nil
+		case <-ticker.C:
+			ws, err := w.service.GetScheduledWorkflows(ctx)
+			if err != nil {
+				return fmt.Errorf("error getting due triggers: %w", err)
 			}
 
-			w.logger.WithFields(logrus.Fields{
-				"schedule_id":   ws.ID,
-				"workflow_id":   ws.WorkflowID,
-				"schedule_type": ws.ScheduleType,
-				"status":        ws.Status,
-				"next_run_at":   ws.NextRunAt.Int64,
-				"last_run_at":   ws.LastRunAt.Int64,
-			}).Info("workflow scheduled successfully")
-		}
+			w.logger.WithField("count", len(ws)).Info("fetched workflows due")
 
-		time.Sleep(w.pollInterval)
+			for _, ws := range ws {
+				w.logger.WithField("workflow_schedule_id", ws.ID).Info("scheduling workflow")
+
+				if err := w.service.ScheduleWorkflow(ctx, ws); err != nil {
+					w.logger.WithField("workflow_schedule_id", ws.ID).
+						Errorf("failed to schedule workflow: %v", err)
+				}
+
+				w.logger.WithFields(logrus.Fields{
+					"schedule_id":   ws.ID,
+					"workflow_id":   ws.WorkflowID,
+					"schedule_type": ws.ScheduleType,
+					"status":        ws.Status,
+					"next_run_at":   time.UnixMilli(ws.NextRunAt.Int64).Format(time.DateTime),
+					"last_run_at":   time.UnixMilli(ws.LastRunAt.Int64).Format(time.DateTime),
+				}).Info("workflow scheduled successfully")
+			}
+		}
 	}
 }

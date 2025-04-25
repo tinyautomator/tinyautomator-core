@@ -7,52 +7,49 @@ package dao
 
 import (
 	"context"
-	"database/sql"
+
+	null "github.com/guregu/null/v6"
 )
 
 const createWorkflowSchedule = `-- name: CreateWorkflowSchedule :one
 INSERT INTO workflow_schedule (
-        id,
-        workflow_id,
-        schedule_type,
-        next_run_at,
-        last_run_at,
-        status,
-        created_at,
-        updated_at
-    )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  workflow_id,
+  schedule_type,
+  next_run_at,
+  last_run_at,
+  status,
+  created_at,
+  updated_at
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
 `
 
 type CreateWorkflowScheduleParams struct {
-	ID           string        `json:"id"`
-	WorkflowID   int64         `json:"workflow_id"`
-	ScheduleType string        `json:"schedule_type"`
-	NextRunAt    sql.NullInt64 `json:"next_run_at"`
-	LastRunAt    sql.NullInt64 `json:"last_run_at"`
-	Status       string        `json:"status"`
-	CreatedAt    int64         `json:"created_at"`
-	UpdatedAt    int64         `json:"updated_at"`
+	WorkflowID   int32    `json:"workflow_id"`
+	ScheduleType string   `json:"schedule_type"`
+	NextRunAt    null.Int `json:"next_run_at"`
+	LastRunAt    null.Int `json:"last_run_at"`
+	Status       string   `json:"status"`
+	CreatedAt    int64    `json:"created_at"`
+	UpdatedAt    int64    `json:"updated_at"`
 }
 
 // CreateWorkflowSchedule
 //
 //	INSERT INTO workflow_schedule (
-//	        id,
-//	        workflow_id,
-//	        schedule_type,
-//	        next_run_at,
-//	        last_run_at,
-//	        status,
-//	        created_at,
-//	        updated_at
-//	    )
-//	VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+//	  workflow_id,
+//	  schedule_type,
+//	  next_run_at,
+//	  last_run_at,
+//	  status,
+//	  created_at,
+//	  updated_at
+//	)
+//	VALUES ($1, $2, $3, $4, $5, $6, $7)
 //	RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
 func (q *Queries) CreateWorkflowSchedule(ctx context.Context, arg *CreateWorkflowScheduleParams) (*WorkflowSchedule, error) {
-	row := q.db.QueryRowContext(ctx, createWorkflowSchedule,
-		arg.ID,
+	row := q.db.QueryRow(ctx, createWorkflowSchedule,
 		arg.WorkflowID,
 		arg.ScheduleType,
 		arg.NextRunAt,
@@ -77,24 +74,99 @@ func (q *Queries) CreateWorkflowSchedule(ctx context.Context, arg *CreateWorkflo
 
 const deleteWorkflowSchedule = `-- name: DeleteWorkflowSchedule :exec
 DELETE FROM workflow_schedule
-WHERE id = ?
+WHERE id = $1
 `
 
 // DeleteWorkflowSchedule
 //
 //	DELETE FROM workflow_schedule
-//	WHERE id = ?
-func (q *Queries) DeleteWorkflowSchedule(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, deleteWorkflowSchedule, id)
+//	WHERE id = $1
+func (q *Queries) DeleteWorkflowSchedule(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteWorkflowSchedule, id)
 	return err
+}
+
+const getDueSchedulesLocked = `-- name: GetDueSchedulesLocked :many
+WITH locked AS (
+  SELECT id
+  FROM workflow_schedule
+  WHERE status = 'active'
+    AND next_run_at IS NOT NULL
+    AND next_run_at <=  extract(epoch from now()) * 1000
+  FOR UPDATE SKIP LOCKED
+  LIMIT $1
+)
+UPDATE workflow_schedule
+SET status = 'pending'
+FROM locked
+WHERE workflow_schedule.id = locked.id
+RETURNING locked.id, workflow_schedule.id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
+`
+
+type GetDueSchedulesLockedRow struct {
+	ID           int32    `json:"id"`
+	ID_2         int32    `json:"id_2"`
+	WorkflowID   int32    `json:"workflow_id"`
+	ScheduleType string   `json:"schedule_type"`
+	NextRunAt    null.Int `json:"next_run_at"`
+	LastRunAt    null.Int `json:"last_run_at"`
+	Status       string   `json:"status"`
+	CreatedAt    int64    `json:"created_at"`
+	UpdatedAt    int64    `json:"updated_at"`
+}
+
+// GetDueSchedulesLocked
+//
+//	WITH locked AS (
+//	  SELECT id
+//	  FROM workflow_schedule
+//	  WHERE status = 'active'
+//	    AND next_run_at IS NOT NULL
+//	    AND next_run_at <=  extract(epoch from now()) * 1000
+//	  FOR UPDATE SKIP LOCKED
+//	  LIMIT $1
+//	)
+//	UPDATE workflow_schedule
+//	SET status = 'pending'
+//	FROM locked
+//	WHERE workflow_schedule.id = locked.id
+//	RETURNING locked.id, workflow_schedule.id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
+func (q *Queries) GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*GetDueSchedulesLockedRow, error) {
+	rows, err := q.db.Query(ctx, getDueSchedulesLocked, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetDueSchedulesLockedRow
+	for rows.Next() {
+		var i GetDueSchedulesLockedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ID_2,
+			&i.WorkflowID,
+			&i.ScheduleType,
+			&i.NextRunAt,
+			&i.LastRunAt,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getDueWorkflowSchedules = `-- name: GetDueWorkflowSchedules :many
 SELECT id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
 FROM workflow_schedule
 WHERE next_run_at IS NOT NULL
-    AND next_run_at <= ?
-    AND status = 'active'
+  AND next_run_at <= $1
+  AND status = 'active'
 `
 
 // GetDueWorkflowSchedules
@@ -102,10 +174,10 @@ WHERE next_run_at IS NOT NULL
 //	SELECT id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
 //	FROM workflow_schedule
 //	WHERE next_run_at IS NOT NULL
-//	    AND next_run_at <= ?
-//	    AND status = 'active'
-func (q *Queries) GetDueWorkflowSchedules(ctx context.Context, nextRunAt sql.NullInt64) ([]*WorkflowSchedule, error) {
-	rows, err := q.db.QueryContext(ctx, getDueWorkflowSchedules, nextRunAt)
+//	  AND next_run_at <= $1
+//	  AND status = 'active'
+func (q *Queries) GetDueWorkflowSchedules(ctx context.Context, nextRunAt null.Int) ([]*WorkflowSchedule, error) {
+	rows, err := q.db.Query(ctx, getDueWorkflowSchedules, nextRunAt)
 	if err != nil {
 		return nil, err
 	}
@@ -127,9 +199,6 @@ func (q *Queries) GetDueWorkflowSchedules(ctx context.Context, nextRunAt sql.Nul
 		}
 		items = append(items, &i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -138,31 +207,31 @@ func (q *Queries) GetDueWorkflowSchedules(ctx context.Context, nextRunAt sql.Nul
 
 const updateWorkflowSchedule = `-- name: UpdateWorkflowSchedule :exec
 UPDATE workflow_schedule
-SET next_run_at = ?,
-    last_run_at = ?,
-    updated_at = ?,
-    status = ?
-WHERE id = ?
+SET next_run_at = $1,
+    last_run_at = $2,
+    updated_at = $3,
+    status = $4
+WHERE id = $5
 `
 
 type UpdateWorkflowScheduleParams struct {
-	NextRunAt sql.NullInt64 `json:"next_run_at"`
-	LastRunAt sql.NullInt64 `json:"last_run_at"`
-	UpdatedAt int64         `json:"updated_at"`
-	Status    string        `json:"status"`
-	ID        string        `json:"id"`
+	NextRunAt null.Int `json:"next_run_at"`
+	LastRunAt null.Int `json:"last_run_at"`
+	UpdatedAt int64    `json:"updated_at"`
+	Status    string   `json:"status"`
+	ID        int32    `json:"id"`
 }
 
 // UpdateWorkflowSchedule
 //
 //	UPDATE workflow_schedule
-//	SET next_run_at = ?,
-//	    last_run_at = ?,
-//	    updated_at = ?,
-//	    status = ?
-//	WHERE id = ?
+//	SET next_run_at = $1,
+//	    last_run_at = $2,
+//	    updated_at = $3,
+//	    status = $4
+//	WHERE id = $5
 func (q *Queries) UpdateWorkflowSchedule(ctx context.Context, arg *UpdateWorkflowScheduleParams) error {
-	_, err := q.db.ExecContext(ctx, updateWorkflowSchedule,
+	_, err := q.db.Exec(ctx, updateWorkflowSchedule,
 		arg.NextRunAt,
 		arg.LastRunAt,
 		arg.UpdatedAt,
