@@ -3,9 +3,9 @@
 import { AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Footer } from "@/components/email-integration/Footer";
-import { Providers } from "@/components/email-integration/Providers";
-import { HowItWorks } from "@/components/email-integration/HowItWorks";
+import { Footer } from "@/components/email-integration/components/Footer";
+import { Providers } from "@/components/email-integration/components/Providers";
+import { HowItWorks } from "@/components/email-integration/components/HowItWorks";
 import { useEmailIntegration } from "./hook";
 
 export default function EmailIntegration() {
