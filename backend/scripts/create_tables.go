@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -22,6 +21,7 @@ func main() {
 	db, err := pgx.Connect(ctx, connStr)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 	defer db.Close(ctx)
 
@@ -53,21 +53,22 @@ func main() {
 }
 
 func loadSQLFiles(dir string) ([]string, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
+	inOrderOfDependency := []string{
+		"workflow",
+		"workflow_schedule",
+		"workflow_node",
+		"workflow_node_ui",
+		"workflow_edge",
 	}
 
 	var files []string
-
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".sql") {
-			continue
+	for _, name := range inOrderOfDependency {
+		path := filepath.Join(dir, name+".sql")
+		if _, err := os.Stat(path); err != nil {
+			return nil, fmt.Errorf("expected SQL file missing: %s", path)
 		}
-
-		files = append(files, filepath.Join(dir, entry.Name()))
+		files = append(files, path)
 	}
 
-	// TODO: i have to put these in the order they depend on
 	return files, nil
 }

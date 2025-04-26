@@ -12,20 +12,13 @@ import (
 )
 
 func main() {
-	var w *Worker
+	var (
+		w   *Worker
+		cfg config.AppConfig
+	)
 
-	var cfg config.AppConfig
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		sig := <-sigChan
-		fmt.Printf("received signal %s, shutting down...\n", sig)
-		cancel()
-	}()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	defer func() {
 		panicErr := recover()
@@ -54,10 +47,14 @@ func main() {
 	logger.Info("initializing worker")
 
 	w = NewWorker(cfg)
-	w.StartScheduler()
 
-	err = w.PollAndSchedule(ctx)
-	if err != nil {
-		panic(fmt.Errorf("error in poll & schedule loop: %v", err))
-	}
+	go func() {
+		err = w.PollAndSchedule(ctx)
+		if err != nil {
+			panic(fmt.Errorf("error in poll & schedule loop: %v", err))
+		}
+	}()
+
+	<-ctx.Done()
+	logger.Info("signal received - shutting down gracefully")
 }

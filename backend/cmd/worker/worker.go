@@ -23,10 +23,6 @@ func NewWorker(cfg config.AppConfig) *Worker {
 	}
 }
 
-func (w *Worker) StartScheduler() {
-	w.service.Start()
-}
-
 func (w *Worker) StopScheduler() {
 	w.service.Shutdown()
 }

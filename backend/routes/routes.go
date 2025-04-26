@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"time"
+
+	"github.com/gin-contrib/timeout"
 	"github.com/gin-gonic/gin"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/controllers"
@@ -18,7 +21,10 @@ func RegisterRoutes(r *gin.Engine, cfg config.AppConfig) {
 	workflowGroup := r.Group("/api/workflow")
 	{
 		workflowGroup.GET("/:id", workflowController.GetWorkflow)
-		workflowGroup.POST("/", workflowController.CreateWorkflow)
+		workflowGroup.POST("/", timeout.New(
+			timeout.WithTimeout(3*time.Second),
+			timeout.WithHandler(workflowController.CreateWorkflow),
+		))
 	}
 
 	gmailController := controllers.NewGmailController(cfg)

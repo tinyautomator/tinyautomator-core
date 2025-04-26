@@ -4,6 +4,7 @@ go 1.24.2
 
 require (
 	github.com/clerk/clerk-sdk-go/v2 v2.2.0
+	github.com/gin-contrib/timeout v1.0.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/guregu/null/v6 v6.0.0
 	github.com/jackc/pgx/v5 v5.7.4

@@ -28,9 +28,6 @@ func NewWorkerService(cfg config.AppConfig) *WorkerService {
 	}
 }
 
-func (s *WorkerService) Start() {
-}
-
 func (s *WorkerService) Shutdown() {
 	s.logger.Info("Waiting for in-flight workflows to finish...")
 	s.wg.Wait()
@@ -68,7 +65,10 @@ func (s *WorkerService) ScheduleWorkflow(ctx context.Context, ws *dao.WorkflowSc
 		// TODO: add logic to execute workflow here
 		time.Sleep(10 * time.Second) // simulate job run
 
-		s.logger.WithField("workflow_id", ws.WorkflowID).Info("workflow execution finished")
+		s.logger.WithFields(logrus.Fields{
+			"schedule_id": ws.ID,
+			"workflow_id": ws.WorkflowID,
+		}).Info("workflow execution finished")
 
 		now := time.Now().UnixMilli()
 		nextRun := s.calculateNextRun(ws.ScheduleType, now)
