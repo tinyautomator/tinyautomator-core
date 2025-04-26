@@ -1,16 +1,11 @@
 import { useEffect, useState } from "react";
-import { Zap } from "lucide-react";
-// import "reactflow/dist/style.css";
+
+import Navbar from "@/components/shared/Navbar";
+import Sidebar from "@/components/sidebar";
+import ViewRenderer from "@/components/dashboard/viewRenderer";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { UserButton } from "@clerk/react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import Sidebar from "@/components/sidebar";
-import Dashboard from "@/components/dashboard";
-import WorkflowBuilder from "@/components/workflowbuilder";
-import WorkflowLibrary from "@/components/workflowlibrary";
-import EmailIntegrationView from "@/components/email-integration";
-
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export default function Dash() {
@@ -27,26 +22,12 @@ export default function Dash() {
     <TooltipProvider>
       <SidebarProvider>
         <div className="flex h-screen w-screen flex-col bg-slate-50">
-          {/* Navbar */}
-          <header className="flex h-14 items-center border-b bg-white px-6 z-10">
-            <div className="flex items-center gap-2 font-semibold">
-              <Zap className="h-5 w-5 text-blue-600" />
-              <span>TinyAutomator</span>
-            </div>
-            <div className="ml-auto flex items-center gap-4">
-              <UserButton />
-            </div>
-          </header>
-
-          {/* Main Content */}
+          <Navbar />
           <div className="flex flex-1 overflow-hidden">
             <Sidebar activeView={activeView} setActiveView={setActiveView} />
 
             <main className="flex-1 min-h-0 overflow-auto">
-              {activeView === "Dashboard" && <Dashboard />}
-              {activeView === "Workflow Builder" && <WorkflowBuilder />}
-              {activeView === "Workflow Library" && <WorkflowLibrary />}
-              {activeView == "Email" && <EmailIntegrationView />}
+              <ViewRenderer activeView={activeView} />
             </main>
           </div>
         </div>
