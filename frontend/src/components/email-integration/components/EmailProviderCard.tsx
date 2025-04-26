@@ -1,30 +1,24 @@
-import { RefreshCw, Trash2, ExternalLink, CheckCircle2 } from "lucide-react";
+import { RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export type ProviderCardProps = {
+  icon: React.ReactNode;
   name: string;
   description: string;
-  icon: React.ReactNode;
-  isConnected: boolean;
-  isDisabled?: boolean;
-  isLoading?: boolean;
   onConnect?: () => Promise<void>;
-  onDisconnect?: () => Promise<void>;
+  isLoading?: boolean;
 };
 
 export default function EmailProviderCard({
+  icon,
   name,
   description,
-  icon,
-  isConnected,
-  isDisabled = false,
-  isLoading = false,
   onConnect,
-  onDisconnect,
+  isLoading = false,
 }: ProviderCardProps) {
   return (
-    <Card className={isDisabled ? "opacity-70" : ""}>
+    <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -36,47 +30,25 @@ export default function EmailProviderCard({
               <p className="text-sm text-muted-foreground">{description}</p>
             </div>
           </div>
-          {isConnected && <CheckCircle2 className="h-5 w-5 text-green-600" />}
         </div>
 
-        {isConnected ? (
-          <Button
-            variant="outline"
-            onClick={onDisconnect}
-            disabled={isDisabled || isLoading}
-            className="w-full gap-2"
-          >
-            {isLoading ? (
-              <>
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                Disconnecting...
-              </>
-            ) : (
-              <>
-                <Trash2 className="h-4 w-4" />
-                Disconnect
-              </>
-            )}
-          </Button>
-        ) : (
-          <Button
-            onClick={onConnect}
-            disabled={isDisabled || isLoading}
-            className="w-full gap-2"
-          >
-            {isLoading ? (
-              <>
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                Connecting...
-              </>
-            ) : (
-              <>
-                <ExternalLink className="h-4 w-4" />
-                Connect
-              </>
-            )}
-          </Button>
-        )}
+        <Button
+          onClick={onConnect}
+          disabled={isLoading}
+          className="w-full gap-2 transition-all duration-200 hover:scale-105 hover:brightness-105 active:scale-95"
+        >
+          {isLoading ? (
+            <>
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              Connecting...
+            </>
+          ) : (
+            <>
+              <ExternalLink className="h-4 w-4" />
+              Connect
+            </>
+          )}
+        </Button>
       </CardContent>
     </Card>
   );
