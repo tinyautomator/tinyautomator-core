@@ -8,26 +8,7 @@ import {
 
 export const HowItWorks = () => {
   const steps = [
-    [
-      "1",
-      "Click the Connect Button",
-      "Click the 'Connect' button on the provider card to start the authentication process",
-    ],
-    [
-      "2",
-      "Sign in to Your Account",
-      "Sign in to your email account when prompted",
-    ],
-    [
-      "3",
-      "Grant Permissions",
-      "Review and grant the necessary permissions for TinyAutomator",
-    ],
-    [
-      "4",
-      "Start Automating",
-      "Once connected, you can start using your email account in automation workflows",
-    ],
+    ["1", "Click the Connect Button", "AND CLICK ACCEPT LIL BITCH"],
   ];
 
   return (
