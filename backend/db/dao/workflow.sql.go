@@ -9,6 +9,7 @@ import (
 	"context"
 
 	null "github.com/guregu/null/v6"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createWorkflow = `-- name: CreateWorkflow :one
@@ -22,7 +23,7 @@ INSERT INTO workflow (
 VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING id, user_id, name, description, is_active, created_at, updated_at
+RETURNING id, user_id, name, description, created_at, updated_at
 `
 
 type CreateWorkflowParams struct {
@@ -45,7 +46,7 @@ type CreateWorkflowParams struct {
 //	VALUES (
 //	  $1, $2, $3, $4, $5
 //	)
-//	RETURNING id, user_id, name, description, is_active, created_at, updated_at
+//	RETURNING id, user_id, name, description, created_at, updated_at
 func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error) {
 	row := q.db.QueryRow(ctx, createWorkflow,
 		arg.UserID,
@@ -60,7 +61,6 @@ func (q *Queries) CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams)
 		&i.UserID,
 		&i.Name,
 		&i.Description,
-		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -106,58 +106,39 @@ func (q *Queries) CreateWorkflowEdge(ctx context.Context, arg *CreateWorkflowEdg
 const createWorkflowNode = `-- name: CreateWorkflowNode :one
 INSERT INTO workflow_node (
   workflow_id,
-  name,
-  type,
-  category,
-  service,
+  action_type,
   config
 )
 VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3
 )
-RETURNING id, workflow_id, name, type, category, service, config
+RETURNING id, workflow_id, action_type, config
 `
 
 type CreateWorkflowNodeParams struct {
-	WorkflowID int32       `json:"workflow_id"`
-	Name       null.String `json:"name"`
-	Type       string      `json:"type"`
-	Category   string      `json:"category"`
-	Service    null.String `json:"service"`
-	Config     string      `json:"config"`
+	WorkflowID int32  `json:"workflow_id"`
+	ActionType string `json:"action_type"`
+	Config     []byte `json:"config"`
 }
 
 // CreateWorkflowNode
 //
 //	INSERT INTO workflow_node (
 //	  workflow_id,
-//	  name,
-//	  type,
-//	  category,
-//	  service,
+//	  action_type,
 //	  config
 //	)
 //	VALUES (
-//	  $1, $2, $3, $4, $5, $6
+//	  $1, $2, $3
 //	)
-//	RETURNING id, workflow_id, name, type, category, service, config
+//	RETURNING id, workflow_id, action_type, config
 func (q *Queries) CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNodeParams) (*WorkflowNode, error) {
-	row := q.db.QueryRow(ctx, createWorkflowNode,
-		arg.WorkflowID,
-		arg.Name,
-		arg.Type,
-		arg.Category,
-		arg.Service,
-		arg.Config,
-	)
+	row := q.db.QueryRow(ctx, createWorkflowNode, arg.WorkflowID, arg.ActionType, arg.Config)
 	var i WorkflowNode
 	err := row.Scan(
 		&i.ID,
 		&i.WorkflowID,
-		&i.Name,
-		&i.Type,
-		&i.Category,
-		&i.Service,
+		&i.ActionType,
 		&i.Config,
 	)
 	return &i, err
@@ -218,14 +199,14 @@ func (q *Queries) CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowN
 }
 
 const getWorkflow = `-- name: GetWorkflow :one
-SELECT id, user_id, name, description, is_active, created_at, updated_at
+SELECT id, user_id, name, description, created_at, updated_at
 FROM workflow
 WHERE id = $1
 `
 
 // GetWorkflow
 //
-//	SELECT id, user_id, name, description, is_active, created_at, updated_at
+//	SELECT id, user_id, name, description, created_at, updated_at
 //	FROM workflow
 //	WHERE id = $1
 func (q *Queries) GetWorkflow(ctx context.Context, id int32) (*Workflow, error) {
@@ -236,7 +217,6 @@ func (q *Queries) GetWorkflow(ctx context.Context, id int32) (*Workflow, error) 
 		&i.UserID,
 		&i.Name,
 		&i.Description,
-		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -278,13 +258,87 @@ func (q *Queries) GetWorkflowEdges(ctx context.Context, workflowID int32) ([]*Wo
 	return items, nil
 }
 
+const getWorkflowGraph = `-- name: GetWorkflowGraph :many
+SELECT
+  w.id AS workflow_id,
+  w.name AS workflow_name,
+  w.description AS workflow_description,
+  w.created_at,
+  wn.id AS node_id,
+  action_type,
+  config,
+  source_node_id,
+  target_node_id
+FROM workflow w
+INNER JOIN workflow_node wn ON w.id = wn.workflow_id
+LEFT JOIN workflow_edge we ON w.id = we.workflow_id
+  AND we.source_node_id = wn.id
+WHERE w.id = $1
+`
+
+type GetWorkflowGraphRow struct {
+	WorkflowID          int32       `json:"workflow_id"`
+	WorkflowName        string      `json:"workflow_name"`
+	WorkflowDescription null.String `json:"workflow_description"`
+	CreatedAt           null.Int    `json:"created_at"`
+	NodeID              int32       `json:"node_id"`
+	ActionType          string      `json:"action_type"`
+	Config              []byte      `json:"config"`
+	SourceNodeID        pgtype.Int4 `json:"source_node_id"`
+	TargetNodeID        pgtype.Int4 `json:"target_node_id"`
+}
+
+// GetWorkflowGraph
+//
+//	SELECT
+//	  w.id AS workflow_id,
+//	  w.name AS workflow_name,
+//	  w.description AS workflow_description,
+//	  w.created_at,
+//	  wn.id AS node_id,
+//	  action_type,
+//	  config,
+//	  source_node_id,
+//	  target_node_id
+//	FROM workflow w
+//	INNER JOIN workflow_node wn ON w.id = wn.workflow_id
+//	LEFT JOIN workflow_edge we ON w.id = we.workflow_id
+//	  AND we.source_node_id = wn.id
+//	WHERE w.id = $1
+func (q *Queries) GetWorkflowGraph(ctx context.Context, id int32) ([]*GetWorkflowGraphRow, error) {
+	rows, err := q.db.Query(ctx, getWorkflowGraph, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetWorkflowGraphRow
+	for rows.Next() {
+		var i GetWorkflowGraphRow
+		if err := rows.Scan(
+			&i.WorkflowID,
+			&i.WorkflowName,
+			&i.WorkflowDescription,
+			&i.CreatedAt,
+			&i.NodeID,
+			&i.ActionType,
+			&i.Config,
+			&i.SourceNodeID,
+			&i.TargetNodeID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getWorkflowNodes = `-- name: GetWorkflowNodes :many
 SELECT id,
   workflow_id,
-  name,
-  type,
-  category,
-  service,
+  action_type,
   config
 FROM workflow_node
 WHERE workflow_id = $1
@@ -294,10 +348,7 @@ WHERE workflow_id = $1
 //
 //	SELECT id,
 //	  workflow_id,
-//	  name,
-//	  type,
-//	  category,
-//	  service,
+//	  action_type,
 //	  config
 //	FROM workflow_node
 //	WHERE workflow_id = $1
@@ -313,10 +364,7 @@ func (q *Queries) GetWorkflowNodes(ctx context.Context, workflowID int32) ([]*Wo
 		if err := rows.Scan(
 			&i.ID,
 			&i.WorkflowID,
-			&i.Name,
-			&i.Type,
-			&i.Category,
-			&i.Service,
+			&i.ActionType,
 			&i.Config,
 		); err != nil {
 			return nil, err

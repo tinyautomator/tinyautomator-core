@@ -11,19 +11,23 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 )
 
+type WorkflowGraph struct {
+	ID    int32
+	Nodes []*dao.WorkflowNode
+	Edges []*dao.WorkflowEdge
+}
+
 type WorkflowNode struct {
 	TempID   string `json:"temp_id"`
-	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Position struct {
 		X float64 `json:"x"`
 		Y float64 `json:"y"`
 	} `json:"position"`
 	Data struct {
-		Label    string `json:"label"`
-		Category string `json:"category"`
-		Config   string `json:"config"`
-		Service  string `json:"service"`
+		Label      string `json:"label"`
+		ActionType string `json:"action_type"`
+		Config     string `json:"config"`
 	} `json:"data"`
 }
 
@@ -42,8 +46,7 @@ type WorkflowRepository interface {
 		nodes []WorkflowNode,
 		edges []WorkflowEdge,
 	) (*dao.Workflow, error)
-	GetWorkflowNodes(ctx context.Context, workflowID int32) ([]*dao.WorkflowNode, error)
-	GetWorkflowEdges(ctx context.Context, workflowID int32) ([]*dao.WorkflowEdge, error)
+	GetWorkflowGraph(ctx context.Context, workflowID int32) (*WorkflowGraph, error)
 }
 
 type workflowRepo struct {
@@ -103,10 +106,8 @@ func (r *workflowRepo) CreateWorkflow(
 	for _, node := range nodes {
 		n, err := qtx.CreateWorkflowNode(ctx, &dao.CreateWorkflowNodeParams{
 			WorkflowID: w.ID,
-			Name:       null.StringFrom(node.Name),
-			Type:       node.Type,
-			Category:   node.Data.Category,
-			Service:    null.StringFrom(node.Data.Service),
+			ActionType: node.Data.ActionType,
+			Config:     []byte(node.Data.Config),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("db error create workflow nodes: %w", err)
@@ -144,28 +145,49 @@ func (r *workflowRepo) CreateWorkflow(
 	return w, nil
 }
 
-func (r workflowRepo) GetWorkflowNodes(
+func (r workflowRepo) GetWorkflowGraph(
 	ctx context.Context,
 	workflowID int32,
-) ([]*dao.WorkflowNode, error) {
-	w, err := r.q.GetWorkflowNodes(ctx, workflowID)
+) (*WorkflowGraph, error) {
+	rows, err := r.q.GetWorkflowGraph(ctx, workflowID)
 	if err != nil {
-		return nil, fmt.Errorf("db error get workflow nodes: %w", err)
+		return nil, fmt.Errorf("error loading workflow graph from db: %w", err)
+	}
+	// TODO: check for no rows
+
+	nodeMap := make(map[int32]*dao.WorkflowNode)
+
+	var edges []*dao.WorkflowEdge
+
+	for _, row := range rows {
+		if _, exists := nodeMap[row.NodeID]; !exists {
+			nodeMap[row.NodeID] = &dao.WorkflowNode{
+				ID:         row.NodeID,
+				ActionType: row.ActionType,
+				Config:     row.Config,
+				WorkflowID: row.WorkflowID,
+			}
+		}
+
+		if row.SourceNodeID.Valid && row.TargetNodeID.Valid {
+			edges = append(edges, &dao.WorkflowEdge{
+				SourceNodeID: row.SourceNodeID.Int32,
+				TargetNodeID: row.TargetNodeID.Int32,
+				WorkflowID:   row.WorkflowID,
+			})
+		}
 	}
 
-	return w, nil
-}
-
-func (r workflowRepo) GetWorkflowEdges(
-	ctx context.Context,
-	workflowID int32,
-) ([]*dao.WorkflowEdge, error) {
-	w, err := r.q.GetWorkflowEdges(ctx, workflowID)
-	if err != nil {
-		return nil, fmt.Errorf("db error get workflow edges: %w", err)
+	var nodes []*dao.WorkflowNode
+	for _, node := range nodeMap {
+		nodes = append(nodes, node)
 	}
 
-	return w, nil
+	return &WorkflowGraph{
+		ID:    workflowID,
+		Nodes: nodes,
+		Edges: edges,
+	}, nil
 }
 
 var _ WorkflowRepository = (*workflowRepo)(nil)

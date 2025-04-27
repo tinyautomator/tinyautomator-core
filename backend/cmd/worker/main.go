@@ -21,6 +21,7 @@ func main() {
 	defer stop()
 
 	defer func() {
+		// TODO: remove
 		panicErr := recover()
 
 		if w != nil {

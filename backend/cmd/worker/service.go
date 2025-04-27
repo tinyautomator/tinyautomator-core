@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -11,20 +10,25 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
+	"github.com/tinyautomator/tinyautomator-core/backend/services"
 )
 
 type WorkerService struct {
-	repo   repositories.WorkflowScheduleRepository
 	logger logrus.FieldLogger
 	wg     sync.WaitGroup
+
+	workflowScheduleRepo repositories.WorkflowScheduleRepository
+
+	workflowExecutorSvc  *services.WorkflowExecutorService
+	workflowSchedulerSvc *services.WorkflowSchedulerService
 }
 
 func NewWorkerService(cfg config.AppConfig) *WorkerService {
-	l := cfg.GetLogger()
-
 	return &WorkerService{
-		repo:   cfg.GetWorkflowScheduleRepository(),
-		logger: l,
+		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
+		workflowExecutorSvc:  services.NewWorkflowExecutorService(cfg),
+		workflowSchedulerSvc: services.NewWorkflowSchedulerService(cfg),
+		logger:               cfg.GetLogger(),
 	}
 }
 
@@ -34,10 +38,10 @@ func (s *WorkerService) Shutdown() {
 	s.logger.Info("Worker shutdown complete")
 }
 
-func (s *WorkerService) GetScheduledWorkflows(
+func (s *WorkerService) GetDueWorkflows(
 	ctx context.Context,
 ) ([]*dao.WorkflowSchedule, error) {
-	ws, err := s.repo.GetDueSchedulesLocked(ctx)
+	ws, err := s.workflowScheduleRepo.GetDueSchedulesLocked(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch due schedules from repo: %w", err)
 	}
@@ -45,16 +49,15 @@ func (s *WorkerService) GetScheduledWorkflows(
 	return ws, nil
 }
 
-func (s *WorkerService) ScheduleWorkflow(ctx context.Context, ws *dao.WorkflowSchedule) error {
+func (s *WorkerService) RunWorkflow(ctx context.Context, ws *dao.WorkflowSchedule) error {
 	if ctx.Err() != nil {
 		s.logger.WithField("workflow_id", ws.WorkflowID).Warn("ctx cancelled, skipping schedule")
 		return nil
 	}
 
-	err := s.validateSchedule(ws)
+	err := s.workflowSchedulerSvc.ValidateSchedule(ws)
 	if err != nil {
-		s.logger.WithField("schedule_id", ws.ID).WithError(err).Error("failed to validate schedule")
-		return err
+		return fmt.Errorf("failed to validate schedule: %w", err)
 	}
 
 	s.wg.Add(1)
@@ -62,8 +65,12 @@ func (s *WorkerService) ScheduleWorkflow(ctx context.Context, ws *dao.WorkflowSc
 	go func() {
 		defer s.wg.Done()
 
-		// TODO: add logic to execute workflow here
-		time.Sleep(10 * time.Second) // simulate job run
+		if err := s.workflowExecutorSvc.ExecuteWorkflow(ctx, ws.WorkflowID); err != nil {
+			s.logger.WithError(err).WithFields(logrus.Fields{
+				"schedule_id": ws.ID,
+				"workflow_id": ws.WorkflowID,
+			}).Warn("workflow execution failed")
+		}
 
 		s.logger.WithFields(logrus.Fields{
 			"schedule_id": ws.ID,
@@ -71,9 +78,9 @@ func (s *WorkerService) ScheduleWorkflow(ctx context.Context, ws *dao.WorkflowSc
 		}).Info("workflow execution finished")
 
 		now := time.Now().UnixMilli()
-		nextRun := s.calculateNextRun(ws.ScheduleType, now)
+		nextRun := s.workflowSchedulerSvc.CalculateNextRun(ws.ScheduleType, now)
 
-		if err := s.repo.UpdateNextRun(context.Background(), ws.ID, nextRun, now); err != nil {
+		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, nextRun, now); err != nil {
 			s.logger.WithError(err).
 				WithField("workflow_id", ws.WorkflowID).
 				Error("failed to update next_run_at")
@@ -81,37 +88,4 @@ func (s *WorkerService) ScheduleWorkflow(ctx context.Context, ws *dao.WorkflowSc
 	}()
 
 	return nil
-}
-
-func (s *WorkerService) validateSchedule(ws *dao.WorkflowSchedule) error {
-	switch ws.ScheduleType {
-	case "once", "daily", "weekly", "monthly":
-		// TODO: instrument
-	default:
-		return fmt.Errorf("invalid schedule_type: %s", ws.ScheduleType)
-	}
-
-	if !ws.NextRunAt.Valid || ws.NextRunAt.Int64 <= 0 {
-		return errors.New("next_run_at must be a valid positive timestamp")
-	}
-
-	return nil
-}
-
-func (s *WorkerService) calculateNextRun(scheduleType string, now int64) *int64 {
-	var t int64
-
-	switch scheduleType {
-	case "daily":
-		t = now + int64(24*time.Hour/time.Millisecond)
-		return &t
-	case "weekly":
-		t = now + int64(7*24*time.Hour/time.Millisecond)
-		return &t
-	case "monthly":
-		t = now + int64(30*24*time.Hour/time.Millisecond)
-		return &t
-	default: // once or invalid
-		return nil
-	}
 }

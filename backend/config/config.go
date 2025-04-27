@@ -16,10 +16,10 @@ const (
 )
 
 type EnvironmentVariables struct {
-	LogLevel                  string        `envconfig:"LOG_LEVEL"                       default:"INFO"`
-	ClerkSecretKey            string        `envconfig:"CLERK_SECRET_KEY"`
-	Port                      string        `envconfig:"PORT"                            default:"9000"`
-	WorkerPollIntervalMinutes time.Duration `envconfig:"WORKER_POLLING_INTERVAL_MINUTES" default:"10m"`
+	LogLevel           string        `envconfig:"LOG_LEVEL"               default:"INFO"`
+	ClerkSecretKey     string        `envconfig:"CLERK_SECRET_KEY"`
+	Port               string        `envconfig:"PORT"                    default:"9000"`
+	WorkerPollInterval time.Duration `envconfig:"WORKER_POLLING_INTERVAL" default:"10m"`
 
 	// Gmail Variables
 	GmailClientID     string   `envconfig:"GMAIL_CLIENT_ID"`

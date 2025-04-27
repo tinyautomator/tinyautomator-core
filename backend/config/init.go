@@ -88,8 +88,9 @@ func (cfg *appConfig) initRepositories(ctx context.Context) error {
 	}
 
 	cfg.pool = pool
-	cfg.workflowRepository = repositories.NewWorkflowRepository(dao.New(pool), pool)
-	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(dao.New(pool), pool)
+	q := dao.New(pool)
+	cfg.workflowRepository = repositories.NewWorkflowRepository(q, pool)
+	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(q, pool)
 
 	return nil
 }

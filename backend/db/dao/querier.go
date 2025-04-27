@@ -23,7 +23,7 @@ type Querier interface {
 	//  VALUES (
 	//    $1, $2, $3, $4, $5
 	//  )
-	//  RETURNING id, user_id, name, description, is_active, created_at, updated_at
+	//  RETURNING id, user_id, name, description, created_at, updated_at
 	CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error)
 	//CreateWorkflowEdge
 	//
@@ -41,16 +41,13 @@ type Querier interface {
 	//
 	//  INSERT INTO workflow_node (
 	//    workflow_id,
-	//    name,
-	//    type,
-	//    category,
-	//    service,
+	//    action_type,
 	//    config
 	//  )
 	//  VALUES (
-	//    $1, $2, $3, $4, $5, $6
+	//    $1, $2, $3
 	//  )
-	//  RETURNING id, workflow_id, name, type, category, service, config
+	//  RETURNING id, workflow_id, action_type, config
 	CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNodeParams) (*WorkflowNode, error)
 	//CreateWorkflowNodeUi
 	//
@@ -112,7 +109,7 @@ type Querier interface {
 	GetDueWorkflowSchedules(ctx context.Context, nextRunAt null.Int) ([]*WorkflowSchedule, error)
 	//GetWorkflow
 	//
-	//  SELECT id, user_id, name, description, is_active, created_at, updated_at
+	//  SELECT id, user_id, name, description, created_at, updated_at
 	//  FROM workflow
 	//  WHERE id = $1
 	GetWorkflow(ctx context.Context, id int32) (*Workflow, error)
@@ -124,14 +121,29 @@ type Querier interface {
 	//  FROM workflow_edge
 	//  WHERE workflow_id = $1
 	GetWorkflowEdges(ctx context.Context, workflowID int32) ([]*WorkflowEdge, error)
+	//GetWorkflowGraph
+	//
+	//  SELECT
+	//    w.id AS workflow_id,
+	//    w.name AS workflow_name,
+	//    w.description AS workflow_description,
+	//    w.created_at,
+	//    wn.id AS node_id,
+	//    action_type,
+	//    config,
+	//    source_node_id,
+	//    target_node_id
+	//  FROM workflow w
+	//  INNER JOIN workflow_node wn ON w.id = wn.workflow_id
+	//  LEFT JOIN workflow_edge we ON w.id = we.workflow_id
+	//    AND we.source_node_id = wn.id
+	//  WHERE w.id = $1
+	GetWorkflowGraph(ctx context.Context, id int32) ([]*GetWorkflowGraphRow, error)
 	//GetWorkflowNodes
 	//
 	//  SELECT id,
 	//    workflow_id,
-	//    name,
-	//    type,
-	//    category,
-	//    service,
+	//    action_type,
 	//    config
 	//  FROM workflow_node
 	//  WHERE workflow_id = $1

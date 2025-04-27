@@ -27,8 +27,9 @@ func main() {
 	routes.RegisterRoutes(r, cfg)
 
 	srv := &http.Server{
-		Addr:         ":" + cfg.GetEnvVars().Port,
-		Handler:      r,
+		Addr:    ":" + cfg.GetEnvVars().Port,
+		Handler: r,
+		// TODO: add this to config
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
@@ -42,6 +43,7 @@ func main() {
 	<-ctx.Done()
 	cfg.GetLogger().Info("signal received - shutting down gracefully")
 
+	// TODO: add this to config
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 2500*time.Millisecond)
 	defer cancel()
 

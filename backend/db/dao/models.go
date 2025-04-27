@@ -13,7 +13,6 @@ type Workflow struct {
 	UserID      string      `json:"user_id"`
 	Name        string      `json:"name"`
 	Description null.String `json:"description"`
-	IsActive    null.Bool   `json:"is_active"`
 	CreatedAt   null.Int    `json:"created_at"`
 	UpdatedAt   null.Int    `json:"updated_at"`
 }
@@ -25,13 +24,10 @@ type WorkflowEdge struct {
 }
 
 type WorkflowNode struct {
-	ID         int32       `json:"id"`
-	WorkflowID int32       `json:"workflow_id"`
-	Name       null.String `json:"name"`
-	Type       string      `json:"type"`
-	Category   string      `json:"category"`
-	Service    null.String `json:"service"`
-	Config     string      `json:"config"`
+	ID         int32  `json:"id"`
+	WorkflowID int32  `json:"workflow_id"`
+	ActionType string `json:"action_type"`
+	Config     []byte `json:"config"`
 }
 
 type WorkflowNodeUi struct {
