@@ -3,7 +3,6 @@ import type { Node } from "@xyflow/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SettingsTab from "./settings/SettingsTab";
 import AdvancedTab from "./advanced/AdvancedTab";
-import LogsTab from "./logs/LogsTab";
 
 interface InspectorTabsProps {
   selectedNode: Node<{ label: string }>;
@@ -31,9 +30,7 @@ export function InspectorTabs({ selectedNode }: InspectorTabsProps) {
           <AdvancedTab selectedNode={selectedNode} />
         </TabsContent>
 
-        <TabsContent value="logs">
-          <LogsTab />
-        </TabsContent>
+        <TabsContent value="logs"></TabsContent>
       </Tabs>
     </>
   );

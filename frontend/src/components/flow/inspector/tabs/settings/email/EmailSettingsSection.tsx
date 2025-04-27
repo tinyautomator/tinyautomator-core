@@ -1,9 +1,9 @@
 "use client";
 
 import { EmailContextProvider } from "./context/EmailContext";
-import { RecipientInputPanel } from "./components/recipients/RecipientInputPanel";
-import { EmailComposerFields } from "./components/composer/EmailComposerFields";
-import { EmailPreviewButton } from "./components/preview/EmailPreviewButton";
+import { RecipientInputPanel } from "./RecipientInputPanel";
+import { EmailComposerFields } from "./EmailComposerFields";
+import { EmailPreviewButton } from "./EmailPreviewButton";
 
 export function EmailSettingsSection() {
   return (

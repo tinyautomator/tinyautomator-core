@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "isbot": "^5",
     "lucide-react": "^0.487.0",
+    "papaparse": "^5.5.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-draggable": "^4.4.6",

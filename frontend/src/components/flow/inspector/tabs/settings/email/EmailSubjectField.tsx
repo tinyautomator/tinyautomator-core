@@ -1,4 +1,4 @@
-import { useEmailContext } from "../../../context/EmailContext";
+import { useEmailContext } from "./context/EmailContext";
 
 export function EmailSubjectField() {
   const { subject, setSubject } = useEmailContext();

@@ -1,5 +1,5 @@
-import { EmailSubjectField } from "./fields/EmailSubjectField";
-import { EmailBodyField } from "./fields/EmailBodyField";
+import { EmailSubjectField } from "./EmailSubjectField";
+import { EmailBodyField } from "./EmailBodyField";
 
 export function EmailComposerFields() {
   return (

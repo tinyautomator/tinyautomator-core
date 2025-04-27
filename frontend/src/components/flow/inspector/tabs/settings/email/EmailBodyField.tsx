@@ -1,5 +1,5 @@
 import { Textarea } from "@/components/ui/textarea";
-import { useEmailContext } from "../../../context/EmailContext";
+import { useEmailContext } from "./context/EmailContext";
 
 export function EmailBodyField() {
   const { body, setBody, maxBodyLength } = useEmailContext();

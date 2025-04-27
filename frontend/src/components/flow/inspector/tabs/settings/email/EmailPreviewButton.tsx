@@ -1,6 +1,6 @@
 "use client";
 
-import { useEmailContext } from "../../context/EmailContext";
+import { useEmailContext } from "./context/EmailContext";
 import { EmailPreviewDialog } from "./EmailPreviewDialog";
 
 export function EmailPreviewButton() {

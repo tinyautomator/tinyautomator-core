@@ -1,6 +1,6 @@
 "use client";
 
-import type { InputMode } from "../../context/EmailContext";
+import type { InputMode } from "./context/EmailContext";
 
 interface RecipientInputSelectorProps {
   inputMode: InputMode;

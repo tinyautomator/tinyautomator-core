@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { parseEmailCsv } from "../../utils/csvParser";
-import { useEmailContext } from "../../context/EmailContext";
+import { parseEmailCsv } from "./utils/csvParser";
+import { useEmailContext } from "./context/EmailContext";
 import { RecipientInputSelector } from "./RecipientInputSelector";
-import { ManualEmailInput } from "./inputs/ManualEmailInput";
-import { CsvEmailInput } from "./inputs/CsvEmailInput";
+import { ManualEmailInput } from "./ManualEmailInput";
+import { CsvEmailInput } from "./CsvEmailInput";
 
 export function RecipientInputPanel() {
   const {

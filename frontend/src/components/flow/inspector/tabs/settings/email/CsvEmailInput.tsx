@@ -5,8 +5,8 @@ import type React from "react";
 import { useRef } from "react";
 import { Upload, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmailChips } from "../shared/EmailChips";
-import { validateEmail } from "../../../utils/emailValidation";
+import { EmailChips } from "./EmailChips";
+import { validateEmail } from "./utils/emailValidation";
 
 interface CsvEmailInputProps {
   emails: string[];

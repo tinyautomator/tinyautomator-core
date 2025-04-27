@@ -1,54 +1,48 @@
 "use client";
-import type { Node } from "@xyflow/react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronsLeftIcon } from "lucide-react";
-import { useState } from "react";
 
+import type { Node } from "@xyflow/react";
+import { ExpandablePanel } from "@/components/shared/ExpandablePanel";
 import { InspectorTabs } from "./tabs/InspectorTabs";
+import { Settings2 } from "lucide-react";
 
 interface InspectorPanelProps {
   selectedNode: Node<{ label: string }> | null;
 }
 
 export default function InspectorPanel({ selectedNode }: InspectorPanelProps) {
-  const [expanded, setExpanded] = useState(false);
   return (
-    <div
-      className={`transition-all duration-300 ${
-        expanded ? "w-full sm:w-[600px]" : "w-80"
-      } max-w-full`}
+    <ExpandablePanel
+      direction="left"
+      size="lg"
+      className="bg-background border-l border-border"
     >
-      <div className="p-4">
-        <h2 className="font-semibold">Inspector</h2>
-        <p className="text-xs text-muted-foreground">
-          Configure the selected block
-        </p>
-      </div>
-      <div className="border-b border-slate-200" />
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Settings2 className="h-5 w-5 text-muted-foreground" />
+          <div>
+            <h2 className="text-lg font-semibold">Inspector</h2>
+            <p className="text-sm text-muted-foreground">
+              {selectedNode
+                ? `Editing: ${selectedNode.data?.label || selectedNode.id}`
+                : "Select a block to configure"}
+            </p>
+          </div>
+        </div>
 
-      <ScrollArea className="h-[calc(100vh-8.5rem)]">
-        <button
-          onClick={() => setExpanded((prev: boolean) => !prev)}
-          className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 transition"
-          title={expanded ? "Collapse panel" : "Expand panel"}
-        >
-          <ChevronsLeftIcon
-            className={`h-5 w-5 transform transition-transform ${
-              expanded ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-        <div className="p-4">
+        <div className="border-b border-border" />
+
+        <div>
           {selectedNode ? (
             <InspectorTabs selectedNode={selectedNode} />
           ) : (
-            <div className="text-sm text-muted-foreground text-center py-20">
+            <div className="text-sm text-muted-foreground text-center py-12">
               No block selected.
-              <br /> Click a node to inspect it.
+              <br />
+              Click a node to inspect it.
             </div>
           )}
         </div>
-      </ScrollArea>
-    </div>
+      </div>
+    </ExpandablePanel>
   );
 }

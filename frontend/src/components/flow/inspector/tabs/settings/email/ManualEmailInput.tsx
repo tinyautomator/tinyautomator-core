@@ -1,7 +1,7 @@
 "use client";
 
-import { EmailChips } from "../shared/EmailChips";
-import { validateEmail } from "../../../utils/emailValidation";
+import { EmailChips } from "./EmailChips";
+import { validateEmail } from "./utils/emailValidation";
 
 interface ManualEmailInputProps {
   emails: string[];
