@@ -7,49 +7,39 @@ import (
 	"os/signal"
 	"runtime/debug"
 	"syscall"
-	"time"
 
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 )
 
 func main() {
-	var w *Worker
+	var (
+		w   *Worker
+		cfg config.AppConfig
+	)
 
-	// TODO: this was a good idea from claude; figure it out better
-	ctx, cancel := context.WithCancel(context.Background())
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	go func() {
-		sig := <-sigChan
-		fmt.Printf("Received signal %s, shutting down...\n", sig)
+	defer func() {
+		// TODO: remove
+		panicErr := recover()
 
 		if w != nil {
 			w.StopScheduler()
 		}
 
-		cancel() // Cancel the context which could be passed to PollAndSchedule
-		// Give some time for operations to complete
-		time.Sleep(2 * time.Second)
-		os.Exit(0)
-	}()
+		if cfg != nil {
+			cfg.CleanUp()
+		}
 
-	defer func() {
-		if r := recover(); r != nil {
-			if w != nil {
-				w.StopScheduler()
-			}
-
-			// TODO: The panic handling in the defer function is good, but
-			// you could also consider setting up a signal handler for
-			// graceful shutdown (e.g., SIGINT, SIGTERM).
-			fmt.Fprintf(os.Stderr, "fatal error: %v\n", r)
+		if panicErr != nil {
+			fmt.Fprintf(os.Stderr, "fatal error: %v\n", panicErr)
 			debug.PrintStack()
 			os.Exit(1)
 		}
 	}()
 
-	cfg, err := config.NewAppConfig()
+	cfg, err := config.NewAppConfig(ctx)
 	if err != nil {
 		panic("failed to initialize config: " + err.Error())
 	}
@@ -58,10 +48,14 @@ func main() {
 	logger.Info("initializing worker")
 
 	w = NewWorker(cfg)
-	w.StartScheduler()
 
-	err = w.PollAndSchedule(ctx)
-	if err != nil {
-		panic(fmt.Errorf("error while polling or scheduling: %v", err))
-	}
+	go func() {
+		err = w.PollAndSchedule(ctx)
+		if err != nil {
+			panic(fmt.Errorf("error in poll & schedule loop: %v", err))
+		}
+	}()
+
+	<-ctx.Done()
+	logger.Info("signal received - shutting down gracefully")
 }

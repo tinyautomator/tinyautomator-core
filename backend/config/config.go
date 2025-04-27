@@ -1,8 +1,10 @@
 package config
 
 import (
+	"context"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"golang.org/x/oauth2"
@@ -14,10 +16,10 @@ const (
 )
 
 type EnvironmentVariables struct {
-	LogLevel                  string        `envconfig:"LOG_LEVEL"                       default:"INFO"`
-	ClerkSecretKey            string        `envconfig:"CLERK_SECRET_KEY"`
-	Port                      string        `envconfig:"PORT"                            default:"9000"`
-	WorkerPollIntervalMinutes time.Duration `envconfig:"WORKER_POLLING_INTERVAL_MINUTES" default:"10m"`
+	LogLevel           string        `envconfig:"LOG_LEVEL"               default:"INFO"`
+	ClerkSecretKey     string        `envconfig:"CLERK_SECRET_KEY"`
+	Port               string        `envconfig:"PORT"                    default:"9000"`
+	WorkerPollInterval time.Duration `envconfig:"WORKER_POLLING_INTERVAL" default:"10m"`
 
 	// Gmail Variables
 	GmailClientID     string   `envconfig:"GMAIL_CLIENT_ID"`
@@ -35,6 +37,8 @@ type AppConfig interface {
 	GetWorkflowScheduleRepository() repositories.WorkflowScheduleRepository
 
 	GetGmailOAuthConfig() *oauth2.Config
+
+	CleanUp()
 }
 
 type appConfig struct {
@@ -42,6 +46,7 @@ type appConfig struct {
 	env     string
 	envVars EnvironmentVariables
 	logger  logrus.FieldLogger
+	pool    *pgxpool.Pool
 
 	// repositories
 	workflowRepository         repositories.WorkflowRepository
@@ -53,7 +58,7 @@ type appConfig struct {
 
 var cfg *appConfig
 
-func NewAppConfig() (AppConfig, error) {
+func NewAppConfig(ctx context.Context) (AppConfig, error) {
 	if cfg != nil {
 		cfg.GetLogger().Info("Config object is already initialized")
 
@@ -70,7 +75,7 @@ func NewAppConfig() (AppConfig, error) {
 		return nil, err
 	}
 
-	if err := cfg.initRepositories(); err != nil {
+	if err := cfg.initRepositories(ctx); err != nil {
 		return nil, err
 	}
 
@@ -101,6 +106,10 @@ func (cfg *appConfig) GetWorkflowScheduleRepository() repositories.WorkflowSched
 
 func (cfg *appConfig) GetGmailOAuthConfig() *oauth2.Config {
 	return cfg.gmailOAuthConfig
+}
+
+func (cfg *appConfig) CleanUp() {
+	cfg.pool.Close()
 }
 
 var _ AppConfig = (*appConfig)(nil)

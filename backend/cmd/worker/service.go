@@ -2,55 +2,46 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tinyautomator/tinyautomator-core/backend/cmd/worker/scheduler"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
+	"github.com/tinyautomator/tinyautomator-core/backend/services"
 )
 
 type WorkerService struct {
-	repo      repositories.WorkflowScheduleRepository
-	scheduler scheduler.WorkflowScheduler
-	logger    logrus.FieldLogger
+	logger logrus.FieldLogger
+	wg     sync.WaitGroup
+
+	workflowScheduleRepo repositories.WorkflowScheduleRepository
+
+	workflowExecutorSvc  *services.WorkflowExecutorService
+	workflowSchedulerSvc *services.WorkflowSchedulerService
 }
 
 func NewWorkerService(cfg config.AppConfig) *WorkerService {
-	l := cfg.GetLogger()
-	// TODO: replace with dynamic scheduler backend selection
-	s, err := scheduler.NewGoCronScheduler(cfg)
-	if err != nil {
-		panic(err)
-	}
-
 	return &WorkerService{
-		repo:      cfg.GetWorkflowScheduleRepository(),
-		scheduler: s,
-		logger:    l,
-	}
-}
-
-func (s *WorkerService) Start() {
-	if err := s.scheduler.Start(); err != nil {
-		panic(err)
+		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
+		workflowExecutorSvc:  services.NewWorkflowExecutorService(cfg),
+		workflowSchedulerSvc: services.NewWorkflowSchedulerService(cfg),
+		logger:               cfg.GetLogger(),
 	}
 }
 
 func (s *WorkerService) Shutdown() {
-	if err := s.scheduler.Shutdown(); err != nil {
-		panic(err)
-	}
+	s.logger.Info("Waiting for in-flight workflows to finish...")
+	s.wg.Wait()
+	s.logger.Info("Worker shutdown complete")
 }
 
-func (s *WorkerService) GetWorkflowsToSchedule(
+func (s *WorkerService) GetDueWorkflows(
 	ctx context.Context,
-	within time.Duration,
 ) ([]*dao.WorkflowSchedule, error) {
-	ws, err := s.repo.GetWorkflowSchedules(ctx, within)
+	ws, err := s.workflowScheduleRepo.GetDueSchedulesLocked(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch due schedules from repo: %w", err)
 	}
@@ -58,31 +49,43 @@ func (s *WorkerService) GetWorkflowsToSchedule(
 	return ws, nil
 }
 
-func (s *WorkerService) ScheduleWorkflow(ctx context.Context, ws *dao.WorkflowSchedule) error {
-	err := s.validateSchedule(ws)
+func (s *WorkerService) RunWorkflow(ctx context.Context, ws *dao.WorkflowSchedule) error {
+	if ctx.Err() != nil {
+		s.logger.WithField("workflow_id", ws.WorkflowID).Warn("ctx cancelled, skipping schedule")
+		return nil
+	}
+
+	err := s.workflowSchedulerSvc.ValidateSchedule(ws)
 	if err != nil {
-		s.logger.WithField("schedule_id", ws.ID).WithError(err).Error("failed to validate schedule")
-		return err
+		return fmt.Errorf("failed to validate schedule: %w", err)
 	}
 
-	if err := s.scheduler.Schedule(ctx, ws); err != nil {
-		return fmt.Errorf("error scheduling workflow: %w", err)
-	}
+	s.wg.Add(1)
 
-	return nil
-}
+	go func() {
+		defer s.wg.Done()
 
-func (s *WorkerService) validateSchedule(ws *dao.WorkflowSchedule) error {
-	switch ws.ScheduleType {
-	case "once", "daily", "weekly", "monthly":
-		// TODO: instrument
-	default:
-		return fmt.Errorf("invalid schedule_type: %s", ws.ScheduleType)
-	}
+		if err := s.workflowExecutorSvc.ExecuteWorkflow(ctx, ws.WorkflowID); err != nil {
+			s.logger.WithError(err).WithFields(logrus.Fields{
+				"schedule_id": ws.ID,
+				"workflow_id": ws.WorkflowID,
+			}).Warn("workflow execution failed")
+		}
 
-	if !ws.NextRunAt.Valid || ws.NextRunAt.Int64 <= 0 {
-		return errors.New("next_run_at must be a valid positive timestamp")
-	}
+		s.logger.WithFields(logrus.Fields{
+			"schedule_id": ws.ID,
+			"workflow_id": ws.WorkflowID,
+		}).Info("workflow execution finished")
+
+		now := time.Now().UnixMilli()
+		nextRun := s.workflowSchedulerSvc.CalculateNextRun(ws.ScheduleType, now)
+
+		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, nextRun, now); err != nil {
+			s.logger.WithError(err).
+				WithField("workflow_id", ws.WorkflowID).
+				Error("failed to update next_run_at")
+		}
+	}()
 
 	return nil
 }

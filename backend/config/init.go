@@ -1,13 +1,14 @@
 package config
 
 import (
-	"database/sql"
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/clerk/clerk-sdk-go/v2"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
@@ -77,14 +78,19 @@ func (cfg *appConfig) initLogger() error {
 	return nil
 }
 
-func (cfg *appConfig) initRepositories() error {
-	db, err := sql.Open("sqlite", "file:dev.db?_foreign_keys=on")
+func (cfg *appConfig) initRepositories(ctx context.Context) error {
+	pool, err := pgxpool.New(
+		ctx,
+		"postgres://tiny:autowmater@localhost:5432/tinyautomator?sslmode=disable",
+	)
 	if err != nil {
 		return fmt.Errorf("failed to open db: %w", err)
 	}
 
-	cfg.workflowRepository = repositories.NewWorkflowRepository(dao.New(db), db)
-	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(dao.New(db))
+	cfg.pool = pool
+	q := dao.New(pool)
+	cfg.workflowRepository = repositories.NewWorkflowRepository(q, pool)
+	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(q, pool)
 
 	return nil
 }

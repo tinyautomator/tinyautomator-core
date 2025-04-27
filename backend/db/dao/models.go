@@ -5,39 +5,33 @@
 package dao
 
 import (
-	"database/sql"
-
 	null "github.com/guregu/null/v6"
 )
 
 type Workflow struct {
-	ID          int64         `json:"id"`
-	UserID      string        `json:"user_id"`
-	Name        string        `json:"name"`
-	Description null.String   `json:"description"`
-	IsActive    sql.NullBool  `json:"is_active"`
-	CreatedAt   sql.NullInt64 `json:"created_at"`
-	UpdatedAt   sql.NullInt64 `json:"updated_at"`
+	ID          int32       `json:"id"`
+	UserID      string      `json:"user_id"`
+	Name        string      `json:"name"`
+	Description null.String `json:"description"`
+	CreatedAt   null.Int    `json:"created_at"`
+	UpdatedAt   null.Int    `json:"updated_at"`
 }
 
 type WorkflowEdge struct {
-	WorkflowID   int64 `json:"workflow_id"`
-	SourceNodeID int64 `json:"source_node_id"`
-	TargetNodeID int64 `json:"target_node_id"`
+	WorkflowID   int32 `json:"workflow_id"`
+	SourceNodeID int32 `json:"source_node_id"`
+	TargetNodeID int32 `json:"target_node_id"`
 }
 
 type WorkflowNode struct {
-	ID         int64       `json:"id"`
-	WorkflowID int64       `json:"workflow_id"`
-	Name       null.String `json:"name"`
-	Type       string      `json:"type"`
-	Category   string      `json:"category"`
-	Service    null.String `json:"service"`
-	Config     string      `json:"config"`
+	ID         int32  `json:"id"`
+	WorkflowID int32  `json:"workflow_id"`
+	ActionType string `json:"action_type"`
+	Config     []byte `json:"config"`
 }
 
 type WorkflowNodeUi struct {
-	ID        int64       `json:"id"`
+	ID        int32       `json:"id"`
 	XPosition float64     `json:"x_position"`
 	YPosition float64     `json:"y_position"`
 	NodeLabel null.String `json:"node_label"`
@@ -45,12 +39,12 @@ type WorkflowNodeUi struct {
 }
 
 type WorkflowSchedule struct {
-	ID           string        `json:"id"`
-	WorkflowID   int64         `json:"workflow_id"`
-	ScheduleType string        `json:"schedule_type"`
-	NextRunAt    sql.NullInt64 `json:"next_run_at"`
-	LastRunAt    sql.NullInt64 `json:"last_run_at"`
-	Status       string        `json:"status"`
-	CreatedAt    int64         `json:"created_at"`
-	UpdatedAt    int64         `json:"updated_at"`
+	ID           int32    `json:"id"`
+	WorkflowID   int32    `json:"workflow_id"`
+	ScheduleType string   `json:"schedule_type"`
+	NextRunAt    null.Int `json:"next_run_at"`
+	LastRunAt    null.Int `json:"last_run_at"`
+	Status       string   `json:"status"`
+	CreatedAt    int64    `json:"created_at"`
+	UpdatedAt    int64    `json:"updated_at"`
 }

@@ -6,7 +6,8 @@ package dao
 
 import (
 	"context"
-	"database/sql"
+
+	null "github.com/guregu/null/v6"
 )
 
 type Querier interface {
@@ -20,9 +21,9 @@ type Querier interface {
 	//    updated_at
 	//  )
 	//  VALUES (
-	//    ?, ?, ?, ?, ?
+	//    $1, $2, $3, $4, $5
 	//  )
-	//  RETURNING id, user_id, name, description, is_active, created_at, updated_at
+	//  RETURNING id, user_id, name, description, created_at, updated_at
 	CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error)
 	//CreateWorkflowEdge
 	//
@@ -32,7 +33,7 @@ type Querier interface {
 	//    target_node_id
 	//  )
 	//  VALUES (
-	//    ?, ?, ?
+	//    $1, $2, $3
 	//  )
 	//  RETURNING workflow_id, source_node_id, target_node_id
 	CreateWorkflowEdge(ctx context.Context, arg *CreateWorkflowEdgeParams) (*WorkflowEdge, error)
@@ -40,92 +41,121 @@ type Querier interface {
 	//
 	//  INSERT INTO workflow_node (
 	//    workflow_id,
-	//    name,
-	//    type,
-	//    category,
-	//    service,
+	//    action_type,
 	//    config
 	//  )
 	//  VALUES (
-	//    ?, ?, ?, ?, ?, ?
+	//    $1, $2, $3
 	//  )
-	//  RETURNING id, workflow_id, name, type, category, service, config
+	//  RETURNING id, workflow_id, action_type, config
 	CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNodeParams) (*WorkflowNode, error)
 	//CreateWorkflowNodeUi
 	//
 	//  INSERT INTO workflow_node_ui (
+	//    id,
 	//    x_position,
 	//    y_position,
 	//    node_label,
 	//    node_type
 	//  )
 	//  VALUES (
-	//    ?, ?, ?, ?
+	//    $1, $2, $3, $4, $5
 	//  )
 	//  RETURNING id, x_position, y_position, node_label, node_type
 	CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error)
 	//CreateWorkflowSchedule
 	//
 	//  INSERT INTO workflow_schedule (
-	//          id,
-	//          workflow_id,
-	//          schedule_type,
-	//          next_run_at,
-	//          last_run_at,
-	//          status,
-	//          created_at,
-	//          updated_at
-	//      )
-	//  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	//    workflow_id,
+	//    schedule_type,
+	//    next_run_at,
+	//    last_run_at,
+	//    status,
+	//    created_at,
+	//    updated_at
+	//  )
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
 	//  RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
 	CreateWorkflowSchedule(ctx context.Context, arg *CreateWorkflowScheduleParams) (*WorkflowSchedule, error)
 	//DeleteWorkflowSchedule
 	//
 	//  DELETE FROM workflow_schedule
-	//  WHERE id = ?
-	DeleteWorkflowSchedule(ctx context.Context, id string) error
+	//  WHERE id = $1
+	DeleteWorkflowSchedule(ctx context.Context, id int32) error
+	//GetDueSchedulesLocked
+	//
+	//  WITH locked AS (
+	//    SELECT id
+	//    FROM workflow_schedule
+	//    WHERE status = 'active'
+	//      AND next_run_at IS NOT NULL
+	//      AND next_run_at <=  extract(epoch from now()) * 1000
+	//    FOR UPDATE SKIP LOCKED
+	//    LIMIT $1
+	//  )
+	//  UPDATE workflow_schedule
+	//  SET status = 'pending'
+	//  FROM locked
+	//  WHERE workflow_schedule.id = locked.id
+	//  RETURNING locked.id, workflow_schedule.id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
+	GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*GetDueSchedulesLockedRow, error)
 	//GetDueWorkflowSchedules
 	//
 	//  SELECT id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
 	//  FROM workflow_schedule
 	//  WHERE next_run_at IS NOT NULL
-	//      AND next_run_at <= ?
-	//      AND status = 'active'
-	GetDueWorkflowSchedules(ctx context.Context, nextRunAt sql.NullInt64) ([]*WorkflowSchedule, error)
+	//    AND next_run_at <= $1
+	//    AND status = 'active'
+	GetDueWorkflowSchedules(ctx context.Context, nextRunAt null.Int) ([]*WorkflowSchedule, error)
 	//GetWorkflow
 	//
-	//  SELECT id, user_id, name, description, is_active, created_at, updated_at
+	//  SELECT id, user_id, name, description, created_at, updated_at
 	//  FROM workflow
-	//  WHERE id = ?
-	GetWorkflow(ctx context.Context, id int64) (*Workflow, error)
+	//  WHERE id = $1
+	GetWorkflow(ctx context.Context, id int32) (*Workflow, error)
 	//GetWorkflowEdges
 	//
 	//  SELECT workflow_id,
 	//    source_node_id,
 	//    target_node_id
 	//  FROM workflow_edge
-	//  WHERE workflow_id = ?
-	GetWorkflowEdges(ctx context.Context, workflowID int64) ([]*WorkflowEdge, error)
+	//  WHERE workflow_id = $1
+	GetWorkflowEdges(ctx context.Context, workflowID int32) ([]*WorkflowEdge, error)
+	//GetWorkflowGraph
+	//
+	//  SELECT
+	//    w.id AS workflow_id,
+	//    w.name AS workflow_name,
+	//    w.description AS workflow_description,
+	//    w.created_at,
+	//    wn.id AS node_id,
+	//    action_type,
+	//    config,
+	//    source_node_id,
+	//    target_node_id
+	//  FROM workflow w
+	//  INNER JOIN workflow_node wn ON w.id = wn.workflow_id
+	//  LEFT JOIN workflow_edge we ON w.id = we.workflow_id
+	//    AND we.source_node_id = wn.id
+	//  WHERE w.id = $1
+	GetWorkflowGraph(ctx context.Context, id int32) ([]*GetWorkflowGraphRow, error)
 	//GetWorkflowNodes
 	//
 	//  SELECT id,
 	//    workflow_id,
-	//    name,
-	//    type,
-	//    category,
-	//    service,
+	//    action_type,
 	//    config
 	//  FROM workflow_node
-	//  WHERE workflow_id = ?
-	GetWorkflowNodes(ctx context.Context, workflowID int64) ([]*WorkflowNode, error)
+	//  WHERE workflow_id = $1
+	GetWorkflowNodes(ctx context.Context, workflowID int32) ([]*WorkflowNode, error)
 	//UpdateWorkflowSchedule
 	//
 	//  UPDATE workflow_schedule
-	//  SET next_run_at = ?,
-	//      last_run_at = ?,
-	//      updated_at = ?,
-	//      status = ?
-	//  WHERE id = ?
+	//  SET next_run_at = $1,
+	//      last_run_at = $2,
+	//      updated_at = $3,
+	//      status = $4
+	//  WHERE id = $5
 	UpdateWorkflowSchedule(ctx context.Context, arg *UpdateWorkflowScheduleParams) error
 }
 

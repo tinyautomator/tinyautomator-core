@@ -2,42 +2,61 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/guregu/null/v6"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 )
 
 type WorkflowScheduleRepository interface {
-	GetWorkflowSchedules(ctx context.Context, within time.Duration) ([]*dao.WorkflowSchedule, error)
-	UpdateNextRun(ctx context.Context, id string, nextRun *int64, lastRun int64) error
+	GetDueSchedulesLocked(ctx context.Context) ([]*dao.WorkflowSchedule, error)
+	UpdateNextRun(
+		ctx context.Context,
+		id int32,
+		nextRunAt *int64,
+		lastRunAt int64,
+	) error
 	Create(
 		ctx context.Context,
-		arg *dao.CreateWorkflowScheduleParams,
+		workflowID int32,
+		next_run int64,
+		schedule_type string,
 	) (*dao.WorkflowSchedule, error)
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id int32) error
 }
 
 type workflowScheduleRepo struct {
-	q *dao.Queries
+	q  *dao.Queries
+	db *pgxpool.Pool
 }
 
-func NewWorkflowScheduleRepository(q *dao.Queries) WorkflowScheduleRepository {
-	return &workflowScheduleRepo{q}
+func NewWorkflowScheduleRepository(q *dao.Queries, pool *pgxpool.Pool) WorkflowScheduleRepository {
+	return &workflowScheduleRepo{q, pool}
 }
 
-func (r *workflowScheduleRepo) GetWorkflowSchedules(
+func (r *workflowScheduleRepo) GetDueSchedulesLocked(
 	ctx context.Context,
-	within time.Duration,
 ) ([]*dao.WorkflowSchedule, error) {
-	now := time.Now().UTC()
-	cutoff := now.Add(within).UnixMilli()
-
-	s, err := r.q.GetDueWorkflowSchedules(ctx, sql.NullInt64{Int64: cutoff, Valid: true})
+	rows, err := r.q.GetDueSchedulesLocked(ctx, 1000)
 	if err != nil {
-		return nil, fmt.Errorf("db error get workflow schedules: %w", err)
+		return nil, fmt.Errorf("failed to fetch due schedules: %w", err)
+	}
+
+	var s []*dao.WorkflowSchedule
+
+	for _, r := range rows {
+		s = append(s, &dao.WorkflowSchedule{
+			ID:           r.ID,
+			WorkflowID:   r.WorkflowID,
+			ScheduleType: r.ScheduleType,
+			Status:       r.ScheduleType,
+			NextRunAt:    r.NextRunAt,
+			LastRunAt:    r.LastRunAt,
+			CreatedAt:    r.CreatedAt,
+			UpdatedAt:    r.UpdatedAt,
+		})
 	}
 
 	return s, nil
@@ -45,30 +64,20 @@ func (r *workflowScheduleRepo) GetWorkflowSchedules(
 
 func (r *workflowScheduleRepo) UpdateNextRun(
 	ctx context.Context,
-	id string,
+	id int32,
 	nextRunAt *int64,
 	lastRunAt int64,
 ) error {
 	status := "active"
 
-	var nextRunAtNullable sql.NullInt64
-
-	if nextRunAt != nil {
-		nextRunAtNullable = sql.NullInt64{
-			Int64: *nextRunAt,
-			Valid: true,
-		}
-	} else {
+	if nextRunAt == nil {
 		status = "completed"
-		nextRunAtNullable = sql.NullInt64{
-			Valid: false,
-		}
 	}
 
 	if err := r.q.UpdateWorkflowSchedule(ctx, &dao.UpdateWorkflowScheduleParams{
 		ID:        id,
-		NextRunAt: nextRunAtNullable,
-		LastRunAt: sql.NullInt64{Int64: lastRunAt, Valid: true},
+		NextRunAt: null.IntFromPtr(nextRunAt),
+		LastRunAt: null.IntFrom(lastRunAt),
 		UpdatedAt: time.Now().UTC().UnixMilli(),
 		Status:    status,
 	}); err != nil {
@@ -80,14 +89,20 @@ func (r *workflowScheduleRepo) UpdateNextRun(
 
 func (r *workflowScheduleRepo) Create(
 	ctx context.Context,
-	arg *dao.CreateWorkflowScheduleParams,
+	workflowID int32,
+	next_run int64,
+	schedule_type string,
 ) (*dao.WorkflowSchedule, error) {
-	arg.ID = uuid.New().String()
-	arg.Status = "active"
-	arg.CreatedAt = time.Now().UTC().UnixMilli()
-	arg.UpdatedAt = time.Now().UTC().UnixMilli()
+	now := time.Now().UTC().UnixMilli()
 
-	s, err := r.q.CreateWorkflowSchedule(ctx, arg)
+	s, err := r.q.CreateWorkflowSchedule(ctx, &dao.CreateWorkflowScheduleParams{
+		WorkflowID:   workflowID,
+		Status:       "active",
+		NextRunAt:    null.IntFrom(next_run),
+		ScheduleType: schedule_type,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("db error create workflow schedule: %w", err)
 	}
@@ -95,7 +110,7 @@ func (r *workflowScheduleRepo) Create(
 	return s, nil
 }
 
-func (r *workflowScheduleRepo) Delete(ctx context.Context, id string) error {
+func (r *workflowScheduleRepo) Delete(ctx context.Context, id int32) error {
 	if err := r.q.DeleteWorkflowSchedule(ctx, id); err != nil {
 		return fmt.Errorf("db error delete workflow schedule: %w", err)
 	}
