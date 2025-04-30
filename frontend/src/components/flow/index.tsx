@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import BlockPanel from "./BlockPanel";
 import FlowCanvas from "./Canvas";
-import InspectorPanel from "./InspectorPanel";
+import InspectorPanel from "./inspector/InspectorPanel";
 import { ReactFlowProvider, type Node, type Edge } from "@xyflow/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
