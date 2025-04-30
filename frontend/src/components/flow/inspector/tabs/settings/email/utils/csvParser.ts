@@ -1,5 +1,7 @@
 import Papa from "papaparse";
 
+import { validateEmail } from "./emailValidation";
+
 export async function parseEmailCsv(file: File) {
   try {
     const text = await file.text();
@@ -14,12 +16,17 @@ export async function parseEmailCsv(file: File) {
         error: `CSV parse error: ${result.errors[0].message}`,
       };
     }
-
     const emails = result.data
       .flat()
-      .map((e) => e.trim().toLowerCase())
-      .filter((e) => e.includes("@"));
+      .map((email) => email.trim().toLowerCase())
+      .filter((email) => validateEmail(email));
 
+    if (emails.length == 0) {
+      return {
+        emails: [],
+        error: "No valid emails in this file error",
+      };
+    }
     return { emails, error: null };
   } catch (error) {
     return {

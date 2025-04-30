@@ -1,13 +1,12 @@
 "use client";
-
-import type { InputMode } from "./context/EmailContext";
+type InputMode = "manual" | "csv" | "google" | "contacts";
 
 interface RecipientInputSelectorProps {
   inputMode: InputMode;
   onInputModeChange: (mode: InputMode) => void;
 }
 
-export function RecipientInputSelector({
+export function RecipientTypeSelector({
   inputMode,
   onInputModeChange,
 }: RecipientInputSelectorProps) {

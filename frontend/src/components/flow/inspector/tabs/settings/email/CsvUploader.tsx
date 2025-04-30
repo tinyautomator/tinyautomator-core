@@ -1,44 +1,55 @@
 "use client";
 
-import type React from "react";
-
-import { useRef } from "react";
+import { useState, useRef } from "react";
 import { Upload, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmailChips } from "./EmailChips";
-import { validateEmail } from "./utils/emailValidation";
+import { EmailFormValues } from "./utils/emailValidation";
+import { useFormContext } from "react-hook-form";
 
-interface CsvEmailInputProps {
-  emails: string[];
-  addEmails: (emails: string[]) => void;
-  clearEmails: () => void;
-  isLoading: boolean;
-  error: string | null;
-  isDragging: boolean;
-  setIsDragging: (v: boolean) => void;
-  handleCsvFile: (file: File) => Promise<void>;
-}
+import { parseEmailCsv } from "./utils/csvParser";
+export function CsvUploader() {
+  const { watch, setValue } = useFormContext<EmailFormValues>();
+  const recipients = watch("recipients");
 
-export function CsvEmailInput({
-  emails,
-  addEmails,
-  clearEmails,
-  isLoading,
-  error,
-  isDragging,
-  setIsDragging,
-  handleCsvFile,
-}: CsvEmailInputProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleCsvFile(file);
   };
 
-  const handleEmailsChange = (updatedEmails: string[]) => {
-    clearEmails();
-    addEmails(updatedEmails);
+  const handleCsvFile = async (file: File) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const parsedCsvFile = await parseEmailCsv(file);
+      if (parsedCsvFile.error) {
+        throw new Error(parsedCsvFile.error);
+      }
+
+      const incoming = parsedCsvFile.emails.map((e) => e.trim().toLowerCase());
+
+      const seen = new Set(recipients);
+      const dedupedEmails = incoming.filter((email) => {
+        const isNew = !seen.has(email);
+        if (isNew) seen.add(email);
+        return isNew;
+      });
+      setValue("recipients", [...recipients, ...dedupedEmails]);
+    } catch (err: unknown) {
+      console.error(err);
+      if (err instanceof Error) {
+        setError(err.message || "Failed to parse CSV.");
+      }
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -74,6 +85,7 @@ export function CsvEmailInput({
               Drag & drop CSV file or click to browse
             </p>
             <Button
+              type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
             >
@@ -95,14 +107,6 @@ export function CsvEmailInput({
           <AlertCircle className="h-4 w-4" />
           <span className="text-sm">{error}</span>
         </div>
-      )}
-
-      {emails.length > 0 && (
-        <EmailChips
-          emails={emails}
-          onEmailsChange={handleEmailsChange}
-          validateEmail={validateEmail}
-        />
       )}
     </div>
   );

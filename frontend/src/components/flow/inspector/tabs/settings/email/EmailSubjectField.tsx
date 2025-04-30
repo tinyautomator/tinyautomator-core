@@ -1,16 +1,22 @@
-import { useEmailContext } from "./context/EmailContext";
+import { useFormContext } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { EmailFormValues } from "./utils/emailValidation";
 
 export function EmailSubjectField() {
-  const { subject, setSubject } = useEmailContext();
-
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<EmailFormValues>();
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Subject</label>
-      <input
+      {errors.subject && (
+        <p className="text-red-500 text-sm">{errors.subject.message}</p>
+      )}
+      <Input
         type="text"
-        value={subject}
-        onChange={(e) => setSubject(e.target.value)}
-        className="w-full border p-2 rounded-md text-sm"
+        {...register("subject")}
+        className="w-full"
         placeholder="Email subject"
       />
     </div>
