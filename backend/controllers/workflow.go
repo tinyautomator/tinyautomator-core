@@ -1,14 +1,14 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
-	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
+	"github.com/tinyautomator/tinyautomator-core/backend/services"
+
 	repo "github.com/tinyautomator/tinyautomator-core/backend/repositories"
 )
 
@@ -20,8 +20,9 @@ type WorkflowController interface {
 }
 
 type workflowController struct {
-	logger logrus.FieldLogger
-	repo   repo.WorkflowRepository
+	logger   logrus.FieldLogger
+	repo     repo.WorkflowRepository
+	executor services.WorkflowExecutorService
 }
 
 type CreateWorkflowRequest struct {
@@ -33,8 +34,9 @@ type CreateWorkflowRequest struct {
 
 func NewWorkflowController(cfg config.AppConfig) *workflowController {
 	return &workflowController{
-		logger: cfg.GetLogger(),
-		repo:   cfg.GetWorkflowRepository(),
+		logger:   cfg.GetLogger(),
+		repo:     cfg.GetWorkflowRepository(),
+		executor: *services.NewWorkflowExecutorService(cfg),
 	}
 }
 
@@ -90,26 +92,19 @@ func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
 }
 
 func (c *workflowController) RunWorkflow(ctx *gin.Context) {
-	w, err := c.fetchWorkflow(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
-	}
-
-	ctx.JSON(http.StatusOK, w)
-}
-
-func (c *workflowController) fetchWorkflow(ctx *gin.Context) (*dao.Workflow, error) {
 	idStr := ctx.Param("id")
 
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid workflow ID '%s': %w", idStr, err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+
+		return
 	}
 
-	w, err := c.repo.GetWorkflow(ctx.Request.Context(), int32(workflowID))
+	err = c.executor.ExecuteWorkflow(ctx, int32(workflowID))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workflow (id=%d): %w", workflowID, err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
 
-	return w, nil
+	ctx.JSON(http.StatusOK, workflowID)
 }
