@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
+	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	repo "github.com/tinyautomator/tinyautomator-core/backend/repositories"
 )
 
@@ -14,6 +16,7 @@ type WorkflowController interface {
 	GetWorkflow(ctx *gin.Context)
 	CreateWorkflow(ctx *gin.Context)
 	GetWorkflowRender(ctx *gin.Context)
+	RunWorkFlow(ctx *gin.Context)
 }
 
 type workflowController struct {
@@ -84,4 +87,29 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 }
 
 func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
+}
+
+func (c *workflowController) RunWorkflow(ctx *gin.Context) {
+	w, err := c.fetchWorkflow(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+	}
+
+	ctx.JSON(http.StatusOK, w)
+}
+
+func (c *workflowController) fetchWorkflow(ctx *gin.Context) (*dao.Workflow, error) {
+	idStr := ctx.Param("id")
+
+	workflowID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid workflow ID '%s': %w", idStr, err)
+	}
+
+	w, err := c.repo.GetWorkflow(ctx.Request.Context(), int32(workflowID))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workflow (id=%d): %w", workflowID, err)
+	}
+
+	return w, nil
 }
