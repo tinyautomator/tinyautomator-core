@@ -22,11 +22,12 @@ export default function ({
   setActiveView: (view: string) => void;
 }) {
   return (
-    <Sidebar className="relative flex h-full flex-col justify-between">
+    <Sidebar
+      collapsible="icon"
+      className="relative flex h-full flex-col justify-between"
+    >
       <SidebarHeader>
-        <div className="flex items-center justify-between px-4 pt-2 pb-1">
-          <span className="text-sm font-medium">Workspace</span>
-        </div>
+        <SidebarGroupLabel>Workspace</SidebarGroupLabel>
       </SidebarHeader>
       <SidebarContent className="scrollbar-hidden">
         <SidebarGroup>
@@ -37,6 +38,7 @@ export default function ({
                   <SidebarMenuButton
                     isActive={activeView === item.label}
                     onClick={() => setActiveView(item.label)}
+                    tooltip={item.label}
                   >
                     {item.icon}
                     <span>{item.label}</span>
@@ -58,6 +60,7 @@ export default function ({
                   <SidebarMenuButton
                     isActive={activeView === item.label}
                     onClick={() => setActiveView(item.label)}
+                    tooltip={item.label}
                   >
                     {item.icon}
                     <span>{item.label}</span>
@@ -76,6 +79,7 @@ export default function ({
               <SidebarMenuButton
                 isActive={activeView === item.label}
                 onClick={() => setActiveView(item.label)}
+                tooltip={item.label}
               >
                 {item.icon}
                 <span>{item.label}</span>

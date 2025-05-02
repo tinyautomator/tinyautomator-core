@@ -1,9 +1,11 @@
 import { Zap } from "lucide-react";
 import { UserButton } from "@clerk/react-router";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function Navbar() {
   return (
     <header className="flex h-14 items-center border-b bg-white px-6 z-10">
+      <SidebarTrigger className="mr-4 -ml-2" />
       <div className="flex items-center gap-2 font-semibold">
         <Zap className="h-5 w-5 text-blue-600" />
         <span>TinyAutomator</span>
