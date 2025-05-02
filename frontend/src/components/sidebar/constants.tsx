@@ -20,10 +20,23 @@ import { JSX } from "react";
 export const WORKSPACE_ITEMS: {
   label: string;
   icon: JSX.Element;
+  path: string;
 }[] = [
-  { label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-  { label: "Workflow Builder", icon: <Zap className="h-4 w-4" /> },
-  { label: "Workflow Library", icon: <BookOpen className="h-4 w-4" /> },
+  {
+    label: "Dashboard",
+    icon: <LayoutDashboard className="h-4 w-4" />,
+    path: "/dashboard",
+  },
+  {
+    label: "Workflow Builder",
+    icon: <Zap className="h-4 w-4" />,
+    path: "/workflow-builder",
+  },
+  {
+    label: "Workflow Library",
+    icon: <BookOpen className="h-4 w-4" />,
+    path: "/workflow-library",
+  },
 ];
 
 export const INTEGRATION_ITEMS: {
