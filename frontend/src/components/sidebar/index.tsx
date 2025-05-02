@@ -22,7 +22,9 @@ export default function () {
       className="relative flex h-full flex-col justify-between"
     >
       <SidebarHeader>
-        <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+        <SidebarGroupLabel aria-label="Workspace Section">
+          Workspace
+        </SidebarGroupLabel>
       </SidebarHeader>
       <SidebarContent className="scrollbar-hidden">
         <SidebarGroup>
@@ -36,6 +38,7 @@ export default function () {
                         tooltip={item.label}
                         asChild
                         isActive={isActive}
+                        className="active:scale-[0.99] !cursor-default"
                       >
                         <div className="flex items-center gap-2">
                           {item.icon}

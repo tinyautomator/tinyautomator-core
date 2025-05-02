@@ -15,7 +15,7 @@ export default function Navbar() {
       <SidebarTrigger className="mr-4 -ml-2" />
       <Link
         to="/dashboard"
-        className="flex items-center gap-2 font-semibold hover:text-blue-600 active:scale-[0.98] transition-all"
+        className="flex items-center gap-2 font-semibold hover:text-blue-600 active:scale-[0.98]"
         aria-label="Return to Dashboard"
       >
         <Zap className="h-5 w-5 text-blue-600" aria-hidden="true" />
