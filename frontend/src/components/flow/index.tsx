@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useRef } from "react";
 import BlockPanel from "./BlockPanel";
 import FlowCanvas from "./Canvas";
