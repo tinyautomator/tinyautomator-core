@@ -19,20 +19,16 @@ func RegisterRoutes(r *gin.Engine, cfg config.AppConfig) {
 	workflowController := controllers.NewWorkflowController(cfg)
 
 	workflowGroup := r.Group("/api/workflow")
-	{
-		workflowGroup.GET("/:id", workflowController.GetWorkflow)
-		workflowGroup.POST("/", timeout.New(
-			timeout.WithTimeout(3*time.Second),
-			timeout.WithHandler(workflowController.CreateWorkflow),
-		))
-	}
+	workflowGroup.GET("/:id", workflowController.GetWorkflow)
+	workflowGroup.POST("/", timeout.New(
+		timeout.WithTimeout(3*time.Second),
+		timeout.WithHandler(workflowController.CreateWorkflow),
+	))
 
 	gmailController := controllers.NewGmailController(cfg)
 
 	gmailGroup := r.Group("/api/integrations/gmail")
-	{
-		gmailGroup.GET("/auth-url", gmailController.GetGmailAuthURL)
-		gmailGroup.GET("/callback", gmailController.HandleCallBack)
-		gmailGroup.POST("/send-email", gmailController.SendEmail)
-	}
+	gmailGroup.GET("/auth-url", gmailController.GetGmailAuthURL)
+	gmailGroup.GET("/callback", gmailController.HandleCallBack)
+	gmailGroup.POST("/send-email", gmailController.SendEmail)
 }
