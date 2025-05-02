@@ -1,5 +1,5 @@
-import Navbar from "@/components/shared/Navbar";
-import Sidebar from "@/components/sidebar";
+import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";

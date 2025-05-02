@@ -15,10 +15,20 @@ export default function Navbar() {
       <SidebarTrigger className="mr-4 -ml-2" />
       <Link
         to="/dashboard"
-        className="flex items-center gap-2 font-semibold hover:text-blue-600 active:scale-[0.98]"
+        className="flex items-center gap-2 font-semibold hover:text-blue-600 active:scale-[0.98] group"
         aria-label="Return to Dashboard"
       >
-        <Zap className="h-5 w-5 text-blue-600" aria-hidden="true" />
+        <div className="relative">
+          <Zap
+            className="h-5 w-5 text-blue-600 transition-opacity opacity-100 group-hover:opacity-0 absolute"
+            aria-hidden="true"
+          />
+          <Zap
+            className="h-5 w-5 text-blue-600 transition-opacity opacity-0 group-hover:opacity-100"
+            aria-hidden="true"
+            fill="currentColor"
+          />
+        </div>
         <span>TinyAutomator</span>
       </Link>
       <div className="ml-auto flex items-center gap-4">
@@ -33,7 +43,7 @@ export default function Navbar() {
               }
             >
               <HelpCircle className="h-5 w-5" />
-              <span className="sr-only">Help & Documentation</span>
+              <span className="sr-only">Support</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left" sideOffset={5}>
