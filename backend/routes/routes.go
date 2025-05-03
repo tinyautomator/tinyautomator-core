@@ -28,7 +28,7 @@ func RegisterRoutes(r *gin.Engine, cfg config.AppConfig) {
 		))
 		workflowGroup.POST("/run/:id", workflowController.RunWorkflow)
 	}
-=======
+
 	workflowGroup.GET("/:id", workflowController.GetWorkflow)
 	workflowGroup.POST("/", timeout.New(
 		timeout.WithTimeout(3*time.Second),
