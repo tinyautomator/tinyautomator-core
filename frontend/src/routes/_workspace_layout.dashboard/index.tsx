@@ -3,8 +3,8 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Stats } from "@/components/dashboard/Stats";
-import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { Stats } from "@/routes/_workspace_layout.dashboard/Stats";
+import { DashboardTabs } from "@/routes/_workspace_layout.dashboard/DashboardTabs";
 
 export default function () {
   return (

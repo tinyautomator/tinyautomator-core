@@ -13,20 +13,18 @@ import {
 } from "@/components/ui/sidebar";
 import "../../App.css";
 import { WORKSPACE_ITEMS, INTEGRATION_ITEMS, FOOTER_ITEMS } from "./constants";
+import { NavLink } from "react-router";
 
-export default function ({
-  activeView,
-  setActiveView,
-}: {
-  activeView: string;
-  setActiveView: (view: string) => void;
-}) {
+export default function () {
   return (
-    <Sidebar className="relative flex h-full flex-col justify-between">
+    <Sidebar
+      collapsible="icon"
+      className="relative flex h-full flex-col justify-between"
+    >
       <SidebarHeader>
-        <div className="flex items-center justify-between px-4 pt-2 pb-1">
-          <span className="text-sm font-medium">Workspace</span>
-        </div>
+        <SidebarGroupLabel aria-label="Workspace Section">
+          Workspace
+        </SidebarGroupLabel>
       </SidebarHeader>
       <SidebarContent className="scrollbar-hidden">
         <SidebarGroup>
@@ -34,13 +32,21 @@ export default function ({
             <SidebarMenu>
               {WORKSPACE_ITEMS.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    isActive={activeView === item.label}
-                    onClick={() => setActiveView(item.label)}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
+                  <NavLink to={item.path}>
+                    {({ isActive }) => (
+                      <SidebarMenuButton
+                        tooltip={item.label}
+                        asChild
+                        isActive={isActive}
+                        className="active:scale-[0.99] !cursor-default"
+                      >
+                        <div className="flex items-center gap-2">
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </div>
+                      </SidebarMenuButton>
+                    )}
+                  </NavLink>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -55,10 +61,7 @@ export default function ({
             <SidebarMenu>
               {INTEGRATION_ITEMS.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    isActive={activeView === item.label}
-                    onClick={() => setActiveView(item.label)}
-                  >
+                  <SidebarMenuButton tooltip={item.label}>
                     {item.icon}
                     <span>{item.label}</span>
                   </SidebarMenuButton>
@@ -73,10 +76,7 @@ export default function ({
         <SidebarMenu>
           {FOOTER_ITEMS.map((item) => (
             <SidebarMenuItem key={item.label}>
-              <SidebarMenuButton
-                isActive={activeView === item.label}
-                onClick={() => setActiveView(item.label)}
-              >
+              <SidebarMenuButton tooltip={item.label}>
                 {item.icon}
                 <span>{item.label}</span>
               </SidebarMenuButton>
