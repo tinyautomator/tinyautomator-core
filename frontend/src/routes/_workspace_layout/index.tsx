@@ -21,9 +21,9 @@ export default function Layout() {
       <SidebarProvider>
         <div className="flex h-screen w-screen flex-col bg-slate-50">
           <Navbar />
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 min-h-0 overflow-hidden">
             <Sidebar />
-            <main className="flex-1 min-h-0 overflow-auto">
+            <main className="flex-1 min-h-0 h-full overflow-hidden">
               <Outlet />
             </main>
           </div>

@@ -1,8 +1,5 @@
-// components/flow/BlockPanel.tsx
-"use client";
-
 import { useState } from "react";
-import { blockCategories } from "./BlockCategories.tsx"; // Move your `blockCategories` array here
+import { blockCategories } from "./BlockCategories.tsx";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -30,18 +27,20 @@ export default function BlockPanel() {
     nodeType: string,
     nodeLabel: string,
   ) => {
-    event.dataTransfer.setData("application/reactflow/type", nodeType);
-    event.dataTransfer.setData("application/reactflow/label", nodeLabel);
+    event.dataTransfer.setData(
+      "application/reactflow",
+      JSON.stringify({ category: nodeType, label: nodeLabel }),
+    );
     event.dataTransfer.effectAllowed = "move";
   };
 
   return (
-    <div className="w-64 border-r bg-white">
+    <div className="w-64 h-full border-r bg-white">
       <div className="flex items-center justify-between p-4">
         <h2 className="font-semibold">Blocks</h2>
       </div>
       <Separator />
-      <ScrollArea className="h-[calc(100vh-8.5rem)]">
+      <ScrollArea className="h-full">
         <div className="px-2 py-2">
           {blockCategories.map((category) => {
             const isOpen = openCategories[category.name] ?? true;
