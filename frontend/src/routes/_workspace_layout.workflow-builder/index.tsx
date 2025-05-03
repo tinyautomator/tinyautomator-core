@@ -13,11 +13,9 @@ export default function WorkflowBuilder() {
       <ReactFlowProvider>
         <FlowProvider>
           <BlockPanel />
-          <div className="flex-1 bg-slate-50">
+          <div className="flex-1 bg-slate-50 flex flex-col">
             <CanvasHeader />
-            <div className="flex-1 h-full">
-              <CanvasBody />
-            </div>
+            <CanvasBody />
           </div>
           <InspectorPanel />
         </FlowProvider>

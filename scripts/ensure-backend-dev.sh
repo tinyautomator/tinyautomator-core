@@ -3,9 +3,9 @@ function air() {
   REPO_NAME=$(basename "$REPO_ROOT")
 
   if [[ "$REPO_NAME" == "tinyautomator-core" ]]; then
-    if [[ "$PWD" == "$REPO_ROOT" ]]; then
+    if [[ "$PWD" != "$REPO_ROOT/backend" ]]; then
       echo "🔄 Switching to backend directory..."
-      cd backend
+      cd "$REPO_ROOT/backend"
     fi
   fi
 

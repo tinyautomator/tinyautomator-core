@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export default function CanvasHeader() {
   return (
-    <div className="flex h-12 items-center justify-between border-b bg-white px-4">
+    <div className="flex h-1/15 items-center justify-between border-b bg-white px-4">
       <div className="flex items-center gap-2">
         <input
           type="text"

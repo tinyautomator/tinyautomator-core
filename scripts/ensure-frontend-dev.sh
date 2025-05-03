@@ -3,9 +3,9 @@ function yarn() {
   REPO_NAME=$(basename "$REPO_ROOT")
 
   if [[ "$REPO_NAME" == "tinyautomator-core" ]]; then
-    if [[ "$PWD" == "$REPO_ROOT" ]]; then
+    if [[ "$PWD" != "$REPO_ROOT/frontend" ]]; then
       echo "📦 Switching to frontend directory..."
-      cd frontend
+      cd "$REPO_ROOT/frontend"
     fi
   fi
 
