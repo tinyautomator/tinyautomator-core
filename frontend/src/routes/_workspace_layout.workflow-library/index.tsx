@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -9,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Clock, Edit, Search, Trash2, Zap } from "lucide-react";
+import "../../App.css";
 
 interface Workflow {
   id: number;

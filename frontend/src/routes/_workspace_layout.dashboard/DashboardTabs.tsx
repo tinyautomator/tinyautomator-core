@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WorkflowCard } from "@/components/dashboard/WorkFlowCard";
-import { Recent } from "@/components/dashboard/Recent";
-import { Analytics } from "@/components/dashboard/Analytics";
+import { WorkflowCard } from "@/routes/_workspace_layout.dashboard/WorkFlowCard";
+import { Recent } from "@/routes/_workspace_layout.dashboard/Recent";
+import { Analytics } from "@/routes/_workspace_layout.dashboard/Analytics";
 
 export function DashboardTabs() {
   return (

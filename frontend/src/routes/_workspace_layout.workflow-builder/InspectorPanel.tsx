@@ -1,19 +1,13 @@
-// components/flow/InspectorPanel.tsx
-"use client";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
-import { Node } from "@xyflow/react";
+import { useFlow } from "@/routes/_workspace_layout.workflow-builder/FlowContext";
 
-interface InspectorPanelProps {
-  selectedNode: Node<{ label: string }> | null;
-}
-
-export default function InspectorPanel({ selectedNode }: InspectorPanelProps) {
+export default function InspectorPanel() {
+  const { selectedNode } = useFlow();
   return (
     <div className="w-80 border-l bg-white">
       <div className="p-4">
