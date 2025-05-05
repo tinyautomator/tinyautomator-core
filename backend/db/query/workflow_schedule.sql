@@ -12,7 +12,7 @@ UPDATE workflow_schedule
 SET next_run_at = $1,
     last_run_at = $2,
     updated_at = $3,
-    status = $4
+    execution_state = $4
 WHERE id = $5;
 
 -- name: CreateWorkflowSchedule :one
@@ -21,11 +21,11 @@ INSERT INTO workflow_schedule (
   schedule_type,
   next_run_at,
   last_run_at,
-  status,
+  execution_state,
   created_at,
   updated_at
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+VALUES ($1, $2, $3, 'queued', $4, $5, $6)
 RETURNING *;
 
 -- name: DeleteWorkflowSchedule :exec
