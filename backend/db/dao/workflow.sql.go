@@ -376,3 +376,96 @@ func (q *Queries) GetWorkflowNodes(ctx context.Context, workflowID int32) ([]*Wo
 	}
 	return items, nil
 }
+
+const renderWorkflowGraph = `-- name: RenderWorkflowGraph :many
+SELECT
+  w.id AS workflow_id,
+  w.name AS workflow_name,
+  w.description AS workflow_description,
+  w.created_at,
+  wn.id AS node_id,
+  wnu.x_position,
+  wnu.y_position,
+  wnu.node_label,
+  wnu.node_type
+  action_type,
+  config,
+  source_node_id,
+  target_node_id
+FROM workflow w
+INNER JOIN workflow_node wn ON w.id = wn.workflow_id
+INNER JOIN workflow_node_ui wnu ON wn.id = wnu.id
+LEFT JOIN workflow_edge we ON w.id = we.workflow_id
+  AND we.source_node_id = wn.id
+WHERE w.id = $1
+`
+
+type RenderWorkflowGraphRow struct {
+	WorkflowID          int32       `json:"workflow_id"`
+	WorkflowName        string      `json:"workflow_name"`
+	WorkflowDescription null.String `json:"workflow_description"`
+	CreatedAt           null.Int    `json:"created_at"`
+	NodeID              int32       `json:"node_id"`
+	XPosition           float64     `json:"x_position"`
+	YPosition           float64     `json:"y_position"`
+	NodeLabel           null.String `json:"node_label"`
+	ActionType          string      `json:"action_type"`
+	Config              []byte      `json:"config"`
+	SourceNodeID        pgtype.Int4 `json:"source_node_id"`
+	TargetNodeID        pgtype.Int4 `json:"target_node_id"`
+}
+
+// RenderWorkflowGraph
+//
+//	SELECT
+//	  w.id AS workflow_id,
+//	  w.name AS workflow_name,
+//	  w.description AS workflow_description,
+//	  w.created_at,
+//	  wn.id AS node_id,
+//	  wnu.x_position,
+//	  wnu.y_position,
+//	  wnu.node_label,
+//	  wnu.node_type
+//	  action_type,
+//	  config,
+//	  source_node_id,
+//	  target_node_id
+//	FROM workflow w
+//	INNER JOIN workflow_node wn ON w.id = wn.workflow_id
+//	INNER JOIN workflow_node_ui wnu ON wn.id = wnu.id
+//	LEFT JOIN workflow_edge we ON w.id = we.workflow_id
+//	  AND we.source_node_id = wn.id
+//	WHERE w.id = $1
+func (q *Queries) RenderWorkflowGraph(ctx context.Context, id int32) ([]*RenderWorkflowGraphRow, error) {
+	rows, err := q.db.Query(ctx, renderWorkflowGraph, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*RenderWorkflowGraphRow
+	for rows.Next() {
+		var i RenderWorkflowGraphRow
+		if err := rows.Scan(
+			&i.WorkflowID,
+			&i.WorkflowName,
+			&i.WorkflowDescription,
+			&i.CreatedAt,
+			&i.NodeID,
+			&i.XPosition,
+			&i.YPosition,
+			&i.NodeLabel,
+			&i.ActionType,
+			&i.Config,
+			&i.SourceNodeID,
+			&i.TargetNodeID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

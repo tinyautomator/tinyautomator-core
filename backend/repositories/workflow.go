@@ -17,21 +17,32 @@ type WorkflowGraph struct {
 	Edges []*dao.WorkflowEdge
 }
 
+type RenderedWorkflowGraph struct {
+	ID    int32          `json:"id"`
+	Nodes []WorkflowNode `json:"nodes"`
+	Edges []WorkflowEdge `json:"edges"`
+}
+
+type WorkflowNodePosition struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+}
+
+type WorkflowNodeData struct {
+	Label      string `json:"label"`
+	ActionType string `json:"action_type"`
+	Config     string `json:"config"`
+}
+
 type WorkflowNode struct {
-	TempID   string `json:"temp_id"`
-	Type     string `json:"type"`
-	Position struct {
-		X float64 `json:"x"`
-		Y float64 `json:"y"`
-	} `json:"position"`
-	Data struct {
-		Label      string `json:"label"`
-		ActionType string `json:"action_type"`
-		Config     string `json:"config"`
-	} `json:"data"`
+	TempID   string               `json:"id"`
+	Type     string               `json:"type"`
+	Position WorkflowNodePosition `json:"position"`
+	Data     WorkflowNodeData     `json:"data"`
 }
 
 type WorkflowEdge struct {
+	ID     string `json:"id"`
 	Source string `json:"source"`
 	Target string `json:"target"`
 }
@@ -47,6 +58,7 @@ type WorkflowRepository interface {
 		edges []WorkflowEdge,
 	) (*dao.Workflow, error)
 	GetWorkflowGraph(ctx context.Context, workflowID int32) (*WorkflowGraph, error)
+	RenderWorkflowGraph(ctx context.Context, workflowID int32) (*RenderedWorkflowGraph, error)
 }
 
 type workflowRepo struct {
@@ -184,6 +196,58 @@ func (r workflowRepo) GetWorkflowGraph(
 	}
 
 	return &WorkflowGraph{
+		ID:    workflowID,
+		Nodes: nodes,
+		Edges: edges,
+	}, nil
+}
+
+func (r workflowRepo) RenderWorkflowGraph(
+	ctx context.Context,
+	workflowID int32,
+) (*RenderedWorkflowGraph, error) {
+	rows, err := r.q.RenderWorkflowGraph(ctx, workflowID)
+	if err != nil {
+		return nil, fmt.Errorf("error loading workflow graph from db: %w", err)
+	}
+	// TODO: check for no rows
+
+	nodeMap := make(map[int32]WorkflowNode)
+
+	var edges []WorkflowEdge
+
+	for _, row := range rows {
+		if _, exists := nodeMap[row.NodeID]; !exists {
+			nodeMap[row.NodeID] = WorkflowNode{
+				TempID: fmt.Sprintf("%d", row.NodeID),
+				Type:   row.ActionType,
+				Position: WorkflowNodePosition{
+					X: row.XPosition,
+					Y: row.YPosition,
+				},
+				Data: WorkflowNodeData{
+					Label:      row.NodeLabel.String,
+					ActionType: row.ActionType,
+					Config:     string(row.Config),
+				},
+			}
+		}
+
+		if row.SourceNodeID.Valid && row.TargetNodeID.Valid {
+			edges = append(edges, WorkflowEdge{
+				ID:     fmt.Sprintf("%d-%d", row.SourceNodeID.Int32, row.TargetNodeID.Int32),
+				Source: fmt.Sprintf("%d", row.SourceNodeID.Int32),
+				Target: fmt.Sprintf("%d", row.TargetNodeID.Int32),
+			})
+		}
+	}
+
+	var nodes []WorkflowNode
+	for _, node := range nodeMap {
+		nodes = append(nodes, node)
+	}
+
+	return &RenderedWorkflowGraph{
 		ID:    workflowID,
 		Nodes: nodes,
 		Edges: edges,

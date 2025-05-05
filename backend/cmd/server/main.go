@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/routes"
@@ -17,6 +18,7 @@ func main() {
 	defer stop()
 
 	r := gin.Default()
+	r.Use(cors.Default())
 
 	cfg, err := config.NewAppConfig(ctx)
 	if err != nil {

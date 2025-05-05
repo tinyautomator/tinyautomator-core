@@ -89,6 +89,22 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 }
 
 func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+
+	workflowID, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+
+		return
+	}
+
+	wg, err := c.repo.RenderWorkflowGraph(ctx, int32(workflowID))
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "workflow not found"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, wg)
 }
 
 func (c *workflowController) RunWorkflow(ctx *gin.Context) {

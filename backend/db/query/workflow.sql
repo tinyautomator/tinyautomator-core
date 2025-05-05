@@ -82,3 +82,25 @@ INNER JOIN workflow_node wn ON w.id = wn.workflow_id
 LEFT JOIN workflow_edge we ON w.id = we.workflow_id
   AND we.source_node_id = wn.id
 WHERE w.id = $1;
+
+-- name: RenderWorkflowGraph :many
+SELECT
+  w.id AS workflow_id,
+  w.name AS workflow_name,
+  w.description AS workflow_description,
+  w.created_at,
+  wn.id AS node_id,
+  wnu.x_position,
+  wnu.y_position,
+  wnu.node_label,
+  wnu.node_type
+  action_type,
+  config,
+  source_node_id,
+  target_node_id
+FROM workflow w
+INNER JOIN workflow_node wn ON w.id = wn.workflow_id
+INNER JOIN workflow_node_ui wnu ON wn.id = wnu.id
+LEFT JOIN workflow_edge we ON w.id = we.workflow_id
+  AND we.source_node_id = wn.id
+WHERE w.id = $1;
