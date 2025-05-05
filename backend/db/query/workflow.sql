@@ -93,7 +93,7 @@ SELECT
   w.id AS workflow_id,
   w.name AS workflow_name,
   w.description AS workflow_description,
-  w.status AS workflow_status
+  w.status AS workflow_status,
   w.created_at,
   wn.id AS node_id,
   wnu.x_position,
