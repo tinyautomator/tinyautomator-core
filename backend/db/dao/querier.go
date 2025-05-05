@@ -148,6 +148,29 @@ type Querier interface {
 	//  FROM workflow_node
 	//  WHERE workflow_id = $1
 	GetWorkflowNodes(ctx context.Context, workflowID int32) ([]*WorkflowNode, error)
+	//RenderWorkflowGraph
+	//
+	//  SELECT
+	//    w.id AS workflow_id,
+	//    w.name AS workflow_name,
+	//    w.description AS workflow_description,
+	//    w.created_at,
+	//    wn.id AS node_id,
+	//    wnu.x_position,
+	//    wnu.y_position,
+	//    wnu.node_label,
+	//    wnu.node_type
+	//    action_type,
+	//    config,
+	//    source_node_id,
+	//    target_node_id
+	//  FROM workflow w
+	//  INNER JOIN workflow_node wn ON w.id = wn.workflow_id
+	//  INNER JOIN workflow_node_ui wnu ON wn.id = wnu.id
+	//  LEFT JOIN workflow_edge we ON w.id = we.workflow_id
+	//    AND we.source_node_id = wn.id
+	//  WHERE w.id = $1
+	RenderWorkflowGraph(ctx context.Context, id int32) ([]*RenderWorkflowGraphRow, error)
 	//UpdateWorkflowSchedule
 	//
 	//  UPDATE workflow_schedule
