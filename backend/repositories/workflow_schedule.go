@@ -48,14 +48,14 @@ func (r *workflowScheduleRepo) GetDueSchedulesLocked(
 
 	for _, r := range rows {
 		s = append(s, &dao.WorkflowSchedule{
-			ID:           r.ID,
-			WorkflowID:   r.WorkflowID,
-			ScheduleType: r.ScheduleType,
-			Status:       r.ScheduleType,
-			NextRunAt:    r.NextRunAt,
-			LastRunAt:    r.LastRunAt,
-			CreatedAt:    r.CreatedAt,
-			UpdatedAt:    r.UpdatedAt,
+			ID:             r.ID,
+			WorkflowID:     r.WorkflowID,
+			ScheduleType:   r.ScheduleType,
+			ExecutionState: r.ExecutionState,
+			NextRunAt:      r.NextRunAt,
+			LastRunAt:      r.LastRunAt,
+			CreatedAt:      r.CreatedAt,
+			UpdatedAt:      r.UpdatedAt,
 		})
 	}
 
@@ -68,18 +68,19 @@ func (r *workflowScheduleRepo) UpdateNextRun(
 	nextRunAt *int64,
 	lastRunAt int64,
 ) error {
-	status := "active"
+	executionState := "queued"
 
+	// TODO : POTENTIAL REFACTOR
 	if nextRunAt == nil {
-		status = "completed"
+		executionState = "paused"
 	}
 
 	if err := r.q.UpdateWorkflowSchedule(ctx, &dao.UpdateWorkflowScheduleParams{
-		ID:        id,
-		NextRunAt: null.IntFromPtr(nextRunAt),
-		LastRunAt: null.IntFrom(lastRunAt),
-		UpdatedAt: time.Now().UTC().UnixMilli(),
-		Status:    status,
+		ID:             id,
+		NextRunAt:      null.IntFromPtr(nextRunAt),
+		LastRunAt:      null.IntFrom(lastRunAt),
+		UpdatedAt:      time.Now().UTC().UnixMilli(),
+		ExecutionState: executionState,
 	}); err != nil {
 		return fmt.Errorf("db error update workflow schedule: %w", err)
 	}
@@ -96,12 +97,12 @@ func (r *workflowScheduleRepo) Create(
 	now := time.Now().UTC().UnixMilli()
 
 	s, err := r.q.CreateWorkflowSchedule(ctx, &dao.CreateWorkflowScheduleParams{
-		WorkflowID:   workflowID,
-		Status:       "active",
-		NextRunAt:    null.IntFrom(next_run),
-		ScheduleType: schedule_type,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		WorkflowID:     workflowID,
+		ExecutionState: "queued",
+		NextRunAt:      null.IntFrom(next_run),
+		ScheduleType:   schedule_type,
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("db error create workflow schedule: %w", err)

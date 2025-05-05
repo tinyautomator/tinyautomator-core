@@ -56,12 +56,12 @@ func (w *Worker) PollAndSchedule(ctx context.Context) error {
 
 				// TODO: change this log because the state of the ws changes after the executor runs
 				w.logger.WithFields(logrus.Fields{
-					"schedule_id":   ws.ID,
-					"workflow_id":   ws.WorkflowID,
-					"schedule_type": ws.ScheduleType,
-					"status":        ws.Status,
-					"next_run_at":   time.UnixMilli(ws.NextRunAt.Int64).Format(time.DateTime),
-					"last_run_at":   time.UnixMilli(ws.LastRunAt.Int64).Format(time.DateTime),
+					"schedule_id":    ws.ID,
+					"workflow_id":    ws.WorkflowID,
+					"schedule_type":  ws.ScheduleType,
+					"executionState": ws.ExecutionState,
+					"next_run_at":    time.UnixMilli(ws.NextRunAt.Int64).Format(time.DateTime),
+					"last_run_at":    time.UnixMilli(ws.LastRunAt.Int64).Format(time.DateTime),
 				}).Info("workflow ran successfully")
 			}
 		}
