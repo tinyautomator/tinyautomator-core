@@ -1,3 +1,5 @@
+-- GetDueWorkflowSchedules is first implementation of getting due schedules, currently using locked one
+
 -- name: GetDueWorkflowSchedules :many
 SELECT *
 FROM workflow_schedule
@@ -34,14 +36,14 @@ WHERE id = $1;
 WITH locked AS (
   SELECT id
   FROM workflow_schedule
-  WHERE status = 'active'
+  WHERE execution_state = 'queued'
     AND next_run_at IS NOT NULL
     AND next_run_at <=  extract(epoch from now()) * 1000
   FOR UPDATE SKIP LOCKED
   LIMIT $1
 )
 UPDATE workflow_schedule
-SET status = 'pending'
+SET status = 'running'
 FROM locked
 WHERE workflow_schedule.id = locked.id
 RETURNING *;
