@@ -29,6 +29,7 @@ type workflowController struct {
 type CreateWorkflowRequest struct {
 	Name        string              `json:"name"        binding:"required"`
 	Description string              `json:"description" binding:"required"`
+	Status      string              `json:"status"      binding:"required"`
 	Nodes       []repo.WorkflowNode `json:"nodes"       binding:"required"`
 	Edges       []repo.WorkflowEdge `json:"edges"       binding:"required"`
 } // TODO: Look up validation libraries for the backend
@@ -94,6 +95,7 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		"test_user", // TODO: replace this later
 		req.Name,
 		req.Description,
+		req.Status,
 		req.Nodes,
 		req.Edges,
 	)
