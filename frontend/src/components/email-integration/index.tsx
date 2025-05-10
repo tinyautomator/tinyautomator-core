@@ -10,7 +10,7 @@ export default function EmailIntegration() {
       <div className="bg-white border-b px-6 py-4">
         <PageHeader
           title="Email Integration"
-          description="Integrate yo emails"
+          description="Integrate your emails"
         />
       </div>
       <div className="flex-1 overflow-auto p-6">
