@@ -21,6 +21,7 @@ type WorkflowScheduleRepository interface {
 	Create(
 		ctx context.Context,
 		workflowID int32,
+		executionState string,
 		next_run int64,
 		schedule_type string,
 	) (*dao.WorkflowSchedule, error)
@@ -91,14 +92,16 @@ func (r *workflowScheduleRepo) UpdateNextRun(
 func (r *workflowScheduleRepo) Create(
 	ctx context.Context,
 	workflowID int32,
+	executionState string,
 	next_run int64,
 	schedule_type string,
+
 ) (*dao.WorkflowSchedule, error) {
 	now := time.Now().UTC().UnixMilli()
 
 	s, err := r.q.CreateWorkflowSchedule(ctx, &dao.CreateWorkflowScheduleParams{
 		WorkflowID:     workflowID,
-		ExecutionState: "queued",
+		ExecutionState: executionState,
 		NextRunAt:      null.IntFrom(next_run),
 		ScheduleType:   schedule_type,
 		CreatedAt:      now,

@@ -6,8 +6,6 @@ package dao
 
 import (
 	"context"
-
-	null "github.com/guregu/null/v6"
 )
 
 type Querier interface {
@@ -73,7 +71,7 @@ type Querier interface {
 	//    created_at,
 	//    updated_at
 	//  )
-	//  VALUES ($1, $2, $3, 'queued', $4, $5, $6)
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
 	//  RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
 	CreateWorkflowSchedule(ctx context.Context, arg *CreateWorkflowScheduleParams) (*WorkflowSchedule, error)
 	//DeleteWorkflowEdge
