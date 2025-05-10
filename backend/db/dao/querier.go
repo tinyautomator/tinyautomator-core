@@ -6,8 +6,6 @@ package dao
 
 import (
 	"context"
-
-	null "github.com/guregu/null/v6"
 )
 
 type Querier interface {
@@ -75,7 +73,7 @@ type Querier interface {
 	//    created_at,
 	//    updated_at
 	//  )
-	//  VALUES ($1, $2, $3, 'queued', $4, $5, $6)
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
 	//  RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
 	CreateWorkflowSchedule(ctx context.Context, arg *CreateWorkflowScheduleParams) (*WorkflowSchedule, error)
 	//DeleteWorkflowSchedule
@@ -100,15 +98,6 @@ type Querier interface {
 	//  WHERE workflow_schedule.id = locked.id
 	//  RETURNING locked.id, workflow_schedule.id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
 	GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*GetDueSchedulesLockedRow, error)
-	// GetDueWorkflowSchedules is first implementation of getting due schedules, currently using locked one
-	//
-	//
-	//  SELECT id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
-	//  FROM workflow_schedule
-	//  WHERE next_run_at IS NOT NULL
-	//    AND next_run_at <= $1
-	//    AND status = 'active'
-	GetDueWorkflowSchedules(ctx context.Context, nextRunAt null.Int) ([]*WorkflowSchedule, error)
 	//GetWorkflow
 	//
 	//  SELECT id, user_id, name, description, status, created_at, updated_at

@@ -21,7 +21,7 @@ INSERT INTO workflow_schedule (
   created_at,
   updated_at
 )
-VALUES ($1, $2, $3, 'queued', $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
 `
 
@@ -29,6 +29,7 @@ type CreateWorkflowScheduleParams struct {
 	WorkflowID     int32    `json:"workflow_id"`
 	ScheduleType   string   `json:"schedule_type"`
 	NextRunAt      null.Int `json:"next_run_at"`
+	LastRunAt      null.Int `json:"last_run_at"`
 	ExecutionState string   `json:"execution_state"`
 	CreatedAt      int64    `json:"created_at"`
 	UpdatedAt      int64    `json:"updated_at"`
@@ -45,13 +46,14 @@ type CreateWorkflowScheduleParams struct {
 //	  created_at,
 //	  updated_at
 //	)
-//	VALUES ($1, $2, $3, 'queued', $4, $5, $6)
+//	VALUES ($1, $2, $3, $4, $5, $6, $7)
 //	RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
 func (q *Queries) CreateWorkflowSchedule(ctx context.Context, arg *CreateWorkflowScheduleParams) (*WorkflowSchedule, error) {
 	row := q.db.QueryRow(ctx, createWorkflowSchedule,
 		arg.WorkflowID,
 		arg.ScheduleType,
 		arg.NextRunAt,
+		arg.LastRunAt,
 		arg.ExecutionState,
 		arg.CreatedAt,
 		arg.UpdatedAt,
@@ -141,51 +143,6 @@ func (q *Queries) GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*Ge
 		if err := rows.Scan(
 			&i.ID,
 			&i.ID_2,
-			&i.WorkflowID,
-			&i.ScheduleType,
-			&i.NextRunAt,
-			&i.LastRunAt,
-			&i.ExecutionState,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getDueWorkflowSchedules = `-- name: GetDueWorkflowSchedules :many
-
-SELECT id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
-FROM workflow_schedule
-WHERE next_run_at IS NOT NULL
-  AND next_run_at <= $1
-  AND status = 'active'
-`
-
-// GetDueWorkflowSchedules is first implementation of getting due schedules, currently using locked one
-//
-//	SELECT id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
-//	FROM workflow_schedule
-//	WHERE next_run_at IS NOT NULL
-//	  AND next_run_at <= $1
-//	  AND status = 'active'
-func (q *Queries) GetDueWorkflowSchedules(ctx context.Context, nextRunAt null.Int) ([]*WorkflowSchedule, error) {
-	rows, err := q.db.Query(ctx, getDueWorkflowSchedules, nextRunAt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*WorkflowSchedule
-	for rows.Next() {
-		var i WorkflowSchedule
-		if err := rows.Scan(
-			&i.ID,
 			&i.WorkflowID,
 			&i.ScheduleType,
 			&i.NextRunAt,

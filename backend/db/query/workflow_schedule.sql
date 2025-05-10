@@ -1,12 +1,3 @@
--- GetDueWorkflowSchedules is first implementation of getting due schedules, currently using locked one
-
--- name: GetDueWorkflowSchedules :many
-SELECT *
-FROM workflow_schedule
-WHERE next_run_at IS NOT NULL
-  AND next_run_at <= $1
-  AND status = 'active';
-
 -- name: UpdateWorkflowSchedule :exec
 UPDATE workflow_schedule
 SET next_run_at = $1,
@@ -25,7 +16,7 @@ INSERT INTO workflow_schedule (
   created_at,
   updated_at
 )
-VALUES ($1, $2, $3, 'queued', $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: DeleteWorkflowSchedule :exec
