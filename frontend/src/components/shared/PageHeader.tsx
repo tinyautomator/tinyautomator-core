@@ -8,7 +8,9 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h1 className="text-2xl font-bold">{title}</h1>
+        <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+          {title}
+        </h3>
         {description && <p className="text-muted-foreground">{description}</p>}
       </div>
       {children && <div>{children}</div>}

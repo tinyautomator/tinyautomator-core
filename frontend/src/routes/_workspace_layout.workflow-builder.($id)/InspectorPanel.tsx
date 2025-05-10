@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
-import { useFlow } from "@/routes/_workspace_layout.workflow-builder/FlowContext";
+import { useFlow } from "@/routes/_workspace_layout.workflow-builder.($id)/FlowContext";
 
 export default function InspectorPanel() {
   const { selectedNode } = useFlow();
@@ -21,7 +21,7 @@ export default function InspectorPanel() {
         {selectedNode ? (
           <div className="p-4">
             <h3 className="mb-4 text-sm font-medium">
-              {selectedNode.data.label} Configuration
+              {selectedNode.data.label as string} Configuration
             </h3>
 
             <Tabs defaultValue="settings">

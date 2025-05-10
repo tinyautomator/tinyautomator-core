@@ -19,12 +19,17 @@ func RegisterRoutes(r *gin.Engine, cfg config.AppConfig) {
 	workflowController := controllers.NewWorkflowController(cfg)
 
 	workflowGroup := r.Group("/api/workflow")
+	workflowGroup.GET("", workflowController.GetUserWorkflows)
 	workflowGroup.GET("/:id", workflowController.GetWorkflow)
 	workflowGroup.GET("/:id/render", workflowController.GetWorkflowRender)
 	workflowGroup.POST("/:id/run", workflowController.RunWorkflow)
-	workflowGroup.POST("/", timeout.New(
+	workflowGroup.POST("", timeout.New(
 		timeout.WithTimeout(3*time.Second),
 		timeout.WithHandler(workflowController.CreateWorkflow),
+	))
+	workflowGroup.PUT("/:id", timeout.New(
+		timeout.WithTimeout(3*time.Second),
+		timeout.WithHandler(workflowController.UpdateWorkflow),
 	))
 
 	gmailController := controllers.NewGmailController(cfg)
