@@ -4,6 +4,7 @@ import { Background, Controls } from "@xyflow/react";
 
 import { ReactFlow } from "@xyflow/react";
 import { useFlow } from "./FlowContext";
+import { NodeUI } from "@/components/shared/NodeUI";
 
 export default function CanvasBody() {
   const {
@@ -18,6 +19,11 @@ export default function CanvasBody() {
     onDrop,
   } = useFlow();
 
+  const nodeTypes = {
+    action: NodeUI,
+    trigger: NodeUI,
+  };
+
   return (
     <div className="h-14/15">
       <ReactFlow
@@ -31,6 +37,7 @@ export default function CanvasBody() {
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         fitView
+        nodeTypes={nodeTypes}
       >
         <Background />
         <Controls />

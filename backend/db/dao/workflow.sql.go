@@ -148,22 +148,18 @@ const createWorkflowNodeUi = `-- name: CreateWorkflowNodeUi :one
 INSERT INTO workflow_node_ui (
   id,
   x_position,
-  y_position,
-  node_label,
-  node_type
+  y_position
 )
 VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3
 )
-RETURNING id, x_position, y_position, node_label, node_type
+RETURNING id, x_position, y_position
 `
 
 type CreateWorkflowNodeUiParams struct {
-	ID        int32       `json:"id"`
-	XPosition float64     `json:"x_position"`
-	YPosition float64     `json:"y_position"`
-	NodeLabel null.String `json:"node_label"`
-	NodeType  string      `json:"node_type"`
+	ID        int32   `json:"id"`
+	XPosition float64 `json:"x_position"`
+	YPosition float64 `json:"y_position"`
 }
 
 // CreateWorkflowNodeUi
@@ -171,31 +167,93 @@ type CreateWorkflowNodeUiParams struct {
 //	INSERT INTO workflow_node_ui (
 //	  id,
 //	  x_position,
-//	  y_position,
-//	  node_label,
-//	  node_type
+//	  y_position
 //	)
 //	VALUES (
-//	  $1, $2, $3, $4, $5
+//	  $1, $2, $3
 //	)
-//	RETURNING id, x_position, y_position, node_label, node_type
+//	RETURNING id, x_position, y_position
 func (q *Queries) CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error) {
-	row := q.db.QueryRow(ctx, createWorkflowNodeUi,
-		arg.ID,
-		arg.XPosition,
-		arg.YPosition,
-		arg.NodeLabel,
-		arg.NodeType,
-	)
+	row := q.db.QueryRow(ctx, createWorkflowNodeUi, arg.ID, arg.XPosition, arg.YPosition)
 	var i WorkflowNodeUi
-	err := row.Scan(
-		&i.ID,
-		&i.XPosition,
-		&i.YPosition,
-		&i.NodeLabel,
-		&i.NodeType,
-	)
+	err := row.Scan(&i.ID, &i.XPosition, &i.YPosition)
 	return &i, err
+}
+
+const deleteWorkflowEdge = `-- name: DeleteWorkflowEdge :exec
+DELETE FROM workflow_edge
+WHERE workflow_id = $1
+  AND source_node_id = $2
+  AND target_node_id = $3
+`
+
+type DeleteWorkflowEdgeParams struct {
+	WorkflowID   int32 `json:"workflow_id"`
+	SourceNodeID int32 `json:"source_node_id"`
+	TargetNodeID int32 `json:"target_node_id"`
+}
+
+// DeleteWorkflowEdge
+//
+//	DELETE FROM workflow_edge
+//	WHERE workflow_id = $1
+//	  AND source_node_id = $2
+//	  AND target_node_id = $3
+func (q *Queries) DeleteWorkflowEdge(ctx context.Context, arg *DeleteWorkflowEdgeParams) error {
+	_, err := q.db.Exec(ctx, deleteWorkflowEdge, arg.WorkflowID, arg.SourceNodeID, arg.TargetNodeID)
+	return err
+}
+
+const deleteWorkflowNode = `-- name: DeleteWorkflowNode :exec
+DELETE FROM workflow_node
+WHERE id = $1
+`
+
+// DeleteWorkflowNode
+//
+//	DELETE FROM workflow_node
+//	WHERE id = $1
+func (q *Queries) DeleteWorkflowNode(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteWorkflowNode, id)
+	return err
+}
+
+const getUserWorkflows = `-- name: GetUserWorkflows :many
+SELECT id, user_id, name, description, created_at, updated_at
+FROM workflow
+WHERE user_id = $1
+`
+
+// GetUserWorkflows
+//
+//	SELECT id, user_id, name, description, created_at, updated_at
+//	FROM workflow
+//	WHERE user_id = $1
+func (q *Queries) GetUserWorkflows(ctx context.Context, userID string) ([]*Workflow, error) {
+	rows, err := q.db.Query(ctx, getUserWorkflows, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Workflow
+	for rows.Next() {
+		var i Workflow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Name,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getWorkflow = `-- name: GetWorkflow :one
@@ -386,8 +444,6 @@ SELECT
   wn.id AS node_id,
   wnu.x_position,
   wnu.y_position,
-  wnu.node_label,
-  wnu.node_type
   action_type,
   config,
   source_node_id,
@@ -408,7 +464,6 @@ type RenderWorkflowGraphRow struct {
 	NodeID              int32       `json:"node_id"`
 	XPosition           float64     `json:"x_position"`
 	YPosition           float64     `json:"y_position"`
-	NodeLabel           null.String `json:"node_label"`
 	ActionType          string      `json:"action_type"`
 	Config              []byte      `json:"config"`
 	SourceNodeID        pgtype.Int4 `json:"source_node_id"`
@@ -425,8 +480,6 @@ type RenderWorkflowGraphRow struct {
 //	  wn.id AS node_id,
 //	  wnu.x_position,
 //	  wnu.y_position,
-//	  wnu.node_label,
-//	  wnu.node_type
 //	  action_type,
 //	  config,
 //	  source_node_id,
@@ -454,7 +507,6 @@ func (q *Queries) RenderWorkflowGraph(ctx context.Context, id int32) ([]*RenderW
 			&i.NodeID,
 			&i.XPosition,
 			&i.YPosition,
-			&i.NodeLabel,
 			&i.ActionType,
 			&i.Config,
 			&i.SourceNodeID,
@@ -468,4 +520,84 @@ func (q *Queries) RenderWorkflowGraph(ctx context.Context, id int32) ([]*RenderW
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateWorkflow = `-- name: UpdateWorkflow :exec
+UPDATE workflow
+SET name = $2,
+    description = $3,
+    updated_at = $4
+WHERE id = $1
+`
+
+type UpdateWorkflowParams struct {
+	ID          int32       `json:"id"`
+	Name        string      `json:"name"`
+	Description null.String `json:"description"`
+	UpdatedAt   null.Int    `json:"updated_at"`
+}
+
+// UpdateWorkflow
+//
+//	UPDATE workflow
+//	SET name = $2,
+//	    description = $3,
+//	    updated_at = $4
+//	WHERE id = $1
+func (q *Queries) UpdateWorkflow(ctx context.Context, arg *UpdateWorkflowParams) error {
+	_, err := q.db.Exec(ctx, updateWorkflow,
+		arg.ID,
+		arg.Name,
+		arg.Description,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
+const updateWorkflowNode = `-- name: UpdateWorkflowNode :exec
+UPDATE workflow_node
+SET action_type = $2,
+    config = $3
+WHERE id = $1
+`
+
+type UpdateWorkflowNodeParams struct {
+	ID         int32  `json:"id"`
+	ActionType string `json:"action_type"`
+	Config     []byte `json:"config"`
+}
+
+// UpdateWorkflowNode
+//
+//	UPDATE workflow_node
+//	SET action_type = $2,
+//	    config = $3
+//	WHERE id = $1
+func (q *Queries) UpdateWorkflowNode(ctx context.Context, arg *UpdateWorkflowNodeParams) error {
+	_, err := q.db.Exec(ctx, updateWorkflowNode, arg.ID, arg.ActionType, arg.Config)
+	return err
+}
+
+const updateWorkflowNodeUI = `-- name: UpdateWorkflowNodeUI :exec
+UPDATE workflow_node_ui
+SET x_position = $2,
+    y_position = $3
+WHERE id = $1
+`
+
+type UpdateWorkflowNodeUIParams struct {
+	ID        int32   `json:"id"`
+	XPosition float64 `json:"x_position"`
+	YPosition float64 `json:"y_position"`
+}
+
+// UpdateWorkflowNodeUI
+//
+//	UPDATE workflow_node_ui
+//	SET x_position = $2,
+//	    y_position = $3
+//	WHERE id = $1
+func (q *Queries) UpdateWorkflowNodeUI(ctx context.Context, arg *UpdateWorkflowNodeUIParams) error {
+	_, err := q.db.Exec(ctx, updateWorkflowNodeUI, arg.ID, arg.XPosition, arg.YPosition)
+	return err
 }

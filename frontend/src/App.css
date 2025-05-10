@@ -138,3 +138,12 @@
   transform: translateZ(0);
   /* triggers GPU acceleration */
 }
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}

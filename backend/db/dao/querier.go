@@ -54,14 +54,12 @@ type Querier interface {
 	//  INSERT INTO workflow_node_ui (
 	//    id,
 	//    x_position,
-	//    y_position,
-	//    node_label,
-	//    node_type
+	//    y_position
 	//  )
 	//  VALUES (
-	//    $1, $2, $3, $4, $5
+	//    $1, $2, $3
 	//  )
-	//  RETURNING id, x_position, y_position, node_label, node_type
+	//  RETURNING id, x_position, y_position
 	CreateWorkflowNodeUi(ctx context.Context, arg *CreateWorkflowNodeUiParams) (*WorkflowNodeUi, error)
 	//CreateWorkflowSchedule
 	//
@@ -77,6 +75,18 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
 	//  RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, status, created_at, updated_at
 	CreateWorkflowSchedule(ctx context.Context, arg *CreateWorkflowScheduleParams) (*WorkflowSchedule, error)
+	//DeleteWorkflowEdge
+	//
+	//  DELETE FROM workflow_edge
+	//  WHERE workflow_id = $1
+	//    AND source_node_id = $2
+	//    AND target_node_id = $3
+	DeleteWorkflowEdge(ctx context.Context, arg *DeleteWorkflowEdgeParams) error
+	//DeleteWorkflowNode
+	//
+	//  DELETE FROM workflow_node
+	//  WHERE id = $1
+	DeleteWorkflowNode(ctx context.Context, id int32) error
 	//DeleteWorkflowSchedule
 	//
 	//  DELETE FROM workflow_schedule
@@ -107,6 +117,12 @@ type Querier interface {
 	//    AND next_run_at <= $1
 	//    AND status = 'active'
 	GetDueWorkflowSchedules(ctx context.Context, nextRunAt null.Int) ([]*WorkflowSchedule, error)
+	//GetUserWorkflows
+	//
+	//  SELECT id, user_id, name, description, created_at, updated_at
+	//  FROM workflow
+	//  WHERE user_id = $1
+	GetUserWorkflows(ctx context.Context, userID string) ([]*Workflow, error)
 	//GetWorkflow
 	//
 	//  SELECT id, user_id, name, description, created_at, updated_at
@@ -158,8 +174,6 @@ type Querier interface {
 	//    wn.id AS node_id,
 	//    wnu.x_position,
 	//    wnu.y_position,
-	//    wnu.node_label,
-	//    wnu.node_type
 	//    action_type,
 	//    config,
 	//    source_node_id,
@@ -171,6 +185,28 @@ type Querier interface {
 	//    AND we.source_node_id = wn.id
 	//  WHERE w.id = $1
 	RenderWorkflowGraph(ctx context.Context, id int32) ([]*RenderWorkflowGraphRow, error)
+	//UpdateWorkflow
+	//
+	//  UPDATE workflow
+	//  SET name = $2,
+	//      description = $3,
+	//      updated_at = $4
+	//  WHERE id = $1
+	UpdateWorkflow(ctx context.Context, arg *UpdateWorkflowParams) error
+	//UpdateWorkflowNode
+	//
+	//  UPDATE workflow_node
+	//  SET action_type = $2,
+	//      config = $3
+	//  WHERE id = $1
+	UpdateWorkflowNode(ctx context.Context, arg *UpdateWorkflowNodeParams) error
+	//UpdateWorkflowNodeUI
+	//
+	//  UPDATE workflow_node_ui
+	//  SET x_position = $2,
+	//      y_position = $3
+	//  WHERE id = $1
+	UpdateWorkflowNodeUI(ctx context.Context, arg *UpdateWorkflowNodeUIParams) error
 	//UpdateWorkflowSchedule
 	//
 	//  UPDATE workflow_schedule

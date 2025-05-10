@@ -1,7 +1,7 @@
-import App from "../App";
+import App from "../../App";
 import { Button } from "@/components/ui/button";
 import { SignInButton } from "@clerk/react-router";
-import { Route } from "./+types/_index";
+import { Route } from "./+types/route";
 import { getAuth } from "@clerk/react-router/ssr.server";
 import { redirect } from "react-router";
 

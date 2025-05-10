@@ -31,11 +31,9 @@ type WorkflowNode struct {
 }
 
 type WorkflowNodeUi struct {
-	ID        int32       `json:"id"`
-	XPosition float64     `json:"x_position"`
-	YPosition float64     `json:"y_position"`
-	NodeLabel null.String `json:"node_label"`
-	NodeType  string      `json:"node_type"`
+	ID        int32   `json:"id"`
+	XPosition float64 `json:"x_position"`
+	YPosition float64 `json:"y_position"`
 }
 
 type WorkflowSchedule struct {

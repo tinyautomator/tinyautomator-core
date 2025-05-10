@@ -1,5 +1,6 @@
+import { workflowApi } from "@/api";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,9 +10,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Play, Settings } from "lucide-react";
+import { NavLink } from "react-router";
 
 interface WorkflowCardProps {
-  title: string;
+  id: string;
+  name: string;
   description: string;
   lastRun: string;
   status: string;
@@ -19,7 +22,8 @@ interface WorkflowCardProps {
 }
 
 export function WorkflowCard({
-  title,
+  id,
+  name,
   description,
   lastRun,
   status,
@@ -29,7 +33,7 @@ export function WorkflowCard({
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">{title}</CardTitle>
+          <CardTitle className="text-base">{name}</CardTitle>
           <Badge variant={status === "active" ? "default" : "outline"}>
             {status === "active" ? "Active" : "Paused"}
           </Badge>
@@ -44,14 +48,23 @@ export function WorkflowCard({
       </CardContent>
       <CardFooter className="pt-2">
         <div className="flex w-full justify-between">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              workflowApi.runWorkflow(id);
+            }}
+          >
             <Play className="mr-1 h-3 w-3" />
             Run Now
           </Button>
-          <Button variant="ghost" size="sm">
+          <NavLink
+            to={`/workflow-builder/${id}`}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
             <Settings className="mr-1 h-3 w-3" />
             Configure
-          </Button>
+          </NavLink>
         </div>
       </CardFooter>
     </Card>

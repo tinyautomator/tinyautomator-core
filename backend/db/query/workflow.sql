@@ -3,6 +3,11 @@ SELECT *
 FROM workflow
 WHERE id = $1;
 
+-- name: GetUserWorkflows :many
+SELECT *
+FROM workflow
+WHERE user_id = $1;
+
 -- name: CreateWorkflow :one
 INSERT INTO workflow (
   user_id,
@@ -46,12 +51,10 @@ RETURNING *;
 INSERT INTO workflow_node_ui (
   id,
   x_position,
-  y_position,
-  node_label,
-  node_type
+  y_position
 )
 VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3
 )
 RETURNING *;
 
@@ -92,8 +95,6 @@ SELECT
   wn.id AS node_id,
   wnu.x_position,
   wnu.y_position,
-  wnu.node_label,
-  wnu.node_type
   action_type,
   config,
   source_node_id,
@@ -104,3 +105,32 @@ INNER JOIN workflow_node_ui wnu ON wn.id = wnu.id
 LEFT JOIN workflow_edge we ON w.id = we.workflow_id
   AND we.source_node_id = wn.id
 WHERE w.id = $1;
+
+-- name: UpdateWorkflow :exec
+UPDATE workflow
+SET name = $2,
+    description = $3,
+    updated_at = $4
+WHERE id = $1;
+
+-- name: UpdateWorkflowNode :exec
+UPDATE workflow_node
+SET action_type = $2,
+    config = $3
+WHERE id = $1;
+
+-- name: UpdateWorkflowNodeUI :exec
+UPDATE workflow_node_ui
+SET x_position = $2,
+    y_position = $3
+WHERE id = $1;
+
+-- name: DeleteWorkflowNode :exec
+DELETE FROM workflow_node
+WHERE id = $1;
+
+-- name: DeleteWorkflowEdge :exec
+DELETE FROM workflow_edge
+WHERE workflow_id = $1
+  AND source_node_id = $2
+  AND target_node_id = $3;
