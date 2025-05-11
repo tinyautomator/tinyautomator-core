@@ -389,43 +389,22 @@ export default function BlockPanel({
             onClear={clearRecentlyUsed}
           />
         )}
-        {filteredCategories
-          .filter((category) => category.category.toLowerCase() === "triggers")
-          .map((category) => (
+        {filteredCategories.map((category) => {
+          let icon = undefined;
+          const cat = category.category.toLowerCase();
+          if (cat === "triggers") icon = <Zap className="w-4 h-4 mr-2" />;
+          else if (cat === "actions") icon = <Cog className="w-4 h-4 mr-2" />;
+
+          return (
             <BlockCategory
               key={category.category}
               category={category}
               onToggleCategory={toggleCategory}
               renderBlock={renderBlock}
-              icon={<Zap className="w-4 h-4 mr-2" />}
+              icon={icon}
             />
-          ))}
-        {filteredCategories
-          .filter((category) => category.category.toLowerCase() === "actions")
-          .map((category) => (
-            <BlockCategory
-              key={category.category}
-              category={category}
-              onToggleCategory={toggleCategory}
-              renderBlock={renderBlock}
-              icon={<Cog className="w-4 h-4 mr-2" />}
-            />
-          ))}
-        {filteredCategories
-          .filter(
-            (category) =>
-              !["triggers", "actions"].includes(
-                category.category.toLowerCase(),
-              ),
-          )
-          .map((category) => (
-            <BlockCategory
-              key={category.category}
-              category={category}
-              onToggleCategory={toggleCategory}
-              renderBlock={renderBlock}
-            />
-          ))}
+          );
+        })}
         {filteredCategories.length === 0 && (
           <NoResults searchQuery={searchQuery} />
         )}

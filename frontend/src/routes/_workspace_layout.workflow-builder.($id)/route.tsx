@@ -53,10 +53,10 @@ export default function WorkflowBuilder({
         <FlowProvider workflowToEdit={workflowToEdit}>
           <div
             className={cn(
-              "transition-all duration-300 overflow-hidden bg-white dark:bg-gray-900 flex flex-col h-full",
+              "transition-all duration-1000 overflow-hidden bg-white dark:bg-gray-900 flex flex-col h-full",
               blockPanelOpen
-                ? "w-64 border-r border-gray-200 dark:border-gray-800"
-                : "w-0 border-none",
+                ? "w-64 border-r border-gray-200 dark:border-gray-800 pointer-events-auto"
+                : "w-0 border-none pointer-events-none"
             )}
           >
             <div
