@@ -1,4 +1,10 @@
-import { createContext, useContext, useCallback, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useState,
+  useMemo,
+} from "react";
 import { v4 as uuidv4 } from "uuid";
 import {
   addEdge,
@@ -41,22 +47,23 @@ const NodeBuilder = (
   position: { x: number; y: number },
   actionType: string,
 ): Node => {
+  const block = actionTypeToBlockMap[actionType];
   return {
     id,
-    type: actionTypeToBlockMap[actionType].node_type,
+    type: block.node_type,
     position,
     data: {
       actionType,
-      label: actionTypeToBlockMap[actionType].label,
-      description: actionTypeToBlockMap[actionType].description,
+      label: block.label,
+      description: block.description,
       config: "",
-      icon: actionTypeToBlockMap[actionType].icon,
+      icon: block.icon,
       status:
-        actionTypeToBlockMap[actionType].node_type === "trigger"
+        block.node_type === "trigger"
           ? "success"
-          : actionTypeToBlockMap[actionType].action_type === "send_email"
+          : block.action_type === "send_email"
             ? "failed"
-            : actionTypeToBlockMap[actionType].action_type === "http_request"
+            : block.action_type === "http_request"
               ? "pending"
               : "pending",
     },
@@ -95,14 +102,14 @@ export function FlowProvider({
   const { screenToFlowPosition } = useReactFlow();
   const [recentlyUsed, setRecentlyUsed] = useState<Block[]>([]);
 
-  const addRecentlyUsedBlock = (block: Block) => {
+  const addRecentlyUsedBlock = useCallback((block: Block) => {
     setRecentlyUsed((prev) => {
       const filtered = prev.filter((b) => b.action_type !== block.action_type);
       return [block, ...filtered].slice(0, 5);
     });
-  };
+  }, []);
 
-  const clearRecentlyUsed = () => setRecentlyUsed([]);
+  const clearRecentlyUsed = useCallback(() => setRecentlyUsed([]), []);
 
   const onConnect = useCallback(
     (params: Edge | Connection) => {
@@ -166,31 +173,48 @@ export function FlowProvider({
 
       addRecentlyUsedBlock(actionTypeToBlockMap[data.actionType]);
     },
-    [setNodes, screenToFlowPosition],
+    [setNodes, screenToFlowPosition, addRecentlyUsedBlock],
+  );
+
+  const contextValue = useMemo(
+    () => ({
+      nodes,
+      edges,
+      selectedNode,
+      onNodesChange,
+      onEdgesChange,
+      onConnect,
+      onNodeClick,
+      onPaneClick,
+      onDragOver,
+      onDrop,
+      setNodes,
+      setEdges,
+      recentlyUsed,
+      addRecentlyUsedBlock,
+      clearRecentlyUsed,
+    }),
+    [
+      nodes,
+      edges,
+      selectedNode,
+      onNodesChange,
+      onEdgesChange,
+      onConnect,
+      onNodeClick,
+      onPaneClick,
+      onDragOver,
+      onDrop,
+      setNodes,
+      setEdges,
+      recentlyUsed,
+      addRecentlyUsedBlock,
+      clearRecentlyUsed,
+    ],
   );
 
   return (
-    <FlowContext.Provider
-      value={{
-        nodes,
-        edges,
-        selectedNode,
-        onNodesChange,
-        onEdgesChange,
-        onConnect,
-        onNodeClick,
-        onPaneClick,
-        onDragOver,
-        onDrop,
-        setNodes,
-        setEdges,
-        recentlyUsed,
-        addRecentlyUsedBlock,
-        clearRecentlyUsed,
-      }}
-    >
-      {children}
-    </FlowContext.Provider>
+    <FlowContext.Provider value={contextValue}>{children}</FlowContext.Provider>
   );
 }
 

@@ -27,6 +27,9 @@ export default function CanvasBody() {
   return (
     <div className="h-14/15">
       <ReactFlow
+        minZoom={0.75}
+        maxZoom={1.5}
+        nodeTypes={nodeTypes}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -37,7 +40,9 @@ export default function CanvasBody() {
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         fitView
-        nodeTypes={nodeTypes}
+        selectNodesOnDrag={false}
+        nodesFocusable={false}
+        edgesFocusable={false}
       >
         <Background />
         <Controls />

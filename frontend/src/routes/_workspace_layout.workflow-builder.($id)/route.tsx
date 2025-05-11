@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import CanvasBody from "./CanvasBody";
 import CanvasHeader from "./CanvasHeader";
 import { workflowApi } from "@/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/ui/sidebar";
 
@@ -34,8 +34,8 @@ export default function WorkflowBuilder({
   const { open, setOpen } = useSidebar();
   const { fitView } = useReactFlow();
 
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
+  const handleKeyPress = useCallback(
+    (e: KeyboardEvent) => {
       const isTextInput =
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement;
@@ -63,11 +63,14 @@ export default function WorkflowBuilder({
           });
         }, 500);
       }
-    };
+    },
+    [open, toggleBlockPanel, toggleInspectorPanel, fitView, setOpen],
+  );
 
+  useEffect(() => {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [open]);
+  }, [handleKeyPress]);
 
   return (
     <div className="flex h-full overflow-hidden">

@@ -9,7 +9,7 @@ import {
   Loader,
   LucideProps,
 } from "lucide-react";
-import { RefAttributes } from "react";
+import { RefAttributes, memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 const statusVariants = {
@@ -31,13 +31,22 @@ const statusVariants = {
   },
 };
 
-export function NodeUI({ type, data, selected, height, width }: NodeProps) {
-  const getIcon = () => {
-    const Icon = data.icon as React.ForwardRefExoticComponent<
-      Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
-    >;
-    return Icon ? <Icon size={16} /> : null;
-  };
+export const NodeUI = memo(function NodeUI({
+  type,
+  data,
+  selected,
+  height,
+  width,
+}: NodeProps) {
+  const getIcon = useMemo(
+    () => () => {
+      const Icon = data.icon as React.ForwardRefExoticComponent<
+        Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+      >;
+      return Icon ? <Icon size={16} /> : null;
+    },
+    [data.icon],
+  );
 
   const StatusIcon = data.status
     ? statusVariants[data.status as keyof typeof statusVariants].icon
@@ -176,4 +185,4 @@ export function NodeUI({ type, data, selected, height, width }: NodeProps) {
       </div>
     </div>
   );
-}
+});
