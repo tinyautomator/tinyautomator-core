@@ -73,8 +73,6 @@ export default function WorkflowBuilder({
               workflowToEdit={workflowToEdit}
               onCollapseToggle={() => setBlockPanelOpen((open) => !open)}
               collapsed={!blockPanelOpen}
-              searchFocused={searchFocused}
-              setSearchFocused={setSearchFocused}
             />
             <Separator />
             <CanvasBody />
