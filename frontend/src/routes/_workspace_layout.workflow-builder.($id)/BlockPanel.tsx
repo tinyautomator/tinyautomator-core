@@ -261,9 +261,11 @@ function BlockPanelHeader({
   onViewModeChange,
   searchFocused,
   setSearchFocused,
+  blockPanelOpen,
 }: BlockPanelHeaderProps & {
   searchFocused: boolean;
   setSearchFocused: (focused: boolean) => void;
+  blockPanelOpen: boolean;
 }) {
   return (
     <div className="p-4 border-b border-gray-200 dark:border-gray-800">
@@ -273,6 +275,7 @@ function BlockPanelHeader({
         onSearchChange={onSearchChange}
         searchFocused={searchFocused}
         setSearchFocused={setSearchFocused}
+        blockPanelOpen={blockPanelOpen}
       />
       <div className="flex justify-between mt-3">
         <ViewModeToggle
@@ -288,9 +291,11 @@ function BlockPanelHeader({
 export default function BlockPanel({
   searchFocused,
   setSearchFocused,
+  blockPanelOpen,
 }: {
   searchFocused: boolean;
   setSearchFocused: (focused: boolean) => void;
+  blockPanelOpen: boolean;
 }) {
   const { recentlyUsed, clearRecentlyUsed } = useFlow();
   const [searchQuery, setSearchQuery] = useState("");
@@ -355,7 +360,7 @@ export default function BlockPanel({
   };
 
   return (
-    <div className="h-full w-64 flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
+    <div className="h-full w-72 flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
       <BlockPanelHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -363,6 +368,7 @@ export default function BlockPanel({
         onViewModeChange={setViewMode}
         searchFocused={searchFocused}
         setSearchFocused={setSearchFocused}
+        blockPanelOpen={blockPanelOpen}
       />
       <ScrollArea className="flex-grow overflow-y-auto p-3">
         <BlockSection
@@ -389,43 +395,22 @@ export default function BlockPanel({
             onClear={clearRecentlyUsed}
           />
         )}
-        {filteredCategories
-          .filter((category) => category.category.toLowerCase() === "triggers")
-          .map((category) => (
+        {filteredCategories.map((category) => {
+          let icon = undefined;
+          const cat = category.category.toLowerCase();
+          if (cat === "triggers") icon = <Zap className="w-4 h-4 mr-2" />;
+          else if (cat === "actions") icon = <Cog className="w-4 h-4 mr-2" />;
+
+          return (
             <BlockCategory
               key={category.category}
               category={category}
               onToggleCategory={toggleCategory}
               renderBlock={renderBlock}
-              icon={<Zap className="w-4 h-4 mr-2" />}
+              icon={icon}
             />
-          ))}
-        {filteredCategories
-          .filter((category) => category.category.toLowerCase() === "actions")
-          .map((category) => (
-            <BlockCategory
-              key={category.category}
-              category={category}
-              onToggleCategory={toggleCategory}
-              renderBlock={renderBlock}
-              icon={<Cog className="w-4 h-4 mr-2" />}
-            />
-          ))}
-        {filteredCategories
-          .filter(
-            (category) =>
-              !["triggers", "actions"].includes(
-                category.category.toLowerCase(),
-              ),
-          )
-          .map((category) => (
-            <BlockCategory
-              key={category.category}
-              category={category}
-              onToggleCategory={toggleCategory}
-              renderBlock={renderBlock}
-            />
-          ))}
+          );
+        })}
         {filteredCategories.length === 0 && (
           <NoResults searchQuery={searchQuery} />
         )}

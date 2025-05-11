@@ -5,6 +5,7 @@ import { RenderedWorkflow, workflowApi } from "@/api";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Menu } from "lucide-react";
+import { useReactFlow } from "@xyflow/react";
 
 export default function CanvasHeader({
   workflowToEdit,
@@ -16,6 +17,7 @@ export default function CanvasHeader({
   collapsed?: boolean;
 }) {
   const { nodes, edges } = useFlow();
+  const { fitView } = useReactFlow();
   const [name, setName] = useState("");
 
   return (
@@ -26,7 +28,17 @@ export default function CanvasHeader({
             variant="ghost"
             size="icon"
             className="mr-2"
-            onClick={onCollapseToggle}
+            onClick={() => {
+              onCollapseToggle();
+              setTimeout(() => {
+                fitView({
+                  padding: 0.2,
+                  duration: 500,
+                  minZoom: 0.5,
+                  maxZoom: 1.5,
+                });
+              }, 500);
+            }}
             aria-label={
               collapsed ? "Expand block panel" : "Collapse block panel"
             }
