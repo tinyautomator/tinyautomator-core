@@ -250,6 +250,8 @@ interface BlockPanelHeaderProps {
   onSearchChange: (value: string) => void;
   viewMode: "default" | "compact";
   onViewModeChange: (mode: "default" | "compact") => void;
+  searchFocused: boolean;
+  setSearchFocused: (focused: boolean) => void;
 }
 
 function BlockPanelHeader({
@@ -257,11 +259,21 @@ function BlockPanelHeader({
   onSearchChange,
   viewMode,
   onViewModeChange,
-}: BlockPanelHeaderProps) {
+  searchFocused,
+  setSearchFocused,
+}: BlockPanelHeaderProps & {
+  searchFocused: boolean;
+  setSearchFocused: (focused: boolean) => void;
+}) {
   return (
     <div className="p-4 border-b border-gray-200 dark:border-gray-800">
       <h2 className="text-lg font-semibold mb-4">Blocks</h2>
-      <SearchBar searchQuery={searchQuery} onSearchChange={onSearchChange} />
+      <SearchBar
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
+        searchFocused={searchFocused}
+        setSearchFocused={setSearchFocused}
+      />
       <div className="flex justify-between mt-3">
         <ViewModeToggle
           viewMode={viewMode}
@@ -273,7 +285,15 @@ function BlockPanelHeader({
   );
 }
 
-export default function BlockPanel() {
+interface BlockPanelProps {
+  searchFocused: boolean;
+  setSearchFocused: (focused: boolean) => void;
+}
+
+export default function BlockPanel({
+  searchFocused,
+  setSearchFocused,
+}: BlockPanelProps) {
   const { recentlyUsed, clearRecentlyUsed } = useFlow();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"default" | "compact">("default");
@@ -343,6 +363,8 @@ export default function BlockPanel() {
         onSearchChange={setSearchQuery}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        searchFocused={searchFocused}
+        setSearchFocused={setSearchFocused}
       />
       <ScrollArea className="flex-grow overflow-y-auto p-3">
         <BlockSection

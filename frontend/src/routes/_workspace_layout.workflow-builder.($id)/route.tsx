@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import CanvasBody from "./CanvasBody";
 import CanvasHeader from "./CanvasHeader";
 import { workflowApi } from "@/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -28,6 +28,25 @@ export default function WorkflowBuilder({
   loaderData: workflowToEdit,
 }: Route.ComponentProps) {
   const [blockPanelOpen, setBlockPanelOpen] = useState(true);
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      const isTextInput =
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement;
+
+      if (e.key === "/" && !isTextInput) {
+        e.preventDefault();
+        setBlockPanelOpen(true);
+        setSearchFocused(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
+
   return (
     <div className="flex h-full">
       <ReactFlowProvider>
@@ -43,7 +62,10 @@ export default function WorkflowBuilder({
             <div
               className={`${blockPanelOpen ? "opacity-100" : "opacity-0 pointer-events-none"} transition-opacity duration-300 h-full`}
             >
-              <BlockPanel />
+              <BlockPanel
+                searchFocused={searchFocused}
+                setSearchFocused={setSearchFocused}
+              />
             </div>
           </div>
           <div className="flex-1 bg-slate-50 flex flex-col">
@@ -51,6 +73,8 @@ export default function WorkflowBuilder({
               workflowToEdit={workflowToEdit}
               onCollapseToggle={() => setBlockPanelOpen((open) => !open)}
               collapsed={!blockPanelOpen}
+              searchFocused={searchFocused}
+              setSearchFocused={setSearchFocused}
             />
             <Separator />
             <CanvasBody />
