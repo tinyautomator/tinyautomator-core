@@ -1,11 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useFlow } from "./FlowContext";
 import { RenderedWorkflow, workflowApi } from "@/api";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Menu } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
+import { useFlowStore } from "./flowStore";
 
 export default function CanvasHeader({
   workflowToEdit,
@@ -16,7 +16,7 @@ export default function CanvasHeader({
   onCollapseToggle?: () => void;
   collapsed?: boolean;
 }) {
-  const { nodes, edges } = useFlow();
+  const { nodes, edges } = useFlowStore();
   const { fitView } = useReactFlow();
   const [name, setName] = useState("");
 
@@ -32,7 +32,6 @@ export default function CanvasHeader({
               onCollapseToggle();
               setTimeout(() => {
                 fitView({
-                  padding: 0.2,
                   duration: 500,
                   minZoom: 0.5,
                   maxZoom: 1.5,
