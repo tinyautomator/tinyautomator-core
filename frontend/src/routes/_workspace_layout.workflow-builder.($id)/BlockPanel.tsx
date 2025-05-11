@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { blockCategories } from "./BlockCategories";
 import { SearchBar } from "./SearchBar";
 import { Block } from "./BlockTypes";
-import { useFlow } from "./FlowContext";
+import { useFlowStore } from "./flowStore";
 
 interface BlockCategory {
   category: string;
@@ -297,7 +297,7 @@ export default function BlockPanel({
   setSearchFocused: (focused: boolean) => void;
   blockPanelOpen: boolean;
 }) {
-  const { recentlyUsed, clearRecentlyUsed } = useFlow();
+  const { recentlyUsed, clearRecentlyUsed } = useFlowStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"default" | "compact">("default");
   const [categories, setCategories] =

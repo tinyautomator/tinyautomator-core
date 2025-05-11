@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Settings, ChevronsRight } from "lucide-react";
-import { useFlow } from "@/routes/_workspace_layout.workflow-builder.($id)/FlowContext";
+import { useFlowStore } from "@/routes/_workspace_layout.workflow-builder.($id)/flowStore";
 import { cn } from "@/lib/utils";
 import { useReactFlow } from "@xyflow/react";
 
@@ -15,7 +15,7 @@ export default function InspectorPanel({
   toggleInspectorPanel: boolean;
   setToggleInspectorPanel: (toggleInspectorPanel: boolean) => void;
 }) {
-  const { selectedNode } = useFlow();
+  const { selectedNode } = useFlowStore();
   const { fitView } = useReactFlow();
 
   return (
@@ -38,7 +38,6 @@ export default function InspectorPanel({
             setToggleInspectorPanel(!toggleInspectorPanel);
             setTimeout(() => {
               fitView({
-                padding: 0.2,
                 duration: 500,
                 minZoom: 0.5,
                 maxZoom: 1.5,
