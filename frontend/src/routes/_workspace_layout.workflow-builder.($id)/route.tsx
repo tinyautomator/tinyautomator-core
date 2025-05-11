@@ -1,4 +1,4 @@
-import { ReactFlowProvider } from "@xyflow/react";
+import { useReactFlow } from "@xyflow/react";
 import "../../App.css";
 import "@xyflow/react/dist/style.css";
 import BlockPanel from "./BlockPanel";
@@ -11,6 +11,7 @@ import CanvasHeader from "./CanvasHeader";
 import { workflowApi } from "@/api";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export async function loader({ params }: Route.LoaderArgs) {
   if (params.id) {
@@ -27,8 +28,11 @@ export async function loader({ params }: Route.LoaderArgs) {
 export default function WorkflowBuilder({
   loaderData: workflowToEdit,
 }: Route.ComponentProps) {
-  const [blockPanelOpen, setBlockPanelOpen] = useState(true);
+  const [toggleBlockPanel, setToggleBlockPanel] = useState(true);
+  const [toggleInspectorPanel, setToggleInspectorPanel] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
+  const { open, setOpen } = useSidebar();
+  const { fitView } = useReactFlow();
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -38,48 +42,64 @@ export default function WorkflowBuilder({
 
       if (e.key === "/" && !isTextInput) {
         e.preventDefault();
-        setBlockPanelOpen(true);
+        setToggleBlockPanel(true);
         setSearchFocused(true);
+      } else if (e.key === "f" && !isTextInput) {
+        e.preventDefault();
+        const fullScreenMode = !(
+          toggleBlockPanel ||
+          toggleInspectorPanel ||
+          open
+        );
+        setOpen(fullScreenMode);
+        setToggleInspectorPanel(fullScreenMode);
+        setToggleBlockPanel(fullScreenMode);
+        setTimeout(() => {
+          fitView({
+            padding: 0.2,
+            duration: 500,
+            minZoom: 0.5,
+            maxZoom: 1.5,
+          });
+        }, 500);
       }
     };
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, []);
+  }, [open]);
 
   return (
-    <div className="flex h-full">
-      <ReactFlowProvider>
-        <FlowProvider workflowToEdit={workflowToEdit}>
-          <div
-            className={cn(
-              "transition-all duration-1000 overflow-hidden bg-white dark:bg-gray-900 flex flex-col h-full",
-              blockPanelOpen
-                ? "w-64 border-r border-gray-200 dark:border-gray-800 pointer-events-auto"
-                : "w-0 border-none pointer-events-none"
-            )}
-          >
-            <div
-              className={`${blockPanelOpen ? "opacity-100" : "opacity-0 pointer-events-none"} transition-opacity duration-300 h-full`}
-            >
-              <BlockPanel
-                searchFocused={searchFocused}
-                setSearchFocused={setSearchFocused}
-              />
-            </div>
-          </div>
-          <div className="flex-1 bg-slate-50 flex flex-col">
-            <CanvasHeader
-              workflowToEdit={workflowToEdit}
-              onCollapseToggle={() => setBlockPanelOpen((open) => !open)}
-              collapsed={!blockPanelOpen}
-            />
-            <Separator />
-            <CanvasBody />
-          </div>
-          <InspectorPanel />
-        </FlowProvider>
-      </ReactFlowProvider>
+    <div className="flex h-full overflow-hidden">
+      <FlowProvider workflowToEdit={workflowToEdit}>
+        <div
+          className={cn(
+            "transition-all duration-300 overflow-hidden bg-white dark:bg-gray-900 flex flex-col h-full max-w-72",
+            toggleBlockPanel
+              ? "w-72 pointer-events-auto"
+              : "w-0 pointer-events-none",
+          )}
+        >
+          <BlockPanel
+            searchFocused={searchFocused}
+            setSearchFocused={setSearchFocused}
+            blockPanelOpen={toggleBlockPanel}
+          />
+        </div>
+        <div className="flex-1 bg-slate-50 flex flex-col">
+          <CanvasHeader
+            workflowToEdit={workflowToEdit}
+            onCollapseToggle={() => setToggleBlockPanel((open) => !open)}
+            collapsed={!toggleBlockPanel}
+          />
+          <Separator />
+          <CanvasBody />
+        </div>
+        <InspectorPanel
+          toggleInspectorPanel={toggleInspectorPanel}
+          setToggleInspectorPanel={setToggleInspectorPanel}
+        />
+      </FlowProvider>
     </div>
   );
 }

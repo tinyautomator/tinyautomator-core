@@ -8,21 +8,33 @@ interface SearchBarProps {
   onSearchChange: (value: string) => void;
   searchFocused: boolean;
   setSearchFocused: (focused: boolean) => void;
+  blockPanelOpen: boolean;
 }
 
 export function SearchBar({
   searchQuery,
   onSearchChange,
   searchFocused,
+  blockPanelOpen,
   setSearchFocused,
 }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevPanelOpenRef = useRef(blockPanelOpen);
 
   useEffect(() => {
     if (searchFocused && inputRef.current) {
-      inputRef.current.focus();
+      const wasClosed = !prevPanelOpenRef.current && blockPanelOpen;
+      if (wasClosed) {
+        const timeoutId = setTimeout(() => {
+          inputRef.current?.focus();
+        }, 300);
+        return () => clearTimeout(timeoutId);
+      } else {
+        inputRef.current.focus();
+      }
     }
-  }, [searchFocused]);
+    prevPanelOpenRef.current = blockPanelOpen;
+  }, [searchFocused, blockPanelOpen]);
 
   return (
     <div className="relative">
