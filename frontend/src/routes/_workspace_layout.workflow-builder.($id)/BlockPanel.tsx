@@ -285,15 +285,13 @@ function BlockPanelHeader({
   );
 }
 
-interface BlockPanelProps {
-  searchFocused: boolean;
-  setSearchFocused: (focused: boolean) => void;
-}
-
 export default function BlockPanel({
   searchFocused,
   setSearchFocused,
-}: BlockPanelProps) {
+}: {
+  searchFocused: boolean;
+  setSearchFocused: (focused: boolean) => void;
+}) {
   const { recentlyUsed, clearRecentlyUsed } = useFlow();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"default" | "compact">("default");
