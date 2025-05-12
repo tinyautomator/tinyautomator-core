@@ -6,8 +6,8 @@ CREATE TABLE workflow_schedule (
     ),
     next_run_at BIGINT,
     last_run_at BIGINT,
-    status TEXT NOT NULL DEFAULT 'active' CHECK (
-        status IN ('active', 'pending', 'paused', 'completed')
+    execution_state TEXT NOT NULL CHECK (
+        execution_state IN ('queued', 'paused', 'running', 'failed')
     ),
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL

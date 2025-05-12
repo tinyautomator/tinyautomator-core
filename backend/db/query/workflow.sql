@@ -13,11 +13,12 @@ INSERT INTO workflow (
   user_id,
   name,
   description,
+  status,
   created_at,
   updated_at
 )
 VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 )
 RETURNING *;
 
@@ -74,6 +75,7 @@ SELECT
   w.id AS workflow_id,
   w.name AS workflow_name,
   w.description AS workflow_description,
+  w.status AS workflow_status,
   w.created_at,
   wn.id AS node_id,
   action_type,
@@ -91,6 +93,7 @@ SELECT
   w.id AS workflow_id,
   w.name AS workflow_name,
   w.description AS workflow_description,
+  w.status AS workflow_status,
   w.created_at,
   wn.id AS node_id,
   wnu.x_position,

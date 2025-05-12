@@ -75,6 +75,7 @@ type WorkflowRepository interface {
 		ctx context.Context,
 		userID string,
 		name string,
+		status string,
 		description string,
 		nodes []WorkflowNode,
 		edges []WorkflowEdge,
@@ -130,6 +131,7 @@ func (r *workflowRepo) CreateWorkflow(
 	userID string,
 	name string,
 	description string,
+	status string,
 	nodes []WorkflowNode,
 	edges []WorkflowEdge,
 ) (*dao.Workflow, error) {
@@ -152,6 +154,7 @@ func (r *workflowRepo) CreateWorkflow(
 		UserID:      userID,
 		Name:        name,
 		Description: null.StringFrom(description),
+		Status:      status,
 		CreatedAt:   null.IntFrom(now),
 		UpdatedAt:   null.IntFrom(now),
 	})
