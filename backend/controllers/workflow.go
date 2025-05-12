@@ -3,10 +3,13 @@ package controllers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
+	rc "github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/services"
 
@@ -24,6 +27,7 @@ type workflowController struct {
 	logger   logrus.FieldLogger
 	repo     repo.WorkflowRepository
 	executor services.WorkflowExecutorService
+	redis    *redis.Client
 }
 
 type CreateWorkflowRequest struct {
@@ -45,6 +49,7 @@ func NewWorkflowController(cfg config.AppConfig) *workflowController {
 		logger:   cfg.GetLogger(),
 		repo:     cfg.GetWorkflowRepository(),
 		executor: *services.NewWorkflowExecutorService(cfg),
+		redis:    cfg.GetRedisClient(),
 	}
 }
 
@@ -275,13 +280,36 @@ func (c *workflowController) RunWorkflow(ctx *gin.Context) {
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
-
 		return
 	}
+
+	lockID, acquired, err := rc.AcquireRunWorkflowLock(
+		ctx,
+		c.redis,
+		idStr,
+		"test_user",
+		10*time.Second,
+	)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	if !acquired {
+		ctx.JSON(http.StatusConflict, gin.H{"error": "workflow already running"})
+		return
+	}
+
+	defer func() {
+		if err := rc.ReleaseRunWorkflowLock(ctx, c.redis, idStr, "test_user", lockID); err != nil {
+			c.logger.Error("failed to release workflow lock: %v", err)
+		}
+	}()
 
 	err = c.executor.ExecuteWorkflow(ctx, int32(workflowID))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, workflowID)

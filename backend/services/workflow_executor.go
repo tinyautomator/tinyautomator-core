@@ -69,7 +69,7 @@ func (s *WorkflowExecutorService) ExecuteWorkflow(ctx context.Context, workflowI
 			"action_type": node.ActionType,
 			"config":      string(node.Config),
 		}).Info("→ Executing node")
-		time.Sleep(1 * time.Second)
+		time.Sleep(7 * time.Second)
 	}
 
 	return nil

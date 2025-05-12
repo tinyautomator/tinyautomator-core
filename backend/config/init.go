@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
@@ -95,7 +96,7 @@ func (cfg *appConfig) initRepositories(ctx context.Context) error {
 	return nil
 }
 
-func (cfg *appConfig) initExternalServices() {
+func (cfg *appConfig) initExternalServices() error {
 	clerk.SetKey(cfg.envVars.ClerkSecretKey)
 
 	cfg.gmailOAuthConfig = &oauth2.Config{
@@ -105,4 +106,15 @@ func (cfg *appConfig) initExternalServices() {
 		Scopes:       cfg.envVars.GmailScopes,
 		Endpoint:     google.Endpoint,
 	}
+
+	cfg.redisClient = redis.NewClient(&redis.Options{
+		Addr: cfg.envVars.RedisUrl,
+		DB:   0,
+	})
+
+	if err := cfg.redisClient.Ping(context.Background()).Err(); err != nil {
+		return fmt.Errorf("failed to connect to redis: %w", err)
+	}
+
+	return nil
 }
