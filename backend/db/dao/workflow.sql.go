@@ -224,14 +224,14 @@ func (q *Queries) DeleteWorkflowNode(ctx context.Context, id int32) error {
 }
 
 const getUserWorkflows = `-- name: GetUserWorkflows :many
-SELECT id, user_id, name, description, created_at, updated_at
+SELECT id, user_id, name, description, status, created_at, updated_at
 FROM workflow
 WHERE user_id = $1
 `
 
 // GetUserWorkflows
 //
-//	SELECT id, user_id, name, description, created_at, updated_at
+//	SELECT id, user_id, name, description, status, created_at, updated_at
 //	FROM workflow
 //	WHERE user_id = $1
 func (q *Queries) GetUserWorkflows(ctx context.Context, userID string) ([]*Workflow, error) {
@@ -248,6 +248,7 @@ func (q *Queries) GetUserWorkflows(ctx context.Context, userID string) ([]*Workf
 			&i.UserID,
 			&i.Name,
 			&i.Description,
+			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
