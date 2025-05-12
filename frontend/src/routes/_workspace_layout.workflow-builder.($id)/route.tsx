@@ -100,7 +100,7 @@ export default function WorkflowBuilder({
 
       setNodes(parsedNodes);
       setEdges(
-        workflowToEdit.edges.map((edge) => ({
+        workflowToEdit.edges?.map((edge) => ({
           ...edge,
           id: edge.id,
           animated: true,

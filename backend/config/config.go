@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"golang.org/x/oauth2"
@@ -20,6 +21,7 @@ type EnvironmentVariables struct {
 	ClerkSecretKey     string        `envconfig:"CLERK_SECRET_KEY"`
 	Port               string        `envconfig:"PORT"                    default:"9000"`
 	WorkerPollInterval time.Duration `envconfig:"WORKER_POLLING_INTERVAL" default:"10m"`
+	RedisUrl           string        `envconfig:"REDIS_URL"               default:"localhost:6379"`
 
 	// Gmail Variables
 	GmailClientID     string   `envconfig:"GMAIL_CLIENT_ID"`
@@ -37,16 +39,18 @@ type AppConfig interface {
 	GetWorkflowScheduleRepository() repositories.WorkflowScheduleRepository
 
 	GetGmailOAuthConfig() *oauth2.Config
+	GetRedisClient() *redis.Client
 
 	CleanUp()
 }
 
 type appConfig struct {
 	// app
-	env     string
-	envVars EnvironmentVariables
-	logger  logrus.FieldLogger
-	pool    *pgxpool.Pool
+	env         string
+	envVars     EnvironmentVariables
+	logger      logrus.FieldLogger
+	pool        *pgxpool.Pool
+	redisClient *redis.Client
 
 	// repositories
 	workflowRepository         repositories.WorkflowRepository
@@ -79,7 +83,9 @@ func NewAppConfig(ctx context.Context) (AppConfig, error) {
 		return nil, err
 	}
 
-	cfg.initExternalServices()
+	if err := cfg.initExternalServices(); err != nil {
+		return nil, err
+	}
 
 	return cfg, nil
 }
@@ -106,6 +112,10 @@ func (cfg *appConfig) GetWorkflowScheduleRepository() repositories.WorkflowSched
 
 func (cfg *appConfig) GetGmailOAuthConfig() *oauth2.Config {
 	return cfg.gmailOAuthConfig
+}
+
+func (cfg *appConfig) GetRedisClient() *redis.Client {
+	return cfg.redisClient
 }
 
 func (cfg *appConfig) CleanUp() {
