@@ -1,8 +1,8 @@
-import { useFlow } from "@/routes/_workspace_layout.workflow-builder.($id)/FlowContext";
+import { useFlowStore } from "@/routes/_workspace_layout.workflow-builder.($id)/flowStore";
 import { EmailSettings } from "./email";
 
 export function SettingsTab() {
-  const { selectedNode } = useFlow();
+  const { selectedNode } = useFlowStore();
 
   if (!selectedNode) return null;
 

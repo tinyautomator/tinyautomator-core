@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 // TODO: Make a more advanced parser that can select the correct column for the email address
 
-=======
->>>>>>> 02799ac (feat: send-email block with new inputs and toasts for different ui interactions)
 import Papa from "papaparse";
 
 export async function parseEmailCsv(file: File) {

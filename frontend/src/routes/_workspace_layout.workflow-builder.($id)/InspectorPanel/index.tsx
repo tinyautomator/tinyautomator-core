@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Settings, ChevronsRight } from "lucide-react";
-import { useFlow } from "@/routes/_workspace_layout.workflow-builder.($id)/FlowContext";
+import { useFlowStore } from "@/routes/_workspace_layout.workflow-builder.($id)/flowStore";
 import { AdvancedSettings } from "./AdvancedSettings";
 import { LogsPanel } from "./LogsPanel";
 import { SettingsTab } from "./settings";
@@ -17,7 +17,7 @@ export default function InspectorPanel({
   toggleInspectorPanel: boolean;
   setToggleInspectorPanel: (toggleInspectorPanel: boolean) => void;
 }) {
-  const { selectedNode } = useFlow();
+  const { selectedNode } = useFlowStore();
   const { fitView } = useReactFlow();
 
   return (
