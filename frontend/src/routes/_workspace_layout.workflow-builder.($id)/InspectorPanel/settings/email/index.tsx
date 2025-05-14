@@ -33,7 +33,10 @@ export function EmailSettings() {
         <div className="flex justify-end"></div>
         <EmailPreview />
       </div>
+<<<<<<< HEAD
       {/* TODO: move this to global app component */}
+=======
+>>>>>>> 02799ac (feat: send-email block with new inputs and toasts for different ui interactions)
       <Toaster />
     </FormProvider>
   );

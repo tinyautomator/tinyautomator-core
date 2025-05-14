@@ -16,7 +16,11 @@ export function RecipientInputSection() {
         inputMode={inputMode}
         onInputModeChange={setInputMode}
       />
+<<<<<<< HEAD
       {/* TODO: Move this logic to a separate component */}
+=======
+
+>>>>>>> 02799ac (feat: send-email block with new inputs and toasts for different ui interactions)
       {inputMode === "csv" && <CsvUploader />}
 
       <RecipientChips />
