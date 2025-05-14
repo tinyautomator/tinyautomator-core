@@ -33,6 +33,7 @@ export function EmailSettings() {
         <div className="flex justify-end"></div>
         <EmailPreview />
       </div>
+      {/* TODO: move this to global app component */}
       <Toaster />
     </FormProvider>
   );

@@ -14,11 +14,21 @@ export function EmailSubjectField() {
   } = useFormContext<EmailFormValues>();
   const subject = watch("subject") || "";
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Subject</label>
       <div className="space-y-1">
-        <Input {...register("subject")} aria-invalid={!!errors.subject} />
+        <Input
+          {...register("subject")}
+          aria-invalid={!!errors.subject}
+          onKeyDown={handleKeyDown}
+        />
         <div className="flex justify-end">
           <span className="text-xs text-muted-foreground">
             {subject.length}/{MAX_SUBJECT_CHAR_COUNT} characters

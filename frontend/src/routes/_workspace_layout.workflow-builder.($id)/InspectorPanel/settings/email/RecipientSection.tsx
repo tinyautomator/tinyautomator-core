@@ -16,7 +16,7 @@ export function RecipientInputSection() {
         inputMode={inputMode}
         onInputModeChange={setInputMode}
       />
-
+      {/* TODO: Move this logic to a separate component */}
       {inputMode === "csv" && <CsvUploader />}
 
       <RecipientChips />

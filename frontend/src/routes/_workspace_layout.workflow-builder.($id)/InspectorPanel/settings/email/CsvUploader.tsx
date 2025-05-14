@@ -2,11 +2,11 @@
 
 import { useState, useRef } from "react";
 import { Upload, Loader2, AlertCircle } from "lucide-react";
-import { useEmailRecipe } from "./utils/useEmailRecipe";
+import { useEmailRecipients } from "./utils/useEmailRecipents";
 import { parseEmailCsv } from "./utils/csvParser";
 import { Button } from "@/components/ui/button";
 export function CsvUploader() {
-  const { addEmail } = useEmailRecipe();
+  const { addEmail } = useEmailRecipients();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);

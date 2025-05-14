@@ -1,9 +1,14 @@
 import { z } from "zod";
 
-export const emailSchema = z.string().email();
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
 
-export function validateEmail(email: string): boolean {
-  return emailSchema.safeParse(email.trim()).success;
+export const emailSchema = z.string().email().transform(normalizeEmail);
+
+export function parseEmail(email: string): string | null {
+  const result = emailSchema.safeParse(email);
+  return result.success ? result.data : null;
 }
 
 export const MAX_MESSAGE_CHAR_COUNT = 2500;
@@ -13,7 +18,9 @@ export const MAX_SUBJECT_CHAR_COUNT = 100;
 export const emailFormSchema = z.object({
   recipients: z
     .array(z.string())
-    .transform((emails) => emails.filter(validateEmail))
+    .transform((emails) =>
+      emails.map(parseEmail).filter((email): email is string => email !== null)
+    )
     .refine((emails) => emails.length > 0, {
       message: "At least one valid email recipient is required",
     }),
@@ -32,11 +39,3 @@ export const emailFormSchema = z.object({
 });
 
 export type EmailFormValues = z.infer<typeof emailFormSchema>;
-
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
-export function normalizeEmails(emails: string[]): string[] {
-  return emails.map(normalizeEmail);
-}

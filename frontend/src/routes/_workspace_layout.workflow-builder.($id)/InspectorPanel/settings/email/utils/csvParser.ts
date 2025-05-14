@@ -1,3 +1,5 @@
+// TODO: Make a more advanced parser that can select the correct column for the email address
+
 import Papa from "papaparse";
 
 export async function parseEmailCsv(file: File) {
