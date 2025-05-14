@@ -1,5 +1,3 @@
-"use client";
-
 import { useForm, FormProvider } from "react-hook-form";
 import { EmailFormValues, emailFormSchema } from "./utils/emailValidation";
 import { zodResolver } from "@hookform/resolvers/zod";

@@ -19,7 +19,7 @@ export function RecipientInputField() {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (["Enter", ","].includes(e.key)) {
+    if (["Enter", ",", "Tab"].includes(e.key)) {
       e.preventDefault();
       handleAdd(inputValue);
     }

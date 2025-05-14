@@ -4,6 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
@@ -41,6 +42,9 @@ export function EmailPreview() {
       >
         <DialogHeader>
           <DialogTitle>Email Preview</DialogTitle>
+          <DialogDescription>
+            This is a preview of the email that will be sent to your recipients.
+          </DialogDescription>
         </DialogHeader>
         <div className="p-4 bg-white border rounded-md space-y-2 text-sm">
           <p>
