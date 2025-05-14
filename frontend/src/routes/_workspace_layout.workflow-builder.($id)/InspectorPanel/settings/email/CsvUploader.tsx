@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useRef } from "react";
 import { Upload, Loader2, AlertCircle } from "lucide-react";
 import { useEmailRecipients } from "./utils/useEmailRecipents";

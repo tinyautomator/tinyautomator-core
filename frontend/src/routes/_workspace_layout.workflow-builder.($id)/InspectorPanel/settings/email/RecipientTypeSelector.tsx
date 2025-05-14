@@ -1,4 +1,3 @@
-"use client";
 type InputMode = "manual" | "csv" | "google" | "contacts";
 
 interface RecipientInputSelectorProps {

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { useFormContext } from "react-hook-form";
