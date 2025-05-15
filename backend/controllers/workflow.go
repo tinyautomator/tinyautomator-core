@@ -3,13 +3,11 @@ package controllers
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
-	rc "github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
+	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/services"
 
@@ -24,10 +22,11 @@ type WorkflowController interface {
 }
 
 type workflowController struct {
-	logger   logrus.FieldLogger
-	repo     repo.WorkflowRepository
-	executor services.WorkflowExecutorService
-	redis    *redis.Client
+	logger          logrus.FieldLogger
+	repo            repo.WorkflowRepository
+	orchestrator    services.OrchestratorService
+	redis           redis.RedisClient
+	workflowService services.WorkflowService
 }
 
 type CreateWorkflowRequest struct {
@@ -47,10 +46,11 @@ type UpdateWorkflowRequest struct {
 
 func NewWorkflowController(cfg config.AppConfig) *workflowController {
 	return &workflowController{
-		logger:   cfg.GetLogger(),
-		repo:     cfg.GetWorkflowRepository(),
-		executor: *services.NewWorkflowExecutorService(cfg),
-		redis:    cfg.GetRedisClient(),
+		logger:          cfg.GetLogger(),
+		repo:            cfg.GetWorkflowRepository(),
+		redis:           cfg.GetRedisClient(),
+		orchestrator:    *services.NewOrchestratorService(cfg),
+		workflowService: *services.NewWorkflowService(cfg),
 	}
 }
 
@@ -99,8 +99,8 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		ctx.Request.Context(),
 		"test_user", // TODO: replace this later
 		req.Name,
+		"active", // TODO: replace this later
 		req.Description,
-		req.Status,
 		req.Nodes,
 		req.Edges,
 	)
@@ -274,45 +274,4 @@ func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, wg)
-}
-
-func (c *workflowController) RunWorkflow(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-
-	workflowID, err := strconv.Atoi(idStr)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
-		return
-	}
-
-	lockID, acquired, err := rc.AcquireRunWorkflowLock(
-		ctx,
-		c.redis,
-		idStr,
-		"test_user",
-		10*time.Second,
-	)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
-		return
-	}
-
-	if !acquired {
-		ctx.JSON(http.StatusConflict, gin.H{"error": "workflow already running"})
-		return
-	}
-
-	defer func() {
-		if err := rc.ReleaseRunWorkflowLock(ctx, c.redis, idStr, "test_user", lockID); err != nil {
-			c.logger.Error("failed to release workflow lock: %v", err)
-		}
-	}()
-
-	err = c.executor.ExecuteWorkflow(ctx, int32(workflowID))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, workflowID)
 }

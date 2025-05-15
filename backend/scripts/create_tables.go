@@ -59,6 +59,8 @@ func loadSQLFiles(dir string) ([]string, error) {
 		"workflow_node",
 		"workflow_node_ui",
 		"workflow_edge",
+		"workflow_run",
+		"workflow_node_run",
 	}
 
 	var files []string

@@ -2,60 +2,39 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"syscall"
 
+	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 )
 
 func main() {
-	var (
-		w   *Worker
-		cfg config.AppConfig
-	)
+	ctx := context.Background()
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
-	defer func() {
-		// TODO: remove
-		panicErr := recover()
-
-		if w != nil {
-			w.StopScheduler()
-		}
-
-		if cfg != nil {
-			cfg.CleanUp()
-		}
-
-		if panicErr != nil {
-			fmt.Fprintf(os.Stderr, "fatal error: %v\n", panicErr)
-			debug.PrintStack()
-			os.Exit(1)
-		}
-	}()
-
+	// Initialize configuration
 	cfg, err := config.NewAppConfig(ctx)
 	if err != nil {
-		panic("failed to initialize config: " + err.Error())
+		logrus.WithError(err).Fatal("failed to initialize config")
 	}
 
-	logger := cfg.GetLogger()
-	logger.Info("initializing worker")
+	// Create worker
+	w, err := NewWorker(cfg)
+	if err != nil {
+		logrus.WithError(err).Fatal("failed to create worker")
+	}
 
-	w = NewWorker(cfg)
+	// Start worker
+	if err := w.Start(); err != nil {
+		logrus.WithError(err).Fatal("failed to start worker")
+	}
 
-	go func() {
-		err = w.PollAndSchedule(ctx)
-		if err != nil {
-			panic(fmt.Errorf("error in poll & schedule loop: %v", err))
-		}
-	}()
+	// Wait for shutdown signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
 
-	<-ctx.Done()
-	logger.Info("signal received - shutting down gracefully")
+	// Shutdown gracefully
+	w.Shutdown()
 }

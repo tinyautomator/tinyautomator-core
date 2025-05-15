@@ -95,7 +95,6 @@ func (r *workflowScheduleRepo) Create(
 	executionState string,
 	next_run int64,
 	schedule_type string,
-
 ) (*dao.WorkflowSchedule, error) {
 	now := time.Now().UTC().UnixMilli()
 
