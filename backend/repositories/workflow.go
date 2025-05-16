@@ -75,7 +75,6 @@ type WorkflowRepository interface {
 		ctx context.Context,
 		userID string,
 		name string,
-		status string,
 		description string,
 		status string,
 		nodes []WorkflowNode,

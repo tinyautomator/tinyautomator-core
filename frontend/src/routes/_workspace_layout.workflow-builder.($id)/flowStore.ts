@@ -70,7 +70,7 @@ export const useFlowStore = create<FlowState>((set) => ({
         },
       };
       return {
-        edges: addEdge(newEdge, Array.isArray(state.edges) ? state.edges : [])
+        edges: addEdge(newEdge, Array.isArray(state.edges) ? state.edges : []),
       };
     });
   },

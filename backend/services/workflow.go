@@ -17,15 +17,6 @@ type WorkflowService struct {
 	orchestrator *OrchestratorService
 }
 
-type SortableNode interface {
-	ID() int32
-}
-
-type SortableEdge interface {
-	SourceNodeID() int32
-	TargetNodeID() int32
-}
-
 func NewWorkflowService(cfg config.AppConfig) *WorkflowService {
 	return &WorkflowService{
 		logger:       cfg.GetLogger(),
@@ -35,37 +26,39 @@ func NewWorkflowService(cfg config.AppConfig) *WorkflowService {
 }
 
 func (s *WorkflowService) ValidateWorkflowGraph(
-	nodes []SortableNode,
-	edges []SortableEdge,
+	nodes []repositories.WorkflowNode,
+	edges []repositories.WorkflowEdge,
 ) error {
-	idToGraphIdx := make(map[int32]int)
-	graphIdxToNode := make(map[int]SortableNode)
+	idToGraphIdx := make(map[string]int)
+	graphIdxToNode := make(map[int]repositories.WorkflowNode)
 
 	for idx, node := range nodes {
-		idToGraphIdx[node.ID()] = idx
+		idToGraphIdx[node.TempID] = idx
 		graphIdxToNode[idx] = node
 	}
 
 	g := graph.New(len(nodes))
 
 	for _, edge := range edges {
-		fromIdx, fromOk := idToGraphIdx[edge.SourceNodeID()]
-		toIdx, toOk := idToGraphIdx[edge.TargetNodeID()]
+		fromIdx, fromOk := idToGraphIdx[edge.Source]
+		toIdx, toOk := idToGraphIdx[edge.Target]
 
 		if fromOk && toOk {
 			g.Add(fromIdx, toIdx)
 		} else {
 			s.logger.WithFields(logrus.Fields{
-				"source_node_id": edge.SourceNodeID,
-				"target_node_id": edge.TargetNodeID,
+				"source_node_id": edge.Source,
+				"target_node_id": edge.Target,
 			}).Error("invalid edge detected")
 		}
 	}
 
-	_, ok := graph.TopSort(g)
+	order, ok := graph.TopSort(g)
 	if !ok {
 		return fmt.Errorf("cycle detected in workflow graph")
 	}
+
+	s.logger.WithField("order", order).Info("validated workflow graph")
 
 	return nil
 }
@@ -79,6 +72,10 @@ func (s *WorkflowService) CreateWorkflow(
 	nodes []repositories.WorkflowNode,
 	edges []repositories.WorkflowEdge,
 ) (*dao.Workflow, error) {
+	if err := s.ValidateWorkflowGraph(nodes, edges); err != nil {
+		return nil, fmt.Errorf("failed to validate workflow graph: %w", err)
+	}
+
 	w, err := s.workflowRepo.CreateWorkflow(ctx, userID, name, description, status, nodes, edges)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create workflow: %w", err)

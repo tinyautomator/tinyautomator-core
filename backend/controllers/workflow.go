@@ -96,16 +96,17 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		return
 	}
 
-	workflow, err := c.repo.CreateWorkflow(
+	workflow, err := c.workflowService.CreateWorkflow(
 		ctx.Request.Context(),
 		"test_user", // TODO: replace this later
 		req.Name,
 		req.Description,
+		req.Status,
 		req.Nodes,
 		req.Edges,
 	)
 	if err != nil {
-		c.logger.Errorf("Workflow insert error: %v", err)
+		c.logger.Errorf("workflow creation error: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create workflow"})
 
 		return
@@ -138,6 +139,14 @@ func (c *workflowController) UpdateWorkflow(ctx *gin.Context) {
 	existing, err := c.repo.RenderWorkflowGraph(ctx, int32(workflowID))
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "workflow not found"})
+		return
+	}
+
+	err = c.workflowService.ValidateWorkflowGraph(req.Nodes, req.Edges)
+	if err != nil {
+		c.logger.WithError(err).Error("failed to validate workflow graph")
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to validate workflow graph"})
+
 		return
 	}
 

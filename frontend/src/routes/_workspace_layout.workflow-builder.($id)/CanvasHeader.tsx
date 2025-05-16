@@ -80,6 +80,7 @@ export default function CanvasHeader({
               workflowApi.createWorkflow({
                 name: name,
                 description: "New Workflow Description",
+                status: "draft",
                 nodes: nodes.map((node) => ({
                   id: node.id,
                   type: node.type || "default",
