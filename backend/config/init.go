@@ -11,8 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/clients/rabbitmq"
+	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"golang.org/x/oauth2"
@@ -79,24 +80,14 @@ func (cfg *appConfig) initLogger() error {
 	return nil
 }
 
-func (cfg *appConfig) initRepositories(ctx context.Context) error {
-	pool, err := pgxpool.New(
-		ctx,
-		"postgres://tiny:autowmater@localhost:5432/tinyautomator?sslmode=disable",
-	)
-	if err != nil {
-		return fmt.Errorf("failed to open db: %w", err)
-	}
-
-	cfg.pool = pool
-	q := dao.New(pool)
-	cfg.workflowRepository = repositories.NewWorkflowRepository(q, pool)
-	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(q, pool)
-
-	return nil
+func (cfg *appConfig) initRepositories() {
+	q := dao.New(cfg.pool)
+	cfg.workflowRepository = repositories.NewWorkflowRepository(q, cfg.pool)
+	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(q, cfg.pool)
+	cfg.workflowRunRepository = repositories.NewWorkflowRunRepository(q, cfg.pool)
 }
 
-func (cfg *appConfig) initExternalServices() error {
+func (cfg *appConfig) initExternalServices(ctx context.Context) error {
 	clerk.SetKey(cfg.envVars.ClerkSecretKey)
 
 	cfg.gmailOAuthConfig = &oauth2.Config{
@@ -107,14 +98,26 @@ func (cfg *appConfig) initExternalServices() error {
 		Endpoint:     google.Endpoint,
 	}
 
-	cfg.redisClient = redis.NewClient(&redis.Options{
-		Addr: cfg.envVars.RedisUrl,
-		DB:   0,
-	})
-
-	if err := cfg.redisClient.Ping(context.Background()).Err(); err != nil {
-		return fmt.Errorf("failed to connect to redis: %w", err)
+	pool, err := pgxpool.New(ctx, cfg.envVars.PostgresUrl)
+	if err != nil {
+		return fmt.Errorf("failed to open db: %w", err)
 	}
+
+	cfg.pool = pool
+
+	redisClient, err := redis.NewRedisClient(cfg.envVars.RedisUrl, cfg.logger)
+	if err != nil {
+		return fmt.Errorf("failed to initialize Redis client: %w", err)
+	}
+
+	cfg.redisClient = redisClient
+
+	rabbitMQClient, err := rabbitmq.NewRabbitMQClient(cfg.envVars.RabbitMQUrl, cfg.logger)
+	if err != nil {
+		return fmt.Errorf("failed to initialize RabbitMQ client: %w", err)
+	}
+
+	cfg.rabbitMQClient = rabbitMQClient
 
 	return nil
 }

@@ -67,30 +67,33 @@ export default function CanvasHeader({
                 nodes: nodes.map((node) => ({
                   id: node.id,
                   type: node.type || "default",
+                  action_type: node.data.actionType as string,
+                  config: { provider: "gmail" },
                   position: node.position,
-                  data: {
-                    label: node.data.label as string,
-                    actionType: node.data.actionType as string,
-                    config: JSON.stringify(node.data.config),
-                  },
                 })),
-                edges: edges,
+                edges: edges.map((edge) => ({
+                  id: edge.id,
+                  source_node_id: edge.source,
+                  target_node_id: edge.target,
+                })),
               });
             } else {
               workflowApi.createWorkflow({
                 name: name,
                 description: "New Workflow Description",
+                status: "draft",
                 nodes: nodes.map((node) => ({
                   id: node.id,
                   type: node.type || "default",
+                  action_type: node.data.actionType as string,
+                  config: { provider: "gmail" },
                   position: node.position,
-                  data: {
-                    label: node.data.label as string,
-                    actionType: node.data.actionType as string,
-                    config: JSON.stringify(node.data.config),
-                  },
                 })),
-                edges: edges,
+                edges: edges.map((edge) => ({
+                  id: edge.id,
+                  source_node_id: edge.source,
+                  target_node_id: edge.target,
+                })),
               });
             }
           }}

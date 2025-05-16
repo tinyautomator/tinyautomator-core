@@ -16,10 +16,9 @@ import { useFlowStore } from "./flowStore";
 export async function loader({ params }: Route.LoaderArgs) {
   if (params.id) {
     const workflowToEdit = await workflowApi.renderWorkflow(params.id);
-    console.log(workflowToEdit);
+    console.log("workflowToEdit", workflowToEdit);
     workflowToEdit?.nodes?.forEach((node) => {
       console.log(node.data);
-      node.data.config = JSON.parse(node.data.config);
     });
     return workflowToEdit;
   }
@@ -95,7 +94,7 @@ export default function WorkflowBuilder({
   useEffect(() => {
     if (workflowToEdit) {
       const parsedNodes = workflowToEdit.nodes.map((n) => {
-        return NodeBuilder(n.id, n.position, n.data.actionType);
+        return NodeBuilder(n.id, n.position, n.action_type);
       });
 
       setNodes(parsedNodes);
@@ -103,6 +102,8 @@ export default function WorkflowBuilder({
         workflowToEdit.edges?.map((edge) => ({
           ...edge,
           id: edge.id,
+          source: edge.source_node_id,
+          target: edge.target_node_id,
           animated: true,
           style: { stroke: "#60a5fa" },
           markerEnd: {

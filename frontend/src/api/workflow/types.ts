@@ -1,15 +1,17 @@
 export interface Workflow {
   id: string;
-  userId: string;
+  user_id: string;
   name: string;
   description: string;
-  createdAt: string;
-  updatedAt: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateWorkflowDto {
   name: string;
   description: string;
+  status: string;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
 }
@@ -24,21 +26,18 @@ export interface UpdateWorkflowDto {
 export interface WorkflowNode extends Record<string, unknown> {
   id: string;
   type: string;
+  action_type: string;
+  config: Record<string, unknown>;
   position: {
     x: number;
     y: number;
-  };
-  data: {
-    label: string;
-    actionType: string;
-    config: string;
   };
 }
 
 export interface WorkflowEdge {
   id: string;
-  source: string;
-  target: string;
+  source_node_id: string;
+  target_node_id: string;
 }
 
 export interface RenderedWorkflow {

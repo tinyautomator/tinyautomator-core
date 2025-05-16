@@ -3,67 +3,64 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/clients/rabbitmq"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
+	"github.com/tinyautomator/tinyautomator-core/backend/services"
 )
 
 type Worker struct {
-	service      *WorkerService
-	pollInterval time.Duration
-	logger       logrus.FieldLogger
+	config             config.AppConfig
+	executor           *services.ExecutorService
+	rabbitMQClient     rabbitmq.RabbitMQClient
+	logger             logrus.FieldLogger
+	shutdownCtx        context.Context
+	shutdownCancelFunc context.CancelFunc
 }
 
 func NewWorker(cfg config.AppConfig) *Worker {
+	ctx, cancel := context.WithCancel(context.Background())
+
 	return &Worker{
-		service:      NewWorkerService(cfg),
-		pollInterval: cfg.GetEnvVars().WorkerPollInterval,
-		logger:       cfg.GetLogger(),
+		config:             cfg,
+		executor:           services.NewExecutorService(cfg),
+		rabbitMQClient:     cfg.GetRabbitMQClient(),
+		logger:             cfg.GetLogger(),
+		shutdownCtx:        ctx,
+		shutdownCancelFunc: cancel,
 	}
 }
 
-func (w *Worker) StopScheduler() {
-	w.service.Shutdown()
+func (w *Worker) Start() error {
+	// TODO: group these by projected cost
+	routingKeys := []string{
+		"node.schedule",
+		"node.send_email",
+		"node.send_sms",
+		// Add other node types as needed
+	}
+
+	// Start consuming messages
+	err := w.rabbitMQClient.Subscribe(
+		w.shutdownCtx,
+		"workflow_node_taskqueue",
+		routingKeys,
+		func(msg []byte) error {
+			return w.executor.ExecuteWorkflowNode(w.shutdownCtx, msg)
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to start worker: %w", err)
+	}
+
+	w.logger.Info("worker started successfully")
+
+	return nil
 }
 
-func (w *Worker) PollAndSchedule(ctx context.Context) error {
-	ticker := time.NewTicker(w.pollInterval)
-	defer ticker.Stop()
-
-	w.logger.Info("start polling for scheduled workflows")
-
-	for {
-		select {
-		case <-ctx.Done():
-			w.logger.Info("ctx cancelled - stopping polling loop")
-			return nil
-		case <-ticker.C:
-			ws, err := w.service.GetDueWorkflows(ctx)
-			if err != nil {
-				return fmt.Errorf("error getting due workflows: %w", err)
-			}
-
-			w.logger.WithField("count", len(ws)).Info("fetched workflows due")
-
-			for _, ws := range ws {
-				w.logger.WithField("workflow_schedule_id", ws.ID).Info("scheduling workflow")
-
-				if err := w.service.RunWorkflow(ctx, ws); err != nil {
-					w.logger.WithField("workflow_schedule_id", ws.ID).
-						Errorf("failed to schedule workflow: %v", err)
-				}
-
-				// TODO: change this log because the state of the ws changes after the executor runs
-				w.logger.WithFields(logrus.Fields{
-					"schedule_id":    ws.ID,
-					"workflow_id":    ws.WorkflowID,
-					"schedule_type":  ws.ScheduleType,
-					"executionState": ws.ExecutionState,
-					"next_run_at":    time.UnixMilli(ws.NextRunAt.Int64).Format(time.DateTime),
-					"last_run_at":    time.UnixMilli(ws.LastRunAt.Int64).Format(time.DateTime),
-				}).Info("workflow ran successfully")
-			}
-		}
-	}
+func (w *Worker) Shutdown() {
+	w.logger.Info("shutting down worker...")
+	w.shutdownCancelFunc()
+	w.logger.Info("worker shutdown complete")
 }

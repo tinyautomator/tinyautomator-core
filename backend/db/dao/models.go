@@ -9,13 +9,13 @@ import (
 )
 
 type Workflow struct {
-	ID          int32       `json:"id"`
-	UserID      string      `json:"user_id"`
-	Name        string      `json:"name"`
-	Description null.String `json:"description"`
-	Status      string      `json:"status"`
-	CreatedAt   null.Int    `json:"created_at"`
-	UpdatedAt   null.Int    `json:"updated_at"`
+	ID          int32  `json:"id"`
+	UserID      string `json:"user_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	CreatedAt   int64  `json:"created_at"`
+	UpdatedAt   int64  `json:"updated_at"`
 }
 
 type WorkflowEdge struct {
@@ -31,10 +31,33 @@ type WorkflowNode struct {
 	Config     []byte `json:"config"`
 }
 
+type WorkflowNodeRun struct {
+	ID             int32       `json:"id"`
+	WorkflowRunID  int32       `json:"workflow_run_id"`
+	WorkflowNodeID int32       `json:"workflow_node_id"`
+	Status         string      `json:"status"`
+	StartedAt      int64       `json:"started_at"`
+	FinishedAt     null.Int    `json:"finished_at"`
+	Metadata       []byte      `json:"metadata"`
+	ErrorMessage   null.String `json:"error_message"`
+	CreatedAt      int64       `json:"created_at"`
+	UpdatedAt      int64       `json:"updated_at"`
+}
+
 type WorkflowNodeUi struct {
 	ID        int32   `json:"id"`
 	XPosition float64 `json:"x_position"`
 	YPosition float64 `json:"y_position"`
+}
+
+type WorkflowRun struct {
+	ID         int32    `json:"id"`
+	WorkflowID int32    `json:"workflow_id"`
+	Status     string   `json:"status"`
+	StartedAt  int64    `json:"started_at"`
+	FinishedAt null.Int `json:"finished_at"`
+	CreatedAt  int64    `json:"created_at"`
+	UpdatedAt  int64    `json:"updated_at"`
 }
 
 type WorkflowSchedule struct {

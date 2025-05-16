@@ -23,8 +23,8 @@ export function DashboardTabs({
               id={workflow.id}
               name={workflow.name}
               description={workflow.description}
-              lastRun={workflow.createdAt}
-              status={"active"}
+              lastRun={workflow.created_at}
+              status={workflow.status}
               runs={0}
             />
           ))}
