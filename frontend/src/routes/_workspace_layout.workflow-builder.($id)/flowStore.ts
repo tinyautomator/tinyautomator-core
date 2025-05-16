@@ -50,22 +50,30 @@ export const useFlowStore = create<FlowState>((set) => ({
       edges: applyEdgeChanges(changes, state.edges),
     })),
 
-  onConnect: (params) =>
-    set((state) => ({
-      edges: addEdge(
-        {
-          ...params,
-          id: `e${params.source}-${params.target}`,
-          animated: true,
-          style: { stroke: "#60a5fa" },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: "#60a5fa",
-          },
+  onConnect: (params) => {
+    console.log("onConnect", params);
+    if (!params.source || !params.target) {
+      console.error("Invalid connection params:", params);
+      return;
+    }
+    set((state) => {
+      const newEdge: Edge = {
+        ...params,
+        id: `e${params.source}-${params.target}`,
+        source: params.source,
+        target: params.target,
+        animated: true,
+        style: { stroke: "#60a5fa" },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: "#60a5fa",
         },
-        state.edges,
-      ),
-    })),
+      };
+      return {
+        edges: addEdge(newEdge, Array.isArray(state.edges) ? state.edges : [])
+      };
+    });
+  },
 
   addRecentlyUsedBlock: (block) =>
     set((state) => {

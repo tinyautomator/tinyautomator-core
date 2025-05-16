@@ -87,6 +87,7 @@ func (c *workflowController) GetUserWorkflows(ctx *gin.Context) {
 func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 	var req CreateWorkflowRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.WithError(err).Error("invalid request body")
 		ctx.JSON(
 			http.StatusUnprocessableEntity,
 			gin.H{"error": "invalid request body", "details": err.Error()},
@@ -99,7 +100,6 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		ctx.Request.Context(),
 		"test_user", // TODO: replace this later
 		req.Name,
-		"active", // TODO: replace this later
 		req.Description,
 		req.Nodes,
 		req.Edges,
@@ -126,6 +126,7 @@ func (c *workflowController) UpdateWorkflow(ctx *gin.Context) {
 
 	var req UpdateWorkflowRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.WithError(err).Error("invalid request body")
 		ctx.JSON(
 			http.StatusUnprocessableEntity,
 			gin.H{"error": "invalid request body", "details": err.Error()},

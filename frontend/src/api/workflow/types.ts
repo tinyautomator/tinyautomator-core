@@ -10,6 +10,7 @@ export interface Workflow {
 export interface CreateWorkflowDto {
   name: string;
   description: string;
+  status: string;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
 }

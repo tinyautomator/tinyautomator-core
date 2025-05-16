@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:9000";
+  import.meta.env.VITE_API_BASE_URL;
 
 class ApiError extends Error {
   constructor(
@@ -45,6 +45,7 @@ export class BaseApiClient {
         });
         throw error;
       }
+      console.error(error);
       throw new ApiError(500, "Network error occurred");
     }
   }

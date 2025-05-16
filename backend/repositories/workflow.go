@@ -77,6 +77,7 @@ type WorkflowRepository interface {
 		name string,
 		status string,
 		description string,
+		status string,
 		nodes []WorkflowNode,
 		edges []WorkflowEdge,
 	) (*dao.Workflow, error)
