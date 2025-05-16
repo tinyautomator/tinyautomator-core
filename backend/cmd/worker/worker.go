@@ -19,7 +19,7 @@ type Worker struct {
 	shutdownCancelFunc context.CancelFunc
 }
 
-func NewWorker(cfg config.AppConfig) (*Worker, error) {
+func NewWorker(cfg config.AppConfig) *Worker {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &Worker{
@@ -29,7 +29,7 @@ func NewWorker(cfg config.AppConfig) (*Worker, error) {
 		logger:             cfg.GetLogger(),
 		shutdownCtx:        ctx,
 		shutdownCancelFunc: cancel,
-	}, nil
+	}
 }
 
 func (w *Worker) Start() error {

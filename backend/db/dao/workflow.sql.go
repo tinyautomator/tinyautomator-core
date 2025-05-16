@@ -8,7 +8,6 @@ package dao
 import (
 	"context"
 
-	null "github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -28,12 +27,12 @@ RETURNING id, user_id, name, description, status, created_at, updated_at
 `
 
 type CreateWorkflowParams struct {
-	UserID      string      `json:"user_id"`
-	Name        string      `json:"name"`
-	Description null.String `json:"description"`
-	Status      string      `json:"status"`
-	CreatedAt   null.Int    `json:"created_at"`
-	UpdatedAt   null.Int    `json:"updated_at"`
+	UserID      string `json:"user_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	CreatedAt   int64  `json:"created_at"`
+	UpdatedAt   int64  `json:"updated_at"`
 }
 
 // CreateWorkflow
@@ -345,9 +344,9 @@ WHERE w.id = $1
 type GetWorkflowGraphRow struct {
 	WorkflowID          int32       `json:"workflow_id"`
 	WorkflowName        string      `json:"workflow_name"`
-	WorkflowDescription null.String `json:"workflow_description"`
+	WorkflowDescription string      `json:"workflow_description"`
 	WorkflowStatus      string      `json:"workflow_status"`
-	CreatedAt           null.Int    `json:"created_at"`
+	CreatedAt           int64       `json:"created_at"`
 	NodeID              int32       `json:"node_id"`
 	ActionType          string      `json:"action_type"`
 	Config              []byte      `json:"config"`
@@ -471,9 +470,9 @@ WHERE w.id = $1
 type RenderWorkflowGraphRow struct {
 	WorkflowID          int32       `json:"workflow_id"`
 	WorkflowName        string      `json:"workflow_name"`
-	WorkflowDescription null.String `json:"workflow_description"`
+	WorkflowDescription string      `json:"workflow_description"`
 	WorkflowStatus      string      `json:"workflow_status"`
-	CreatedAt           null.Int    `json:"created_at"`
+	CreatedAt           int64       `json:"created_at"`
 	NodeID              int32       `json:"node_id"`
 	XPosition           float64     `json:"x_position"`
 	YPosition           float64     `json:"y_position"`
@@ -546,10 +545,10 @@ WHERE id = $1
 `
 
 type UpdateWorkflowParams struct {
-	ID          int32       `json:"id"`
-	Name        string      `json:"name"`
-	Description null.String `json:"description"`
-	UpdatedAt   null.Int    `json:"updated_at"`
+	ID          int32  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	UpdatedAt   int64  `json:"updated_at"`
 }
 
 // UpdateWorkflow

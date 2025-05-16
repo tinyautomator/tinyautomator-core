@@ -70,7 +70,7 @@ func (r *workflowRunRepo) CreateWorkflowRun(
 		CreatedAt:  now,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db error create workflow run: %w", err)
 	}
 
 	return &WorkflowRun{

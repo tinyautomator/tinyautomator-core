@@ -9,13 +9,13 @@ import (
 )
 
 type Workflow struct {
-	ID          int32       `json:"id"`
-	UserID      string      `json:"user_id"`
-	Name        string      `json:"name"`
-	Description null.String `json:"description"`
-	Status      string      `json:"status"`
-	CreatedAt   null.Int    `json:"created_at"`
-	UpdatedAt   null.Int    `json:"updated_at"`
+	ID          int32  `json:"id"`
+	UserID      string `json:"user_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	CreatedAt   int64  `json:"created_at"`
+	UpdatedAt   int64  `json:"updated_at"`
 }
 
 type WorkflowEdge struct {

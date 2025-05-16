@@ -20,10 +20,7 @@ func main() {
 	}
 
 	// Create worker
-	w, err := NewWorker(cfg)
-	if err != nil {
-		logrus.WithError(err).Fatal("failed to create worker")
-	}
+	w := NewWorker(cfg)
 
 	// Start worker
 	if err := w.Start(); err != nil {

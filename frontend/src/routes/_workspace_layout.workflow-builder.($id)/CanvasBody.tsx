@@ -21,9 +21,9 @@ export const NodeBuilder = (
     position,
     data: {
       actionType,
+      config: { provider: "gmail" },
       label: block.label,
       description: block.description,
-      config: "",
       icon: block.icon,
       status:
         block.node_type === "trigger"

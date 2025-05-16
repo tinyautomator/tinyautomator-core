@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/rabbitmq"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
-	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"github.com/yourbasic/graph"
 )
@@ -36,9 +36,9 @@ func NewOrchestratorService(cfg config.AppConfig) *OrchestratorService {
 	}
 }
 
-func (s *OrchestratorService) ValidateWorkflowGraph(wg *repositories.WorkflowGraph) error {
+func (s *OrchestratorService) ValidateWorkflowGraph(wg *models.WorkflowGraph) error {
 	idToGraphIdx := make(map[int32]int)
-	graphIdxToNode := make(map[int]*dao.WorkflowNode)
+	graphIdxToNode := make(map[int]*models.WorkflowNode)
 
 	for idx, node := range wg.Nodes {
 		idToGraphIdx[node.ID] = idx
@@ -111,7 +111,7 @@ func (s *OrchestratorService) OrchestrateWorkflow(ctx context.Context, workflowI
 		hasIncoming[edge.TargetNodeID] = true
 	}
 
-	var rootNodes []*dao.WorkflowNode
+	var rootNodes []*models.WorkflowNode
 
 	for _, node := range wg.Nodes {
 		if !hasIncoming[node.ID] {
@@ -157,7 +157,7 @@ func (s *OrchestratorService) OrchestrateWorkflow(ctx context.Context, workflowI
 			"id":          node.ID,
 			"node_run_id": nodeRun.ID,
 			"action_type": node.ActionType,
-			"config":      string(node.Config),
+			"config":      node.Config,
 		}).Info("→ Dispatched node task")
 	}
 

@@ -80,13 +80,11 @@ func (cfg *appConfig) initLogger() error {
 	return nil
 }
 
-func (cfg *appConfig) initRepositories() error {
+func (cfg *appConfig) initRepositories() {
 	q := dao.New(cfg.pool)
 	cfg.workflowRepository = repositories.NewWorkflowRepository(q, cfg.pool)
 	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(q, cfg.pool)
 	cfg.workflowRunRepository = repositories.NewWorkflowRunRepository(q, cfg.pool)
-
-	return nil
 }
 
 func (cfg *appConfig) initExternalServices(ctx context.Context) error {

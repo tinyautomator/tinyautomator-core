@@ -99,9 +99,7 @@ func NewAppConfig(ctx context.Context) (AppConfig, error) {
 		return nil, err
 	}
 
-	if err := cfg.initRepositories(); err != nil {
-		return nil, err
-	}
+	cfg.initRepositories()
 
 	return cfg, nil
 }
