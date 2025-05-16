@@ -66,7 +66,9 @@ func (c *workflowController) GetWorkflow(ctx *gin.Context) {
 
 	w, err := c.repo.GetWorkflow(ctx.Request.Context(), int32(workflowID))
 	if err != nil {
+		c.logger.WithError(err).Error("failed to get workflow")
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "workflow not found"})
+
 		return
 	}
 
@@ -76,6 +78,7 @@ func (c *workflowController) GetWorkflow(ctx *gin.Context) {
 func (c *workflowController) GetUserWorkflows(ctx *gin.Context) {
 	w, err := c.repo.GetUserWorkflows(ctx.Request.Context(), "test_user")
 	if err != nil {
+		c.logger.WithError(err).Error("failed to get user workflows")
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "workflows not found"})
 
 		return
