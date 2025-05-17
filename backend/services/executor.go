@@ -6,17 +6,16 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tinyautomator/tinyautomator-core/backend/config"
-	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
 type ExecutorService struct {
-	workflowRepo    repositories.WorkflowRepository
-	workflowRunRepo repositories.WorkflowRunRepository
+	workflowRepo    models.WorkflowRepository
+	workflowRunRepo models.WorkflowRunRepository
 	logger          logrus.FieldLogger
 }
 
-func NewExecutorService(cfg config.AppConfig) *ExecutorService {
+func NewExecutorService(cfg models.AppConfig) models.ExecutorService {
 	return &ExecutorService{
 		workflowRepo:    cfg.GetWorkflowRepository(),
 		workflowRunRepo: cfg.GetWorkflowRunRepository(),
@@ -25,7 +24,7 @@ func NewExecutorService(cfg config.AppConfig) *ExecutorService {
 }
 
 func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) error {
-	var task WorkflowNodeTask
+	var task models.WorkflowNodeTask
 	if err := json.Unmarshal(msg, &task); err != nil {
 		return fmt.Errorf("failed to unmarshal task: %w", err)
 	}
@@ -42,3 +41,5 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 
 	return nil
 }
+
+var _ models.ExecutorService = (*ExecutorService)(nil)

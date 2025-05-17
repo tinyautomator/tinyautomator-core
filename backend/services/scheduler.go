@@ -8,24 +8,24 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tinyautomator/tinyautomator-core/backend/config"
-	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
-	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
 type SchedulerService struct {
 	logger logrus.FieldLogger
 	wg     sync.WaitGroup
 
-	workflowScheduleRepo repositories.WorkflowScheduleRepository
-	orchestrator         *OrchestratorService
+	workflowScheduleRepo models.WorkflowScheduleRepository
+	workflowRepo         models.WorkflowRepository
+	orchestrator         models.OrchestratorService
 }
 
-func NewSchedulerService(cfg config.AppConfig) *SchedulerService {
+func NewSchedulerService(cfg models.AppConfig) models.SchedulerService {
 	return &SchedulerService{
 		logger:               cfg.GetLogger(),
 		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
-		orchestrator:         NewOrchestratorService(cfg),
+		workflowRepo:         cfg.GetWorkflowRepository(),
+		orchestrator:         cfg.GetOrchestratorService(),
 	}
 }
 
@@ -37,10 +37,10 @@ func (s *SchedulerService) EnsureInFlightEnqueued() {
 
 func (s *SchedulerService) GetDueWorkflows(
 	ctx context.Context,
-) ([]*dao.WorkflowSchedule, error) {
+) ([]*models.WorkflowSchedule, error) {
 	ws, err := s.workflowScheduleRepo.GetDueSchedulesLocked(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch due schedules from repo: %w", err)
+		return nil, fmt.Errorf("failed to get due schedules: %w", err)
 	}
 
 	return ws, nil
@@ -48,7 +48,7 @@ func (s *SchedulerService) GetDueWorkflows(
 
 func (s *SchedulerService) RunScheduledWorkflow(
 	ctx context.Context,
-	ws *dao.WorkflowSchedule,
+	ws *models.WorkflowSchedule,
 ) error {
 	if ctx.Err() != nil {
 		s.logger.WithField("workflow_id", ws.WorkflowID).Warn("ctx cancelled, skipping schedule")
@@ -90,18 +90,26 @@ func (s *SchedulerService) RunScheduledWorkflow(
 	return nil
 }
 
-func (s *SchedulerService) ValidateSchedule(ws *dao.WorkflowSchedule) error {
+func (s *SchedulerService) ValidateSchedule(ws *models.WorkflowSchedule) error {
 	switch ws.ScheduleType {
 	case "once", "daily", "weekly", "monthly":
-		// TODO: instrument
+		// TODO: change this
 	default:
-		return fmt.Errorf("invalid schedule_type: %s", ws.ScheduleType)
+		return fmt.Errorf("invalid schedule type: %s", ws.ScheduleType)
 	}
 
-	if !ws.NextRunAt.Valid || ws.NextRunAt.Int64 <= 0 {
+	if !ws.NextRunAt.Valid || ws.NextRunAt.Time.UnixMilli() <= 0 {
 		return errors.New("next_run_at must be a valid positive timestamp")
 	}
 
+	return nil
+}
+
+func (s *SchedulerService) ScheduleWorkflow(
+	ctx context.Context,
+	workflowID int32,
+) error {
+	// TODO: implement
 	return nil
 }
 
@@ -123,3 +131,5 @@ func (s *SchedulerService) CalculateNextRun(scheduleType string, now int64) *int
 		return nil
 	}
 }
+
+var _ models.SchedulerService = (*SchedulerService)(nil)

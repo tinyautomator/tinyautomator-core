@@ -6,17 +6,17 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tinyautomator/tinyautomator-core/backend/config"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/services"
 )
 
 type Scheduler struct {
-	service      *services.SchedulerService
+	service      models.SchedulerService
 	pollInterval time.Duration
 	logger       logrus.FieldLogger
 }
 
-func NewScheduler(cfg config.AppConfig) *Scheduler {
+func NewScheduler(cfg models.AppConfig) *Scheduler {
 	return &Scheduler{
 		service:      services.NewSchedulerService(cfg),
 		pollInterval: cfg.GetEnvVars().WorkerPollInterval,
@@ -61,8 +61,8 @@ func (s *Scheduler) PollAndRunScheduledWorkflows(ctx context.Context) error {
 					"workflow_id":    ws.WorkflowID,
 					"schedule_type":  ws.ScheduleType,
 					"executionState": ws.ExecutionState,
-					"next_run_at":    time.UnixMilli(ws.NextRunAt.Int64).Format(time.DateTime),
-					"last_run_at":    time.UnixMilli(ws.LastRunAt.Int64).Format(time.DateTime),
+					"next_run_at":    ws.NextRunAt.Time.Format(time.DateTime),
+					"last_run_at":    ws.LastRunAt.Time.Format(time.DateTime),
 				}).Info("workflow ran successfully")
 			}
 		}

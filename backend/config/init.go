@@ -15,13 +15,14 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/rabbitmq"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	_ "modernc.org/sqlite"
 )
 
-func (e EnvironmentVariables) validate() error {
+func validateEnvVars(e *models.EnvironmentVariables) error {
 	switch strings.ToLower(e.LogLevel) {
 	case "debug", "info", "warn":
 		return nil
@@ -31,15 +32,15 @@ func (e EnvironmentVariables) validate() error {
 }
 
 func (cfg *appConfig) loadEnvironmentVariables() error {
-	if cfg.env = os.Getenv("APPLICATION_ENV"); cfg.env == "" {
-		cfg.env = DEVELOPMENT
+	if cfg.envVars.Env = os.Getenv("APPLICATION_ENV"); cfg.envVars.Env == "" {
+		cfg.envVars.Env = DEVELOPMENT
 	}
 
-	if err := godotenv.Overload(".env", ".env."+cfg.env); err != nil {
+	if err := godotenv.Overload(".env", ".env."+cfg.envVars.Env); err != nil {
 		return fmt.Errorf("unable to load required env files: %w", err)
 	}
 
-	if cfg.env == DEVELOPMENT {
+	if cfg.envVars.Env == DEVELOPMENT {
 		if err := godotenv.Overload(".env." + DEVELOPMENT + ".local"); err != nil {
 			return fmt.Errorf("unable to load local env file: %w", err)
 		}
@@ -49,7 +50,7 @@ func (cfg *appConfig) loadEnvironmentVariables() error {
 		return fmt.Errorf("unable to process env vars: %w", err)
 	}
 
-	if err := cfg.envVars.validate(); err != nil {
+	if err := validateEnvVars(&cfg.envVars); err != nil {
 		return err
 	}
 
@@ -66,7 +67,7 @@ func (cfg *appConfig) initLogger() error {
 		logger.SetLevel(logLevel)
 	}
 
-	if cfg.env == PRODUCTION {
+	if cfg.envVars.Env == PRODUCTION {
 		logger.SetFormatter(&logrus.JSONFormatter{})
 		logger.SetReportCaller(true)
 	} else {
@@ -81,16 +82,16 @@ func (cfg *appConfig) initLogger() error {
 }
 
 func (cfg *appConfig) initRepositories() {
-	q := dao.New(cfg.pool)
-	cfg.workflowRepository = repositories.NewWorkflowRepository(q, cfg.pool)
-	cfg.workflowScheduleRepository = repositories.NewWorkflowScheduleRepository(q, cfg.pool)
-	cfg.workflowRunRepository = repositories.NewWorkflowRunRepository(q, cfg.pool)
+	q := dao.New(cfg.pgPool)
+	cfg.workflowRepo = repositories.NewWorkflowRepository(q, cfg.pgPool)
+	cfg.workflowScheduleRepo = repositories.NewWorkflowScheduleRepository(q, cfg.pgPool)
+	cfg.workflowRunRepo = repositories.NewWorkflowRunRepository(q, cfg.pgPool)
 }
 
 func (cfg *appConfig) initExternalServices(ctx context.Context) error {
 	clerk.SetKey(cfg.envVars.ClerkSecretKey)
 
-	cfg.gmailOAuthConfig = &oauth2.Config{
+	cfg.envVars.GmailOAuthConfig = &oauth2.Config{
 		ClientID:     cfg.envVars.GmailClientID,
 		ClientSecret: cfg.envVars.GmailClientSecret,
 		RedirectURL:  cfg.envVars.GmailRedirectURL,
@@ -103,7 +104,7 @@ func (cfg *appConfig) initExternalServices(ctx context.Context) error {
 		return fmt.Errorf("failed to open db: %w", err)
 	}
 
-	cfg.pool = pool
+	cfg.pgPool = pool
 
 	redisClient, err := redis.NewRedisClient(cfg.envVars.RedisUrl, cfg.logger)
 	if err != nil {

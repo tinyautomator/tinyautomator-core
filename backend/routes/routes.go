@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-contrib/timeout"
 	"github.com/gin-gonic/gin"
-	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/controllers"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-func RegisterRoutes(r *gin.Engine, cfg config.AppConfig) {
+func RegisterRoutes(r *gin.Engine, cfg models.AppConfig) {
 	r.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "TinyAutomator backend is live 🚀",

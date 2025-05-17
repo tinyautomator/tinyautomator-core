@@ -7,11 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
-	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/services"
-
-	repo "github.com/tinyautomator/tinyautomator-core/backend/repositories"
 )
 
 type WorkflowController interface {
@@ -23,10 +20,10 @@ type WorkflowController interface {
 
 type workflowController struct {
 	logger          logrus.FieldLogger
-	repo            repo.WorkflowRepository
-	orchestrator    services.OrchestratorService
+	repo            models.WorkflowRepository
+	orchestrator    models.OrchestratorService
 	redis           redis.RedisClient
-	workflowService services.WorkflowService
+	workflowService models.WorkflowService
 }
 
 type CreateWorkflowRequest struct {
@@ -44,13 +41,13 @@ type UpdateWorkflowRequest struct {
 	Edges       []*models.WorkflowEdgeDTO `json:"edges"       binding:"required"`
 }
 
-func NewWorkflowController(cfg config.AppConfig) *workflowController {
+func NewWorkflowController(cfg models.AppConfig) *workflowController {
 	return &workflowController{
 		logger:          cfg.GetLogger(),
 		repo:            cfg.GetWorkflowRepository(),
 		redis:           cfg.GetRedisClient(),
-		orchestrator:    *services.NewOrchestratorService(cfg),
-		workflowService: *services.NewWorkflowService(cfg),
+		orchestrator:    services.NewOrchestratorService(cfg),
+		workflowService: services.NewWorkflowService(cfg),
 	}
 }
 

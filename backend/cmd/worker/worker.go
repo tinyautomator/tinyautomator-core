@@ -6,20 +6,20 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/rabbitmq"
-	"github.com/tinyautomator/tinyautomator-core/backend/config"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/services"
 )
 
 type Worker struct {
-	config             config.AppConfig
-	executor           *services.ExecutorService
+	config             models.AppConfig
+	executor           models.ExecutorService
 	rabbitMQClient     rabbitmq.RabbitMQClient
 	logger             logrus.FieldLogger
 	shutdownCtx        context.Context
 	shutdownCancelFunc context.CancelFunc
 }
 
-func NewWorker(cfg config.AppConfig) *Worker {
+func NewWorker(cfg models.AppConfig) *Worker {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &Worker{

@@ -7,32 +7,54 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"github.com/tinyautomator/tinyautomator-core/backend/config"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
-	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
 	"github.com/yourbasic/graph"
 )
 
 type WorkflowService struct {
 	logger       logrus.FieldLogger
-	workflowRepo repositories.WorkflowRepository
-	orchestrator *OrchestratorService
+	workflowRepo models.WorkflowRepository
+	orchestrator models.OrchestratorService
 }
 
-func NewWorkflowService(cfg config.AppConfig) *WorkflowService {
+func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 	return &WorkflowService{
 		logger:       cfg.GetLogger(),
 		workflowRepo: cfg.GetWorkflowRepository(),
-		orchestrator: NewOrchestratorService(cfg),
+		orchestrator: cfg.GetOrchestratorService(),
 	}
 }
 
-func (s *WorkflowService) ValidateWorkflowGraphDTO(
+func (s *WorkflowService) prepForValidate(
 	nodes []*models.WorkflowNodeDTO,
 	edges []*models.WorkflowEdgeDTO,
+) ([]models.ValidateNode, []models.ValidateEdge) {
+	n := make([]models.ValidateNode, len(nodes))
+	e := make([]models.ValidateEdge, len(edges))
+
+	for i, node := range nodes {
+		n[i] = models.ValidateNode{
+			ID:         node.ID,
+			ActionType: node.ActionType,
+		}
+	}
+
+	for i, edge := range edges {
+		e[i] = models.ValidateEdge{
+			SourceNodeID: edge.SourceNodeID,
+			TargetNodeID: edge.TargetNodeID,
+		}
+	}
+
+	return n, e
+}
+
+func (s *WorkflowService) ValidateWorkflowGraph(
+	nodes []models.ValidateNode,
+	edges []models.ValidateEdge,
 ) error {
 	idToIdx := make(map[string]int)
-	idxToID := make(map[int]*models.WorkflowNodeDTO)
+	idxToID := make(map[int]string)
 
 	for idx, node := range nodes {
 		if node.ID == "" {
@@ -40,7 +62,7 @@ func (s *WorkflowService) ValidateWorkflowGraphDTO(
 		}
 
 		idToIdx[node.ID] = idx
-		idxToID[idx] = node
+		idxToID[idx] = node.ActionType
 	}
 
 	g := graph.New(len(nodes))
@@ -67,25 +89,25 @@ func (s *WorkflowService) ValidateWorkflowGraphDTO(
 
 	level := make(map[string]int)
 	for _, nodeIdx := range order {
-		if _, ok := level[idxToID[nodeIdx].ActionType]; !ok {
-			level[idxToID[nodeIdx].ActionType] = 0
+		if _, ok := level[idxToID[nodeIdx]]; !ok {
+			level[idxToID[nodeIdx]] = 0
 			// TODO: for mvp restrict children from only being accessible from their root
-			s.logger.Infof("root node found %v", idxToID[nodeIdx].ActionType)
+			s.logger.Infof("root node found %v", idxToID[nodeIdx])
 		}
 
 		var err error
 		if notValid := g.Visit(nodeIdx, func(childIdx int, _ int64) bool {
 			parent := idxToID[nodeIdx]
 			child := idxToID[childIdx]
-			parentLevel, pOk := level[parent.ActionType]
-			childLevel, cOk := level[child.ActionType]
+			parentLevel, pOk := level[parent]
+			childLevel, cOk := level[child]
 
 			if pOk && cOk && parentLevel > 0 && childLevel > 0 && parentLevel >= childLevel {
-				s.logger.Warnf("node %s → %s invalid level", parent.ActionType, child.ActionType)
-				err = fmt.Errorf("validation error: node %s → %s invalid relationship", parent.ActionType, child.ActionType)
+				s.logger.Warnf("node %s → %s invalid level", parent, child)
+				err = fmt.Errorf("validation error: node %s → %s invalid relationship", parent, child)
 				return true
 			}
-			level[child.ActionType] = level[parent.ActionType] + 1
+			level[child] = level[parent] + 1
 			return false
 		}); notValid {
 			return err
@@ -104,7 +126,8 @@ func (s *WorkflowService) CreateWorkflow(
 	nodes []*models.WorkflowNodeDTO,
 	edges []*models.WorkflowEdgeDTO,
 ) (*models.Workflow, error) {
-	if err := s.ValidateWorkflowGraphDTO(nodes, edges); err != nil {
+	n, e := s.prepForValidate(nodes, edges)
+	if err := s.ValidateWorkflowGraph(n, e); err != nil {
 		return nil, fmt.Errorf("failed to validate workflow graph: %w", err)
 	}
 
@@ -124,7 +147,8 @@ func (s *WorkflowService) UpdateWorkflow(
 	nodes []*models.WorkflowNodeDTO,
 	edges []*models.WorkflowEdgeDTO,
 ) error {
-	if err := s.ValidateWorkflowGraphDTO(nodes, edges); err != nil {
+	n, e := s.prepForValidate(nodes, edges)
+	if err := s.ValidateWorkflowGraph(n, e); err != nil {
 		return fmt.Errorf("failed to validate workflow graph: %w", err)
 	}
 

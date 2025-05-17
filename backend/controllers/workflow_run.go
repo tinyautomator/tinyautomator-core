@@ -8,8 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
-	"github.com/tinyautomator/tinyautomator-core/backend/config"
-	repo "github.com/tinyautomator/tinyautomator-core/backend/repositories"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/services"
 )
 
@@ -21,17 +20,17 @@ type WorkflowRunController interface {
 }
 
 type workflowRunController struct {
-	workflowRunRepo repo.WorkflowRunRepository
+	workflowRunRepo models.WorkflowRunRepository
 	redis           redis.RedisClient
-	orchestrator    services.OrchestratorService
+	orchestrator    models.OrchestratorService
 	logger          logrus.FieldLogger
 }
 
-func NewWorkflowRunController(cfg config.AppConfig) *workflowRunController {
+func NewWorkflowRunController(cfg models.AppConfig) *workflowRunController {
 	return &workflowRunController{
 		workflowRunRepo: cfg.GetWorkflowRunRepository(),
 		redis:           cfg.GetRedisClient(),
-		orchestrator:    *services.NewOrchestratorService(cfg),
+		orchestrator:    services.NewOrchestratorService(cfg),
 		logger:          cfg.GetLogger(),
 	}
 }
