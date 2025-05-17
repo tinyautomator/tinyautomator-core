@@ -16,9 +16,6 @@ export async function loader(args: Route.LoaderArgs) {
 export default function Component() {
   return (
     <>
-      <SignInButton mode="modal">
-        <Button variant="outline">Sign In</Button>
-      </SignInButton>
       <App />;
     </>
   );

@@ -1,10 +1,10 @@
 import "./App.css";
+import { LandingPage } from "./components/shared/LandingPage";
 
 function App() {
   return (
     <div id="root">
-      <h1>TinyAutomator Frontend</h1>
-      <p>Let's build some automation magic ✨</p>
+      <LandingPage />
     </div>
   );
 }
