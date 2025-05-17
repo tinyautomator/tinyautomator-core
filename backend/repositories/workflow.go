@@ -13,34 +13,12 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-type WorkflowRepository interface {
-	GetWorkflow(ctx context.Context, id int32) (*models.Workflow, error)
-	GetUserWorkflows(ctx context.Context, userID string) ([]*models.Workflow, error)
-	CreateWorkflow(
-		ctx context.Context,
-		userID string,
-		name string,
-		description string,
-		status string,
-		nodes []*models.WorkflowNodeDTO,
-		edges []*models.WorkflowEdgeDTO,
-	) (*models.Workflow, error)
-	UpdateWorkflow(
-		ctx context.Context,
-		workflowID int32,
-		delta *models.WorkflowDelta,
-		existingNodes []*models.WorkflowNodeDTO,
-	) error
-	GetWorkflowGraph(ctx context.Context, workflowID int32) (*models.WorkflowGraph, error)
-	RenderWorkflowGraph(ctx context.Context, workflowID int32) (*models.WorkflowGraphDTO, error)
-}
-
 type workflowRepo struct {
 	q  *dao.Queries
 	db *pgxpool.Pool
 }
 
-func NewWorkflowRepository(q *dao.Queries, pool *pgxpool.Pool) WorkflowRepository {
+func NewWorkflowRepository(q *dao.Queries, pool *pgxpool.Pool) models.WorkflowRepository {
 	return &workflowRepo{q, pool}
 }
 
@@ -498,4 +476,4 @@ func (r workflowRepo) RenderWorkflowGraph(
 	}, nil
 }
 
-var _ WorkflowRepository = (*workflowRepo)(nil)
+var _ models.WorkflowRepository = (*workflowRepo)(nil)

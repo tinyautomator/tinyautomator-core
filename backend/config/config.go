@@ -2,13 +2,13 @@ package config
 
 import (
 	"context"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/rabbitmq"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
-	"github.com/tinyautomator/tinyautomator-core/backend/repositories"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
+	"github.com/tinyautomator/tinyautomator-core/backend/services"
 	"golang.org/x/oauth2"
 )
 
@@ -17,71 +17,26 @@ const (
 	PRODUCTION  = "production"
 )
 
-type EnvironmentVariables struct {
-	LogLevel           string        `envconfig:"LOG_LEVEL"               default:"INFO"`
-	ClerkSecretKey     string        `envconfig:"CLERK_SECRET_KEY"`
-	Port               string        `envconfig:"PORT"                    default:"9000"`
-	WorkerPollInterval time.Duration `envconfig:"WORKER_POLLING_INTERVAL" default:"10m"`
-
-	// Gmail Variables
-	GmailClientID     string   `envconfig:"GMAIL_CLIENT_ID"`
-	GmailClientSecret string   `envconfig:"GMAIL_CLIENT_SECRET"`
-	GmailRedirectURL  string   `envconfig:"GMAIL_REDIRECT_URL"`
-	GmailScopes       []string `envconfig:"GMAIL_SCOPES"`
-
-	// Redis
-	RedisUrl string `envconfig:"REDIS_URL"`
-
-	// Database
-	PostgresUrl string `envconfig:"POSTGRES_URL"`
-
-	// RabbitMQ
-	RabbitMQUrl         string `envconfig:"RABBITMQ_URL"`
-	RabbitMQQueuePrefix string `envconfig:"RABBITMQ_QUEUE_PREFIX"`
-}
-
-type AppConfig interface {
-	GetEnv() string
-	GetEnvVars() EnvironmentVariables
-	GetLogger() logrus.FieldLogger
-
-	GetWorkflowRepository() repositories.WorkflowRepository
-	GetWorkflowScheduleRepository() repositories.WorkflowScheduleRepository
-	GetWorkflowRunRepository() repositories.WorkflowRunRepository
-
-	GetGmailOAuthConfig() *oauth2.Config
-	GetRedisClient() redis.RedisClient
-	GetRabbitMQClient() rabbitmq.RabbitMQClient
-
-	CleanUp()
-}
-
 type appConfig struct {
-	// app
-	env     string
-	envVars EnvironmentVariables
-	logger  logrus.FieldLogger
-
-	// repositories
-	workflowRepository         repositories.WorkflowRepository
-	workflowScheduleRepository repositories.WorkflowScheduleRepository
-	workflowRunRepository      repositories.WorkflowRunRepository
-
-	// oauth
-	gmailOAuthConfig *oauth2.Config
-
-	// external
-	pool           *pgxpool.Pool
-	redisClient    redis.RedisClient
-	rabbitMQClient rabbitmq.RabbitMQClient
+	envVars              models.EnvironmentVariables
+	logger               *logrus.Logger
+	pgPool               *pgxpool.Pool
+	redisClient          redis.RedisClient
+	rabbitMQClient       rabbitmq.RabbitMQClient
+	workflowRepo         models.WorkflowRepository
+	workflowRunRepo      models.WorkflowRunRepository
+	workflowScheduleRepo models.WorkflowScheduleRepository
+	orchestrator         models.OrchestratorService
+	executor             models.ExecutorService
+	scheduler            models.SchedulerService
+	workflowSvc          models.WorkflowService
 }
 
 var cfg *appConfig
 
-func NewAppConfig(ctx context.Context) (AppConfig, error) {
+func NewAppConfig(ctx context.Context) (models.AppConfig, error) {
 	if cfg != nil {
 		cfg.GetLogger().Info("Config object is already initialized")
-
 		return cfg, nil
 	}
 
@@ -100,56 +55,80 @@ func NewAppConfig(ctx context.Context) (AppConfig, error) {
 	}
 
 	cfg.initRepositories()
+	cfg.orchestrator = services.NewOrchestratorService(cfg)
+	cfg.executor = services.NewExecutorService(cfg)
+	cfg.scheduler = services.NewSchedulerService(cfg)
+	cfg.workflowSvc = services.NewWorkflowService(cfg)
 
 	return cfg, nil
 }
 
-func (cfg *appConfig) GetEnv() string {
-	return cfg.env
+func (c *appConfig) GetEnv() string {
+	return c.envVars.Env
 }
 
-func (cfg *appConfig) GetEnvVars() EnvironmentVariables {
-	return cfg.envVars
+func (c *appConfig) GetEnvVars() models.EnvironmentVariables {
+	return c.envVars
 }
 
-func (cfg *appConfig) GetLogger() logrus.FieldLogger {
-	return cfg.logger
+func (c *appConfig) GetLogger() logrus.FieldLogger {
+	return c.logger
 }
 
-func (cfg *appConfig) GetWorkflowRepository() repositories.WorkflowRepository {
-	return cfg.workflowRepository
+func (c *appConfig) GetPGPool() *pgxpool.Pool {
+	return c.pgPool
 }
 
-func (cfg *appConfig) GetWorkflowScheduleRepository() repositories.WorkflowScheduleRepository {
-	return cfg.workflowScheduleRepository
+func (c *appConfig) GetRedisClient() redis.RedisClient {
+	return c.redisClient
 }
 
-func (cfg *appConfig) GetWorkflowRunRepository() repositories.WorkflowRunRepository {
-	return cfg.workflowRunRepository
+func (c *appConfig) GetRabbitMQClient() rabbitmq.RabbitMQClient {
+	return c.rabbitMQClient
 }
 
-func (cfg *appConfig) GetGmailOAuthConfig() *oauth2.Config {
-	return cfg.gmailOAuthConfig
+func (c *appConfig) GetWorkflowRepository() models.WorkflowRepository {
+	return c.workflowRepo
 }
 
-func (cfg *appConfig) GetRedisClient() redis.RedisClient {
-	return cfg.redisClient
+func (c *appConfig) GetWorkflowRunRepository() models.WorkflowRunRepository {
+	return c.workflowRunRepo
 }
 
-func (cfg *appConfig) GetRabbitMQClient() rabbitmq.RabbitMQClient {
-	return cfg.rabbitMQClient
+func (c *appConfig) GetWorkflowScheduleRepository() models.WorkflowScheduleRepository {
+	return c.workflowScheduleRepo
 }
 
-func (cfg *appConfig) CleanUp() {
-	if err := cfg.redisClient.Close(); err != nil {
-		cfg.logger.WithError(err).Error("Failed to close Redis client")
+func (c *appConfig) GetOrchestratorService() models.OrchestratorService {
+	return c.orchestrator
+}
+
+func (c *appConfig) GetExecutorService() models.ExecutorService {
+	return c.executor
+}
+
+func (c *appConfig) GetSchedulerService() models.SchedulerService {
+	return c.scheduler
+}
+
+func (c *appConfig) GetWorkflowService() models.WorkflowService {
+	return c.workflowSvc
+}
+
+func (c *appConfig) GetGmailOAuthConfig() *oauth2.Config {
+	return c.envVars.GmailOAuthConfig
+}
+
+func (c *appConfig) CleanUp() {
+	if err := c.redisClient.Close(); err != nil {
+		c.logger.WithError(err).Error("Failed to close Redis client")
 	}
 
-	if err := cfg.rabbitMQClient.Close(); err != nil {
-		cfg.logger.WithError(err).Error("Failed to close RabbitMQ client")
+	if err := c.rabbitMQClient.Close(); err != nil {
+		c.logger.WithError(err).Error("Failed to close RabbitMQ client")
 	}
 
-	cfg.pool.Close()
+	c.pgPool.Close()
 }
 
-var _ AppConfig = (*appConfig)(nil)
+var _ models.AppConfig = (*appConfig)(nil)

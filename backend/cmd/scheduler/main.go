@@ -9,12 +9,13 @@ import (
 	"syscall"
 
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
 func main() {
 	var (
 		s   *Scheduler
-		cfg config.AppConfig
+		cfg models.AppConfig
 	)
 
 	defer func() {

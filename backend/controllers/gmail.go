@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/google"
-	"github.com/tinyautomator/tinyautomator-core/backend/config"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"golang.org/x/oauth2"
 )
 
@@ -20,7 +20,7 @@ type gmailController struct {
 	gmailOAuthConfig *oauth2.Config
 }
 
-func NewGmailController(cfg config.AppConfig) GmailController {
+func NewGmailController(cfg models.AppConfig) GmailController {
 	return &gmailController{
 		gmailOAuthConfig: cfg.GetGmailOAuthConfig(),
 	}
