@@ -1,15 +1,13 @@
 import { useState } from "react";
+import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import { WorkflowCard } from "./WorkflowCard";
 import { DeleteWorkflowDialog } from "./DeleteWorkflowDialog";
 import { useNavigate } from "react-router";
 import type { Workflow } from "../route";
 import { EmptyState } from "./EmptyState";
 
-interface WorkflowListProps {
-  workflows: Workflow[];
-}
-
-export function WorkflowList({ workflows }: WorkflowListProps) {
+export function WorkflowList() {
+  const { workflows } = useFilteredWorkflows();
   const navigate = useNavigate();
   const [workflowToDelete, setWorkflowToDelete] = useState<Workflow | null>(
     null
@@ -38,13 +36,13 @@ export function WorkflowList({ workflows }: WorkflowListProps) {
     // TODO: Implement status change
   };
 
-  if (!workflows.length) {
+  if (workflows.length === 0) {
     return <EmptyState />;
   }
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         {workflows.map((workflow) => (
           <WorkflowCard
             key={workflow.id}

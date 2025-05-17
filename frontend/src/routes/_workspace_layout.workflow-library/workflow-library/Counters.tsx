@@ -6,6 +6,8 @@ interface CounterProps {
 }
 
 // TODO: Style the number
+// TODO: Can rename to a geeeral counter will be using in tag counts as well...
+
 export function TabCounter({ count, className = "" }: CounterProps) {
   return (
     <span className={`text-xs text-slate-500 dark:text-slate-400 ${className}`}>

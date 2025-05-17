@@ -1,4 +1,4 @@
-import type { Workflow } from "../route";
+import type { Workflow } from "../../route";
 
 export const sampleWorkflows: Workflow[] = [
   {

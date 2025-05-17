@@ -1,40 +1,34 @@
+import { useValidatedSearchParams } from "./utils/schemas";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TabCounter } from "./Counters";
-import { Tab, TAB_VALUES } from "./utils/schemas";
+import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
+import type { Workflow } from "../route";
 
-interface WorkflowTabsProps {
-  selectedTab: Tab;
-  onTabChange: (tab: Tab) => void;
-  counts: Record<Tab, number>;
-}
+const TAB_VALUES = ["active", "draft", "templates", "archived"] as const;
 
-export function WorkflowTabs({
-  selectedTab,
-  onTabChange,
-  counts,
-}: WorkflowTabsProps) {
+export function WorkflowTabs() {
+  const [{ tab }, updateParams] = useValidatedSearchParams();
+  const { statusCounts: counts } = useFilteredWorkflows();
+
   return (
-    <div className="px-8 pt-6 pb-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <Tabs
-          value={selectedTab}
-          onValueChange={(value) => onTabChange(value as Tab)}
-          className="w-full"
-        >
-          <TabsList className="grid w-full max-w-md grid-cols-4 p-1 bg-slate-100 dark:bg-slate-800">
-            {TAB_VALUES.map((tab) => (
-              <TabsTrigger
-                key={tab}
-                value={tab}
-                className="flex items-center justify-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                <TabCounter count={counts[tab] || 0} />
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </div>
-    </div>
+    <Tabs
+      value={tab}
+      onValueChange={(value) =>
+        updateParams({ tab: value as Workflow["status"] })
+      }
+      className="border-b border-slate-100 dark:border-slate-800"
+    >
+      <TabsList className="h-12 rounded-none border-b border-slate-100 dark:border-slate-800 bg-transparent">
+        {TAB_VALUES.map((tabValue) => (
+          <TabsTrigger
+            key={tabValue}
+            value={tabValue}
+            className="data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800"
+          >
+            {tabValue.charAt(0).toUpperCase() + tabValue.slice(1)} (
+            {counts[tabValue] ?? 0})
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 }
