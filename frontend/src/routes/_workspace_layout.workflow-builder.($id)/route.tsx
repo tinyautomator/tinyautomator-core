@@ -72,7 +72,7 @@ export default function WorkflowBuilder({
         }, 500);
       }
     },
-    [open, toggleBlockPanel, toggleInspectorPanel, fitView, setOpen]
+    [open, toggleBlockPanel, toggleInspectorPanel, fitView, setOpen],
   );
 
   useEffect(() => {
@@ -110,7 +110,7 @@ export default function WorkflowBuilder({
             type: MarkerType.ArrowClosed,
             color: "#60a5fa",
           },
-        }))
+        })),
       );
     }
   }, [workflowToEdit, setNodes, setEdges]);
@@ -122,7 +122,7 @@ export default function WorkflowBuilder({
           "transition-all duration-300 overflow-hidden bg-white dark:bg-gray-900 flex flex-col h-full max-w-72",
           toggleBlockPanel
             ? "w-72 pointer-events-auto"
-            : "w-0 pointer-events-none"
+            : "w-0 pointer-events-none",
         )}
       >
         <BlockPanel

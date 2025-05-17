@@ -26,7 +26,7 @@ export function EmailForm() {
           duration: 3000,
         });
       });
-    }
+    },
   );
 
   const handleReset = () => {

@@ -1,6 +1,6 @@
-import { Toaster as Sonner, ToasterProps } from "sonner";
+import { Toaster as Sonner } from "sonner";
 
-const Toaster = ({ ...props }: ToasterProps) => {
+const Toaster = () => {
   return (
     <Sonner
       position="bottom-right"

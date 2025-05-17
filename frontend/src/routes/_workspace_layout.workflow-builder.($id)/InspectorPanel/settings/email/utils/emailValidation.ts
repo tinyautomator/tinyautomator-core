@@ -19,7 +19,7 @@ export const emailFormSchema = z.object({
   recipients: z
     .array(z.string())
     .transform((emails) =>
-      emails.map(parseEmail).filter((email): email is string => email !== null)
+      emails.map(parseEmail).filter((email): email is string => email !== null),
     )
     .refine((emails) => emails.length > 0, {
       message: "At least one valid email recipient is required",

@@ -23,7 +23,7 @@ export function useEmailRecipients() {
         }
         return acc;
       },
-      { validRecipients: [] as string[], invalidRecipients: [] as string[] }
+      { validRecipients: [] as string[], invalidRecipients: [] as string[] },
     );
   }, [recipients]);
 
@@ -53,7 +53,7 @@ export function useEmailRecipients() {
 
     if (
       currentRecipients.some(
-        (r) => r === (parsed || newEmail) && r !== oldEmail
+        (r) => r === (parsed || newEmail) && r !== oldEmail,
       )
     ) {
       toast.error("Email already added");
@@ -67,7 +67,7 @@ export function useEmailRecipients() {
         shouldValidate: true,
         shouldDirty: true,
         shouldTouch: true,
-      }
+      },
     );
   };
 
@@ -80,7 +80,7 @@ export function useEmailRecipients() {
         shouldValidate: true,
         shouldDirty: true,
         shouldTouch: true,
-      }
+      },
     );
   };
 

@@ -24,14 +24,14 @@ export default function InspectorPanel({
     <div
       className={cn(
         "relative h-full transition-all duration-500",
-        toggleInspectorPanel ? "w-80" : "w-0"
+        toggleInspectorPanel ? "w-80" : "w-0",
       )}
     >
       {/* Collapse button - only visible when expanded, outside sidebar */}
       <div
         className={cn(
           "fixed top-1/6 z-50 transition-all duration-500",
-          toggleInspectorPanel ? "right-80 !translate-x-1/2" : "right-0 w-13"
+          toggleInspectorPanel ? "right-80 !translate-x-1/2" : "right-0 w-13",
         )}
       >
         <Button
@@ -53,14 +53,14 @@ export default function InspectorPanel({
             "transition-[width,height,border-radius] duration-500",
             toggleInspectorPanel
               ? "h-10 w-10 rounded-full"
-              : "h-13 w-13 rounded-l-full"
+              : "h-13 w-13 rounded-l-full",
           )}
           aria-label="Collapse inspector"
         >
           <ChevronsRight
             className={cn(
               "text-slate-600 transition-all duration-500 group-hover:scale-110 !h-6 !w-6",
-              toggleInspectorPanel ? "rotate-0" : "rotate-180"
+              toggleInspectorPanel ? "rotate-0" : "rotate-180",
             )}
           />
         </Button>
@@ -70,14 +70,16 @@ export default function InspectorPanel({
       <div
         className={cn(
           "h-full border-l bg-white transition-all duration-500 overflow-hidden",
-          toggleInspectorPanel ? "w-80" : "w-0"
+          toggleInspectorPanel ? "w-80" : "w-0",
         )}
       >
         {/* Panel content - always rendered, animate only opacity */}
         <div
           className={cn(
             "h-full w-80",
-            toggleInspectorPanel ? "pointer-events-auto" : "pointer-events-none"
+            toggleInspectorPanel
+              ? "pointer-events-auto"
+              : "pointer-events-none",
           )}
         >
           <div className="h-1/15 pl-5 flex flex-col justify-between">

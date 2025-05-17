@@ -9,8 +9,16 @@ import {
   Loader,
   LucideProps,
 } from "lucide-react";
-import { RefAttributes, memo, useMemo } from "react";
+import {
+  RefAttributes,
+  memo,
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
 import { cn } from "@/lib/utils";
+import { useFlowStore } from "@/routes/_workspace_layout.workflow-builder.($id)/flowStore";
 
 const statusVariants = {
   success: {
@@ -32,12 +40,15 @@ const statusVariants = {
 };
 
 export const NodeUI = memo(function NodeUI({
+  id,
   type,
   data,
   selected,
   height,
   width,
 }: NodeProps) {
+  const handleAnimations = useFlowStore((state) => state.handleAnimations);
+
   const getIcon = useMemo(
     () => () => {
       const Icon = data.icon as React.ForwardRefExoticComponent<
@@ -77,7 +88,7 @@ export const NodeUI = memo(function NodeUI({
             height={height - strokeWidth}
             rx={rx}
             fill="none"
-            stroke="#bfdbfe"
+            stroke="#d1fae5"
             strokeWidth={strokeWidth}
           />
           {/* Animated progress border */}
@@ -88,7 +99,7 @@ export const NodeUI = memo(function NodeUI({
             height={height - strokeWidth}
             rx={rx}
             fill="none"
-            stroke="#60a5fa"
+            stroke="#10b981"
             strokeWidth={strokeWidth}
             strokeDasharray={`${dashLength} ${gapLength}`}
             strokeDashoffset="0"
@@ -154,27 +165,21 @@ export const NodeUI = memo(function NodeUI({
             </Button>
           </div>
         </div>
-        <Handle
-          type={type === "action" ? "target" : "source"}
-          position={type === "action" ? Position.Top : Position.Bottom}
-          className={cn(
-            "!w-3 !h-3 !bg-white !border-1 !rounded-full !cursor-pointer transition-colors",
-            type === "action"
-              ? "!border-purple-500 hover:!bg-purple-500 opacity-80"
-              : "!border-amber-500 hover:!bg-amber-500 opacity-80",
-            (data.status === "running" || selected) && "invisible",
-          )}
-        />
-        <Handle
+        {type === "action" && (
+          <CustomHandle
+            type="target"
+            position={Position.Top}
+            handleType="input"
+            animateHandle={handleAnimations[id]?.target ?? false}
+            nodeType={type}
+          />
+        )}
+        <CustomHandle
           type="source"
           position={Position.Bottom}
-          className={cn(
-            "!w-3 !h-3 !bg-white !border-1 !rounded-full !cursor-pointer transition-colors",
-            type === "action"
-              ? "!border-purple-500 hover:!bg-purple-500 opacity-80"
-              : "!border-amber-500 hover:!bg-amber-500 opacity-80",
-            (data.status === "running" || selected) && "invisible",
-          )}
+          handleType="output"
+          animateHandle={handleAnimations[id]?.source ?? false}
+          nodeType={type}
         />
         <div
           className={cn(
@@ -186,3 +191,196 @@ export const NodeUI = memo(function NodeUI({
     </div>
   );
 });
+
+interface CustomHandleProps {
+  type: "source" | "target";
+  position: Position;
+  handleType: "input" | "output";
+  animateHandle: boolean | undefined;
+  nodeType: string;
+}
+
+export const CustomHandle = ({
+  type,
+  position,
+  handleType,
+  animateHandle,
+  nodeType,
+}: CustomHandleProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const handleRef = useRef<HTMLDivElement>(null);
+
+  // Color scheme based on nodeType
+  const borderColor =
+    nodeType === "action"
+      ? isActive
+        ? "border-purple-700"
+        : isHovered || animateHandle
+          ? "border-purple-600"
+          : "border-purple-500"
+      : nodeType === "trigger"
+        ? isActive
+          ? "border-amber-700"
+          : isHovered || animateHandle
+            ? "border-amber-600"
+            : "border-amber-500"
+        : "border-blue-400";
+
+  const innerBgColor =
+    nodeType === "action"
+      ? isActive
+        ? "bg-purple-500"
+        : isHovered || animateHandle
+          ? "bg-purple-400"
+          : "bg-purple-300"
+      : nodeType === "trigger"
+        ? isActive
+          ? "bg-amber-500"
+          : isHovered || animateHandle
+            ? "bg-amber-400"
+            : "bg-amber-300"
+        : "bg-blue-200";
+
+  useEffect(() => {
+    const el = handleRef.current;
+    if (!el) return;
+
+    const handleMouseUp = () => {
+      setIsActive(false);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    const handleMouseDown = () => {
+      setIsActive(true);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    el.addEventListener("mousedown", handleMouseDown);
+
+    return () => {
+      el.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, []);
+
+  return (
+    <div
+      className={cn(
+        "absolute left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300 pointer-events-none",
+        isHovered || isActive || animateHandle ? "opacity-100" : "opacity-70",
+        handleType === "output" ? "top-full mt-3" : "bottom-full mb-3",
+      )}
+    >
+      <div className="relative group/handle flex items-center justify-center pointer-events-none">
+        {/* Animated connection guide */}
+        <div
+          className={cn(
+            "absolute left-1/2 w-[2px] h-3 transition-all duration-500",
+            handleType === "input" ? "top-[100%]" : "bottom-[100%]",
+            isHovered || animateHandle
+              ? "opacity-100 scale-y-100"
+              : "opacity-0 scale-y-0",
+            nodeType === "action"
+              ? "bg-gradient-to-b from-purple-600 to-transparent"
+              : nodeType === "trigger"
+                ? "bg-gradient-to-b from-amber-500 to-transparent"
+                : "bg-gradient-to-b from-blue-400 to-transparent",
+          )}
+        />
+        {/* Main handle container */}
+        <div
+          className={cn(
+            "relative flex items-center justify-center w-5 h-5 transition-all duration-300 ease-out pointer-events-none",
+            isActive || isHovered ? "scale-110" : "scale-100",
+          )}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          ref={handleRef}
+        >
+          {/* React Flow Handle - Hidden but functional */}
+          <Handle
+            type={type}
+            position={position}
+            className={cn(
+              "!absolute !inset-0 !w-full !h-full !m-0 !p-0",
+              "!translate-x-0 !translate-y-0 !transform-none",
+              "!bg-transparent !border-none !rounded-none",
+              "pointer-events-auto",
+            )}
+            // className="!transform-none !translate-x-0 !translate-y-0 !static !border-0 !bg-transparent"
+          />
+          {/* Outer ring - magnetic effect */}
+          <div
+            className={cn(
+              "absolute inset-0 rounded-full transition-all duration-300 border-1 border-dashed",
+              animateHandle && "animate-handle-spin-slow",
+              borderColor,
+            )}
+          />
+          {/* Inner connection point */}
+          <div
+            className={cn(
+              "absolute inset-1 rounded-full transition-all duration-300 transform",
+              innerBgColor,
+              isActive
+                ? "scale-125"
+                : isHovered || animateHandle
+                  ? "scale-100"
+                  : "scale-75",
+            )}
+          />
+          {/* Center dot */}
+          <div
+            className={cn(
+              "absolute inset-2 rounded-full bg-white transition-all duration-300",
+              isActive || animateHandle ? "scale-0" : "scale-100",
+            )}
+          />
+        </div>
+        {/* Instructional text */}
+        {!animateHandle && (
+          <div
+            className={cn(
+              "absolute",
+              handleType === "input" ? "bottom-full mb-1" : "top-full mt-1",
+              "left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-medium transition-all duration-300",
+              isHovered
+                ? "opacity-100 transform translate-y-0"
+                : "opacity-0 transform " +
+                    (handleType === "input"
+                      ? "translate-y-1"
+                      : "-translate-y-1"),
+            )}
+          >
+            <span
+              className={
+                nodeType === "action"
+                  ? "text-purple-400"
+                  : nodeType === "trigger"
+                    ? "text-amber-500"
+                    : "text-blue-400"
+              }
+            >
+              {handleType === "input"
+                ? "⌄ Drop connection here"
+                : "⌃ Drag to connect"}
+            </span>
+          </div>
+        )}
+        {/* Ripple effect on active state */}
+        {isActive && (
+          <div
+            className={cn(
+              "absolute inset-[-8px] rounded-full animate-handle-ping-slow opacity-30",
+              nodeType === "action"
+                ? "bg-purple-200"
+                : nodeType === "trigger"
+                  ? "bg-amber-200"
+                  : "bg-blue-200",
+            )}
+          />
+        )}
+      </div>
+    </div>
+  );
+};

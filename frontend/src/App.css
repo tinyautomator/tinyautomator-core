@@ -147,3 +147,11 @@
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
 }
+
+.animate-handle-spin-slow {
+  animation: spin 8s linear infinite;
+}
+
+.animate-handle-ping-slow {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
