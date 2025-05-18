@@ -1,5 +1,4 @@
-import { PlusCircleIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CreateWorkflowButton } from "@/components/shared/CreatWorkflowButton";
 import { workflowApi } from "@/api";
 import { WorkflowTabs } from "./workflow-library/WorkflowTabs";
 import { WorkflowList } from "./workflow-library/WorkflowList";
@@ -18,7 +17,6 @@ export interface Workflow {
   nodeCount: number;
   tags: string[];
 }
-// TODO: Pending UI while filtering with shadow workflows...
 // TODO: implement refetching of workflows periodically?
 export async function loader() {
   const data = await workflowApi.getUserWorkflows();
@@ -49,10 +47,7 @@ export default function WorkflowLibrary() {
               Manage and organize your automated workflows
             </p>
           </div>
-          <Button className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white transition-colors duration-200 active:translate-y-0.5">
-            <PlusCircleIcon className="h-4 w-4" />
-            <span>Create Workflow</span>
-          </Button>
+          <CreateWorkflowButton />
         </div>
 
         <div className="flex-1 min-h-0 flex flex-col">

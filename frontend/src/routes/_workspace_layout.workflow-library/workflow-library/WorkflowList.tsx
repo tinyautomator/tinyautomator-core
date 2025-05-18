@@ -124,7 +124,7 @@ export function WorkflowList() {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-3 p-3 h-[calc(100%-4rem)]">
+      <div className="grid grid-cols-3 gap-3 p-3 h-[calc(100%-5rem)]">
         {showLoading
           ? Array.from({ length: 6 }).map((_, index) => (
               <WorkflowCardSkeleton key={index} />
@@ -140,7 +140,7 @@ export function WorkflowList() {
             ))}
       </div>
 
-      <div className="h-16">
+      <div className="h-20 flex items-center justify-center pt-6">
         <WorkflowPagination />
       </div>
 
