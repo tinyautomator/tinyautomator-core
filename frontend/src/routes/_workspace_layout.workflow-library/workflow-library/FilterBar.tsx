@@ -1,7 +1,7 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { TagFilter } from "./TagFilter";
-import { useValidatedSearchParams } from "./utils/schemas";
+import { useValidatedSearchParams } from "./hooks/useSearchParams";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 

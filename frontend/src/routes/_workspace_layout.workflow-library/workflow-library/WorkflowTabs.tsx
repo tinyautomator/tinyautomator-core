@@ -1,4 +1,4 @@
-import { useValidatedSearchParams } from "./utils/schemas";
+import { useValidatedSearchParams } from "./hooks/useSearchParams";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import type { Workflow } from "../route";

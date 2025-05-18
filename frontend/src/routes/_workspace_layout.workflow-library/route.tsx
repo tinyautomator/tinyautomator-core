@@ -5,7 +5,6 @@ import { WorkflowTabs } from "./workflow-library/WorkflowTabs";
 import { WorkflowList } from "./workflow-library/WorkflowList";
 import { FilterBar } from "./workflow-library/FilterBar";
 import { sampleWorkflows } from "./workflow-library/utils/sampleWorkflows";
-import { useFilteredWorkflows } from "./workflow-library/hooks/useFilteredWorkflows";
 
 // TODO: update global workflow type to match the api response
 export interface Workflow {

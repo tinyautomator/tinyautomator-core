@@ -1,4 +1,4 @@
-import { useValidatedSearchParams } from "./utils/schemas";
+import { useValidatedSearchParams } from "./hooks/useSearchParams";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,13 +11,12 @@ import {
 } from "@/components/ui/popover";
 import { ListFilter } from "lucide-react";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
-import { Form, useNavigate } from "react-router";
+import { Form } from "react-router";
 
 export function TagFilter() {
   const [{ tags: selectedTags }, updateParams] = useValidatedSearchParams();
   const { tagCounts } = useFilteredWorkflows();
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
 
   // Get unique tags from tagCounts
   const uniqueTags = useMemo(() => {
@@ -31,19 +30,11 @@ export function TagFilter() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setTimeout(() => setOpen(false), 100);
     const form = e.currentTarget;
     const formData = new FormData(form);
-    console.log("Form Data:", Object.fromEntries(formData.entries()));
-
-    const checkedTags = Array.from(
-      form.querySelectorAll('input[name="tags"]:checked')
-    ).map((input) => (input as HTMLInputElement).value);
-    console.log("Checked Tags:", checkedTags);
-
-    // Pass the array of tags directly
-    updateParams({ tags: checkedTags });
-    navigate(`?tags=${checkedTags.join(",")}`);
+    const newTags = Array.from(formData.getAll("tags") as string[]);
+    updateParams({ tags: newTags });
+    setOpen(false);
   };
 
   return (

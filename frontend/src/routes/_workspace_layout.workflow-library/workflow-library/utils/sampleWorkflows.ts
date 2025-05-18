@@ -1,76 +1,52 @@
 import type { Workflow } from "../../route";
 
-export const sampleWorkflows: Workflow[] = [
+const workflowTemplates = [
   {
-    id: Math.random(),
     title: "Email Marketing Campaign",
     description: "Automated email sequence for new subscribers",
-    lastEdited: new Date().toISOString(),
-    status: "active",
-    nodeCount: 15,
     tags: ["marketing", "email", "paid"],
   },
   {
-    id: Math.random(),
     title: "Social Media Post Scheduler",
     description: "Schedule posts across multiple platforms",
-    lastEdited: new Date().toISOString(),
-    status: "draft",
-    nodeCount: 8,
     tags: ["social", "scheduled", "free"],
   },
   {
-    id: Math.random(),
     title: "Customer Onboarding",
     description: "Welcome sequence for new customers",
-    lastEdited: new Date().toISOString(),
-    status: "active",
-    nodeCount: 12,
     tags: ["onboarding", "email", "paid"],
   },
   {
-    id: Math.random(),
     title: "Data Backup Automation",
     description: "Daily backup of critical data",
-    lastEdited: new Date().toISOString(),
-    status: "archived",
-    nodeCount: 5,
     tags: ["backup", "scheduled", "free"],
   },
   {
-    id: Math.random(),
     title: "Lead Nurturing Sequence",
     description: "Follow-up sequence for potential customers",
-    lastEdited: new Date().toISOString(),
-    status: "draft",
-    nodeCount: 10,
     tags: ["marketing", "email", "paid"],
   },
-  {
-    id: Math.random(),
-    title: "Website Analytics Report",
-    description: "Weekly analytics report generation",
-    lastEdited: new Date().toISOString(),
-    status: "active",
-    nodeCount: 7,
-    tags: ["analytics", "report", "free"],
-  },
-  {
-    id: Math.random(),
-    title: "Customer Feedback Survey",
-    description: "Automated survey distribution",
-    lastEdited: new Date().toISOString(),
-    status: "archived",
-    nodeCount: 6,
-    tags: ["survey", "feedback", "free"],
-  },
-  {
-    id: Math.random(),
-    title: "Product Update Notifications",
-    description: "Notify users about new features",
-    lastEdited: new Date().toISOString(),
-    status: "active",
-    nodeCount: 9,
-    tags: ["notification", "email", "paid"],
-  },
 ];
+
+const statuses = ["active", "draft", "archived", "templates"] as const;
+
+function generateMoreWorkflows(count: number): Workflow[] {
+  return Array.from({ length: count }, (_, index) => {
+    const template = workflowTemplates[index % workflowTemplates.length];
+    const number = Math.floor(index / workflowTemplates.length) + 1;
+    return {
+      id: Math.random(),
+      title: `${template.title} ${number}`,
+      description: template.description,
+      lastEdited: new Date(
+        Date.now() - Math.random() * 10000000000
+      ).toISOString(),
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      nodeCount: Math.floor(Math.random() * 20) + 5,
+      tags: [...template.tags],
+    };
+  });
+}
+
+// Generate 50 workflows for good pagination testing
+export const sampleWorkflows: Workflow[] = generateMoreWorkflows(1000);

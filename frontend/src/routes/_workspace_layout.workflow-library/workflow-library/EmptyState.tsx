@@ -6,7 +6,7 @@ import {
   BlocksIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useValidatedSearchParams } from "./utils/schemas";
+import { useValidatedSearchParams } from "./hooks/useSearchParams";
 import { useNavigate } from "react-router";
 
 type StateContent = {

@@ -5,6 +5,90 @@ import { DeleteWorkflowDialog } from "./DeleteWorkflowDialog";
 import { useNavigate } from "react-router";
 import type { Workflow } from "../route";
 import { EmptyState } from "./EmptyState";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useValidatedSearchParams } from "./hooks/useSearchParams";
+
+function WorkflowPagination() {
+  const { pagination } = useFilteredWorkflows();
+  const [, updateParams] = useValidatedSearchParams();
+
+  if (pagination.totalPages <= 1) return null;
+
+  // Calculate the window of page numbers to show
+  const windowSize = 5;
+  const halfWindow = Math.floor(windowSize / 2);
+  let startPage = Math.max(1, pagination.currentPage - halfWindow);
+  let endPage = Math.min(pagination.totalPages, startPage + windowSize - 1);
+
+  // Adjust the window if we're near the end
+  if (endPage - startPage + 1 < windowSize) {
+    startPage = Math.max(1, endPage - windowSize + 1);
+  }
+
+  const pageNumbers = Array.from(
+    { length: endPage - startPage + 1 },
+    (_, i) => startPage + i
+  );
+
+  const handlePageChange = (page: number) => {
+    updateParams({ page: String(page) });
+  };
+
+  return (
+    <Pagination className="py-4 border-t border-slate-200 dark:border-slate-800">
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            onClick={() =>
+              pagination.hasPrevPage &&
+              handlePageChange(pagination.currentPage - 1)
+            }
+            aria-disabled={!pagination.hasPrevPage}
+            className={
+              !pagination.hasPrevPage
+                ? "pointer-events-none opacity-50"
+                : "cursor-pointer"
+            }
+          />
+        </PaginationItem>
+
+        {pageNumbers.map((pageNum) => (
+          <PaginationItem key={pageNum}>
+            <PaginationLink
+              onClick={() => handlePageChange(pageNum)}
+              isActive={pagination.currentPage === pageNum}
+              className="cursor-pointer"
+            >
+              {pageNum}
+            </PaginationLink>
+          </PaginationItem>
+        ))}
+
+        <PaginationItem>
+          <PaginationNext
+            onClick={() =>
+              pagination.hasNextPage &&
+              handlePageChange(pagination.currentPage + 1)
+            }
+            aria-disabled={!pagination.hasNextPage}
+            className={
+              !pagination.hasNextPage
+                ? "pointer-events-none opacity-50"
+                : "cursor-pointer"
+            }
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
 
 export function WorkflowList() {
   const { workflows } = useFilteredWorkflows();
@@ -53,6 +137,8 @@ export function WorkflowList() {
           />
         ))}
       </div>
+
+      <WorkflowPagination />
 
       <DeleteWorkflowDialog
         workflow={workflowToDelete}
