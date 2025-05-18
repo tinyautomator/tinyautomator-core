@@ -10,37 +10,36 @@ export function useValidatedSearchParams(): [
 
   const validatedParams = useMemo(() => {
     const params = Object.fromEntries(searchParams.entries());
-    const result = searchParamsSchema.safeParse({
-      ...params,
-      tags: params.tags ? params.tags.split(",") : [],
-    });
-
-    return result.success ? result.data : searchParamsSchema.parse({});
+    return searchParamsSchema.parse(params);
   }, [searchParams]);
 
   const updateParams = (newParams: Partial<SearchParams>) => {
-    const updatedParams = new URLSearchParams(searchParams);
-
-    // Reset page to 1 if any param other than page changes
-    if (Object.keys(newParams).some((key) => key !== "page")) {
-      updatedParams.set("page", "1");
-    }
-
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (key === "tags" && Array.isArray(value)) {
-        if (value.length > 0) {
-          updatedParams.set(key, value.join(","));
-        } else {
-          updatedParams.delete(key);
+    setSearchParams(
+      (prev) => {
+        // Reset to page 1 if any param other than page changes
+        if (Object.keys(newParams).some((key) => key !== "page")) {
+          prev.set("page", "1");
         }
-      } else if (value) {
-        updatedParams.set(key, String(value));
-      } else {
-        updatedParams.delete(key);
-      }
-    });
 
-    setSearchParams(updatedParams);
+        // Update params
+        Object.entries(newParams).forEach(([key, value]) => {
+          if (key === "tags" && Array.isArray(value)) {
+            if (value.length > 0) {
+              prev.set(key, value.join(","));
+            } else {
+              prev.delete(key);
+            }
+          } else if (value) {
+            prev.set(key, String(value));
+          } else {
+            prev.delete(key);
+          }
+        });
+
+        return prev;
+      },
+      { preventScrollReset: true }
+    );
   };
 
   return [validatedParams, updateParams];

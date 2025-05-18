@@ -4,9 +4,8 @@ import { TagFilter } from "./TagFilter";
 import { useValidatedSearchParams } from "./hooks/useSearchParams";
 import { useOptimisticParamValue } from "./hooks/useOptimisticParamValue";
 import { useDebouncedCallback } from "use-debounce";
-import * as React from "react";
 
-const SearchInput: React.FC = () => {
+const SearchInput = () => {
   const [{ q }, updateParams] = useValidatedSearchParams();
   const [localValue, setLocalValue] = useOptimisticParamValue(q ?? "");
 

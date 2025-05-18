@@ -35,14 +35,29 @@ export function TagFilter() {
     const formData = new FormData(form);
     const newTags = Array.from(formData.getAll("tags") as string[]);
     updateParams({ tags: newTags });
-    setOpen(false);
+    // setOpen(false);
   };
+
+  // Derive active state from whether there are any selected tags
+  const hasSelectedTags = selectedTags && selectedTags.length > 0;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon" aria-label="Tag Filters">
-          <ListFilter size={16} strokeWidth={2} aria-hidden="true" />
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Tag Filters"
+          className={hasSelectedTags ? "bg-slate-100 dark:bg-slate-800" : ""}
+        >
+          <ListFilter
+            size={16}
+            strokeWidth={2}
+            aria-hidden="true"
+            className={
+              hasSelectedTags ? "text-slate-900 dark:text-slate-100" : ""
+            }
+          />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-48 p-3 overflow-hidden">

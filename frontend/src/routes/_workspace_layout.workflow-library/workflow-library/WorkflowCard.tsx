@@ -171,7 +171,7 @@ type WorkflowStatus = "active" | "draft" | "archived" | "templates";
 
 const STATUS_STYLES = {
   active: {
-    icon: "text-emerald-500 fill-emerald-500 animate-pulse",
+    icon: "text-emerald-500 fill-emerald-500",
     text: "text-emerald-700 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-900/20",
   },
@@ -251,10 +251,10 @@ export function WorkflowCard({
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           {workflow.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-1">
-              {workflow.tags.slice(0, 3).map((tag) => (
+            <div className="flex flex-wrap gap-1.5">
+              {workflow.tags.slice(0, 2).map((tag) => (
                 <Badge
                   key={tag}
                   variant="outline"
@@ -266,23 +266,24 @@ export function WorkflowCard({
                   {tag}
                 </Badge>
               ))}
-              {workflow.tags.length > 3 && (
+              {workflow.tags.length > 2 && (
                 <Badge
                   variant="outline"
                   className="bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-normal py-0.5 px-2"
                 >
-                  +{workflow.tags.length - 3} more
+                  +{workflow.tags.length - 2} more
                 </Badge>
               )}
             </div>
           )}
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <Circle
                 className={cn(
                   "h-3 w-3 transition-colors duration-200",
-                  STATUS_STYLES[workflow.status as WorkflowStatus].icon
+                  STATUS_STYLES[workflow.status as WorkflowStatus].icon,
+                  workflow.status === "active" && "group-hover:animate-pulse"
                 )}
               />
               <span
