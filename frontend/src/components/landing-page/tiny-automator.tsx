@@ -5,13 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Settings as GearIcon } from "lucide-react"
 import { SignInButton } from "@clerk/react-router";
 
-// Define the Block type
 export interface Block {
   heading: string
   blurb: string
 }
 
-// Default blocks data
 const defaultBlocks: Block[] = [
   {
     heading: "Automate Without Limits",
