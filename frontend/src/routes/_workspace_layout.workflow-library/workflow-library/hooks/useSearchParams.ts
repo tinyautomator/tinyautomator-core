@@ -21,6 +21,11 @@ export function useValidatedSearchParams(): [
   const updateParams = (newParams: Partial<SearchParams>) => {
     const updatedParams = new URLSearchParams(searchParams);
 
+    // Reset page to 1 if any param other than page changes
+    if (Object.keys(newParams).some((key) => key !== "page")) {
+      updatedParams.set("page", "1");
+    }
+
     Object.entries(newParams).forEach(([key, value]) => {
       if (key === "tags" && Array.isArray(value)) {
         if (value.length > 0) {

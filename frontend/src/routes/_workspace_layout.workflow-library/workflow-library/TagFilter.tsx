@@ -9,6 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListFilter } from "lucide-react";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import { Form } from "react-router";
@@ -44,35 +45,39 @@ export function TagFilter() {
           <ListFilter size={16} strokeWidth={2} aria-hidden="true" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-3">
+      <PopoverContent className="w-48 p-3 overflow-hidden">
         <div className="space-y-3">
           <div className="text-xs font-medium text-muted-foreground">
             Tag Filters
           </div>
           <Form method="get" className="space-y-2" onSubmit={handleSubmit}>
-            {uniqueTags.map((tag) => (
-              <div key={tag} className="flex items-center gap-1.5">
-                <Checkbox
-                  id={tag}
-                  name="tags"
-                  value={tag}
-                  defaultChecked={selectedTags?.includes(tag)}
-                  className="cursor-pointer h-3.5 w-3.5"
-                />
-                <Label
-                  htmlFor={tag}
-                  className="font-normal flex-1 cursor-pointer text-xs truncate"
-                >
-                  {tag}
-                </Label>
-                <Badge
-                  variant="secondary"
-                  className="ml-auto text-[10px] py-0 px-1.5 h-4 min-w-[1.5rem] flex items-center justify-center"
-                >
-                  {tagCounts.get(tag) ?? 0}
-                </Badge>
+            <ScrollArea className="h-[240px] -mx-1 px-1">
+              <div className="space-y-2 pr-3">
+                {uniqueTags.map((tag) => (
+                  <div key={tag} className="flex items-center gap-1.5">
+                    <Checkbox
+                      id={tag}
+                      name="tags"
+                      value={tag}
+                      defaultChecked={selectedTags?.includes(tag)}
+                      className="cursor-pointer h-3.5 w-3.5"
+                    />
+                    <Label
+                      htmlFor={tag}
+                      className="font-normal flex-1 cursor-pointer text-xs truncate"
+                    >
+                      {tag}
+                    </Label>
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto text-[10px] py-0 px-1.5 h-4 min-w-[1.5rem] flex items-center justify-center"
+                    >
+                      {tagCounts.get(tag) ?? 0}
+                    </Badge>
+                  </div>
+                ))}
               </div>
-            ))}
+            </ScrollArea>
             <div
               role="separator"
               aria-orientation="horizontal"

@@ -1,4 +1,5 @@
 import { Box } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface CounterProps {
   count: number;
@@ -8,11 +9,14 @@ interface CounterProps {
 // TODO: Style the number
 // TODO: Can rename to a geeeral counter will be using in tag counts as well...
 
-export function TabCounter({ count, className = "" }: CounterProps) {
+export function Counter({ count }: CounterProps) {
   return (
-    <span className={`text-xs text-slate-500 dark:text-slate-400 ${className}`}>
+    <Badge
+      variant="secondary"
+      className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center text-xs font-normal bg-transparent border border-slate-200 dark:border-slate-700"
+    >
       {count}
-    </span>
+    </Badge>
   );
 }
 

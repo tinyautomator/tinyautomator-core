@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import { WorkflowCard } from "./WorkflowCard";
+import { WorkflowCardSkeleton } from "./WorkflowCardSkeleton";
 import { DeleteWorkflowDialog } from "./DeleteWorkflowDialog";
-import { useNavigate } from "react-router";
+import { useNavigation, useNavigate } from "react-router";
+import { useDebounce } from "use-debounce";
 import type { Workflow } from "../route";
 import { EmptyState } from "./EmptyState";
 import {
@@ -14,17 +16,20 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useValidatedSearchParams } from "./hooks/useSearchParams";
+import { useOptimisticParamValue } from "./hooks/useOptimisticParamValue";
+import { cn } from "@/lib/utils";
 
 function WorkflowPagination() {
   const { pagination } = useFilteredWorkflows();
-  const [, updateParams] = useValidatedSearchParams();
+  const [{ page }, updateParams] = useValidatedSearchParams();
+  const [currentPage, setCurrentPage] = useOptimisticParamValue(page ?? "1");
 
   if (pagination.totalPages <= 1) return null;
 
   // Calculate the window of page numbers to show
   const windowSize = 5;
   const halfWindow = Math.floor(windowSize / 2);
-  let startPage = Math.max(1, pagination.currentPage - halfWindow);
+  let startPage = Math.max(1, Number(currentPage) - halfWindow);
   let endPage = Math.min(pagination.totalPages, startPage + windowSize - 1);
 
   // Adjust the window if we're near the end
@@ -37,52 +42,41 @@ function WorkflowPagination() {
     (_, i) => startPage + i
   );
 
-  const handlePageChange = (page: number) => {
-    updateParams({ page: String(page) });
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(String(newPage));
+    updateParams({ page: String(newPage) });
   };
 
+  const isFirstPage = Number(currentPage) <= 1;
+  const isLastPage = Number(currentPage) >= pagination.totalPages;
+
   return (
-    <Pagination className="py-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-      <PaginationContent>
+    <Pagination>
+      <PaginationContent className="select-none">
         <PaginationItem>
           <PaginationPrevious
             onClick={() =>
-              pagination.hasPrevPage &&
-              handlePageChange(pagination.currentPage - 1)
+              !isFirstPage && handlePageChange(Number(currentPage) - 1)
             }
-            aria-disabled={!pagination.hasPrevPage}
-            className={
-              !pagination.hasPrevPage
-                ? "pointer-events-none opacity-50"
-                : "cursor-pointer"
-            }
+            className={cn(isFirstPage && "pointer-events-none opacity-50")}
           />
         </PaginationItem>
-
         {pageNumbers.map((pageNum) => (
           <PaginationItem key={pageNum}>
             <PaginationLink
               onClick={() => handlePageChange(pageNum)}
-              isActive={pagination.currentPage === pageNum}
-              className="cursor-pointer"
+              isActive={pageNum === Number(currentPage)}
             >
               {pageNum}
             </PaginationLink>
           </PaginationItem>
         ))}
-
         <PaginationItem>
           <PaginationNext
             onClick={() =>
-              pagination.hasNextPage &&
-              handlePageChange(pagination.currentPage + 1)
+              !isLastPage && handlePageChange(Number(currentPage) + 1)
             }
-            aria-disabled={!pagination.hasNextPage}
-            className={
-              !pagination.hasNextPage
-                ? "pointer-events-none opacity-50"
-                : "cursor-pointer"
-            }
+            className={cn(isLastPage && "pointer-events-none opacity-50")}
           />
         </PaginationItem>
       </PaginationContent>
@@ -92,10 +86,14 @@ function WorkflowPagination() {
 
 export function WorkflowList() {
   const { workflows } = useFilteredWorkflows();
+  const navigation = useNavigation();
   const navigate = useNavigate();
   const [workflowToDelete, setWorkflowToDelete] = useState<Workflow | null>(
     null
   );
+
+  // Debounce the loading state by 150ms to prevent flash
+  const [showLoading] = useDebounce(navigation.state !== "idle", 150);
 
   const handleDelete = (workflow: Workflow) => {
     setWorkflowToDelete(workflow);
@@ -120,22 +118,26 @@ export function WorkflowList() {
     // TODO: Implement status change
   };
 
-  if (workflows.length === 0) {
+  if (workflows.length === 0 && !showLoading) {
     return <EmptyState />;
   }
 
   return (
     <>
       <div className="grid grid-cols-3 gap-3 p-3 h-[calc(100%-4rem)]">
-        {workflows.map((workflow) => (
-          <WorkflowCard
-            key={workflow.id}
-            workflow={workflow}
-            onConfigure={() => handleConfigure(workflow.id)}
-            onDelete={() => handleDelete(workflow)}
-            onChangeStatus={handleChangeStatus}
-          />
-        ))}
+        {showLoading
+          ? Array.from({ length: 6 }).map((_, index) => (
+              <WorkflowCardSkeleton key={index} />
+            ))
+          : workflows.map((workflow) => (
+              <WorkflowCard
+                key={workflow.id}
+                workflow={workflow}
+                onConfigure={() => handleConfigure(workflow.id)}
+                onDelete={() => handleDelete(workflow)}
+                onChangeStatus={handleChangeStatus}
+              />
+            ))}
       </div>
 
       <div className="h-16">
