@@ -108,9 +108,11 @@ export function WorkflowCard({
         isArchived && "opacity-75 grayscale border-dashed"
       )}
     >
-      <div className="p-5 flex-1 relative">
-        <div className="flex justify-between items-start mb-2">
-          <Badge className={cn(STATUS_STYLES[workflow.status], "capitalize")}>
+      <div className="p-3 flex-1 relative">
+        <div className="flex justify-between items-start mb-1.5">
+          <Badge
+            className={cn(STATUS_STYLES[workflow.status], "capitalize text-xs")}
+          >
             {workflow.status}
           </Badge>
 
@@ -138,66 +140,66 @@ export function WorkflowCard({
                 </TooltipProvider>
               )
             )}
-
-            <DropdownMenu>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 active:translate-y-0.5"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">More options</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>More options</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <DropdownMenuContent align="end" className="w-56">
-                {dropdownActions.map(
-                  ({ label, icon: Icon, onClick, iconClassName }) => (
+            {dropdownActions.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-800 active:translate-y-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    )}
+                  >
+                    <MoreHorizontal className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                    <span className="sr-only">More actions</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {dropdownActions.map(({ label, icon: Icon, onClick }) => (
                     <DropdownMenuItem
                       key={label}
                       onClick={onClick}
                       className={cn(
+                        "flex items-center gap-2",
                         label === "Delete" &&
-                          "text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 data-[highlighted]:bg-red-50 dark:data-[highlighted]:bg-red-950/30 data-[highlighted]:text-red-500 dark:data-[highlighted]:text-red-400"
+                          "text-red-500 dark:text-red-400 hover:!bg-red-50 dark:hover:!bg-red-950/30"
                       )}
                     >
-                      <Icon className={iconClassName} />
+                      <Icon
+                        className={cn(
+                          "h-4 w-4",
+                          label === "Delete" && "text-red-500 dark:text-red-400"
+                        )}
+                      />
                       {label}
                     </DropdownMenuItem>
-                  )
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 
         <h3
           className={cn(
-            "text-lg font-semibold text-slate-900 dark:text-white mb-1 line-clamp-1",
+            "text-base font-medium text-slate-900 dark:text-white mb-1 line-clamp-1",
             isArchived && "text-slate-500 dark:text-slate-400"
           )}
         >
           {workflow.title}
         </h3>
 
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 line-clamp-2">
           {workflow.description}
         </p>
 
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-1.5 mb-2">
           {workflow.tags.map((tag) => (
             <Badge
               key={tag}
               variant="outline"
               className={cn(
-                "bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-medium py-1 px-2.5 transition-colors duration-200 cursor-pointer",
+                "bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-medium py-0.5 px-2 transition-colors duration-200 cursor-pointer",
                 isArchived && "opacity-70"
               )}
             >
@@ -207,10 +209,10 @@ export function WorkflowCard({
         </div>
       </div>
 
-      <div className="bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-5 py-3 text-xs text-slate-500 dark:text-slate-400 flex justify-between items-center">
+      <div className="bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-3 py-2 text-xs text-slate-500 dark:text-slate-400 flex justify-between items-center">
         <NodeCounter count={workflow.nodeCount} />
         <div className="flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 text-slate-400" />
+          <Clock className="h-3 w-3 text-slate-400" />
           <span>{timeAgo}</span>
         </div>
       </div>

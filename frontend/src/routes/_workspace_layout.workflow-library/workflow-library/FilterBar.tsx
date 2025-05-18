@@ -14,7 +14,7 @@ function SearchInput() {
   }, 300);
 
   return (
-    <div className="relative">
+    <div className="relative flex-1">
       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
       <Input
         placeholder="Search workflows..."
@@ -31,7 +31,7 @@ function SearchInput() {
 
 export function FilterBar() {
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800">
       <SearchInput />
       <TagFilter />
     </div>

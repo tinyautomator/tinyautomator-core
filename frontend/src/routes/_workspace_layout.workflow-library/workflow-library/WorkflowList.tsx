@@ -42,7 +42,7 @@ function WorkflowPagination() {
   };
 
   return (
-    <Pagination className="py-4 border-t border-slate-200 dark:border-slate-800">
+    <Pagination className="py-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
@@ -126,7 +126,7 @@ export function WorkflowList() {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+      <div className="grid grid-cols-3 gap-3 p-3 h-[calc(100%-4rem)]">
         {workflows.map((workflow) => (
           <WorkflowCard
             key={workflow.id}
@@ -138,7 +138,9 @@ export function WorkflowList() {
         ))}
       </div>
 
-      <WorkflowPagination />
+      <div className="h-16">
+        <WorkflowPagination />
+      </div>
 
       <DeleteWorkflowDialog
         workflow={workflowToDelete}

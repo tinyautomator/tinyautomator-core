@@ -49,23 +49,26 @@ export function TagFilter() {
           <div className="text-xs font-medium text-muted-foreground">
             Tag Filters
           </div>
-          <Form method="get" className="space-y-3" onSubmit={handleSubmit}>
+          <Form method="get" className="space-y-2" onSubmit={handleSubmit}>
             {uniqueTags.map((tag) => (
-              <div key={tag} className="flex items-center gap-2">
+              <div key={tag} className="flex items-center gap-1.5">
                 <Checkbox
                   id={tag}
                   name="tags"
                   value={tag}
                   defaultChecked={selectedTags?.includes(tag)}
-                  className="cursor-pointer"
+                  className="cursor-pointer h-3.5 w-3.5"
                 />
                 <Label
                   htmlFor={tag}
-                  className="font-normal flex-1 cursor-pointer"
+                  className="font-normal flex-1 cursor-pointer text-xs truncate"
                 >
                   {tag}
                 </Label>
-                <Badge variant="secondary" className="ml-auto">
+                <Badge
+                  variant="secondary"
+                  className="ml-auto text-[10px] py-0 px-1.5 h-4 min-w-[1.5rem] flex items-center justify-center"
+                >
                   {tagCounts.get(tag) ?? 0}
                 </Badge>
               </div>
