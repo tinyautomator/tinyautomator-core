@@ -7,6 +7,7 @@ import { Outlet, redirect } from "react-router";
 import { getAuth } from "@clerk/react-router/ssr.server";
 import { Route } from "./+types/route";
 import { ReactFlowProvider } from "@xyflow/react";
+import { Toaster } from "@/components/ui/sonner";
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -19,6 +20,7 @@ export async function loader(args: Route.LoaderArgs) {
 export default function Layout() {
   return (
     <TooltipProvider>
+      <Toaster />
       <SidebarProvider>
         <div className="flex flex-col h-screen w-screen bg-slate-50">
           <Navbar />
