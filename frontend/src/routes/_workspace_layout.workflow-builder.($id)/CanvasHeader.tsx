@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Menu } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
 import { useFlowStore } from "./flowStore";
+import { toast } from "sonner";
 
 export default function CanvasHeader({
   workflowToEdit,
@@ -77,6 +78,7 @@ export default function CanvasHeader({
                   target_node_id: edge.target,
                 })),
               });
+              toast.success("Workflow updated successfully");
             } else {
               workflowApi.createWorkflow({
                 name: name,
@@ -95,6 +97,7 @@ export default function CanvasHeader({
                   target_node_id: edge.target,
                 })),
               });
+              toast.success("Workflow saved successfully");
             }
           }}
         >
