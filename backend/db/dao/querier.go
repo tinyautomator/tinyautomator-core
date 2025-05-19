@@ -67,12 +67,18 @@ type Querier interface {
 	//CreateWorkflowNodeRun
 	//
 	//  INSERT INTO workflow_node_run (
-	//    workflow_run_id, workflow_node_id, status, started_at, metadata, created_at, updated_at
-	//  ) VALUES (
-	//    $1, $2, 'running', $3, $4, $5, $6
+	//    workflow_run_id,
+	//    workflow_node_id,
+	//    status,
+	//    started_at,
+	//    metadata,
+	//    created_at,
+	//    updated_at
 	//  )
-	//  RETURNING id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
-	CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (*WorkflowNodeRun, error)
+	//  VALUES ($1, $2, 'running', $3, $4, $5, $6)
+	//  ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
+	//  RETURNING id
+	CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (int32, error)
 	//CreateWorkflowNodeUi
 	//
 	//  INSERT INTO workflow_node_ui (
@@ -125,6 +131,12 @@ type Querier interface {
 	//  DELETE FROM workflow_schedule
 	//  WHERE id = $1
 	DeleteWorkflowSchedule(ctx context.Context, id int32) error
+	//GetChildNodeIDs
+	//
+	//  SELECT target_node_id
+	//  FROM workflow_edge
+	//  WHERE source_node_id = $1
+	GetChildNodeIDs(ctx context.Context, sourceNodeID int32) ([]int32, error)
 	//GetDueSchedulesLocked
 	//
 	//  WITH locked AS (
@@ -154,14 +166,6 @@ type Querier interface {
 	//  FROM workflow
 	//  WHERE id = $1
 	GetWorkflow(ctx context.Context, id int32) (*Workflow, error)
-	//GetWorkflowEdges
-	//
-	//  SELECT workflow_id,
-	//    source_node_id,
-	//    target_node_id
-	//  FROM workflow_edge
-	//  WHERE workflow_id = $1
-	GetWorkflowEdges(ctx context.Context, workflowID int32) ([]*WorkflowEdge, error)
 	//GetWorkflowGraph
 	//
 	//  SELECT
@@ -181,6 +185,12 @@ type Querier interface {
 	//    AND we.source_node_id = wn.id
 	//  WHERE w.id = $1
 	GetWorkflowGraph(ctx context.Context, id int32) ([]*GetWorkflowGraphRow, error)
+	//GetWorkflowNodeRun
+	//
+	//  SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
+	//  FROM workflow_node_run
+	//  WHERE id = $1
+	GetWorkflowNodeRun(ctx context.Context, id int32) (*WorkflowNodeRun, error)
 	//GetWorkflowNodeRunsByRunID
 	//
 	//  SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
@@ -188,15 +198,6 @@ type Querier interface {
 	//  WHERE workflow_run_id = $1
 	//  ORDER BY started_at ASC
 	GetWorkflowNodeRunsByRunID(ctx context.Context, workflowRunID int32) ([]*WorkflowNodeRun, error)
-	//GetWorkflowNodes
-	//
-	//  SELECT id,
-	//    workflow_id,
-	//    action_type,
-	//    config
-	//  FROM workflow_node
-	//  WHERE workflow_id = $1
-	GetWorkflowNodes(ctx context.Context, workflowID int32) ([]*WorkflowNode, error)
 	//GetWorkflowRun
 	//
 	//  SELECT id, workflow_id, status, started_at, finished_at, created_at, updated_at FROM workflow_run

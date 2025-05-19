@@ -49,11 +49,17 @@ func (q *Queries) CompleteWorkflowNodeRun(ctx context.Context, arg *CompleteWork
 
 const createWorkflowNodeRun = `-- name: CreateWorkflowNodeRun :one
 INSERT INTO workflow_node_run (
-  workflow_run_id, workflow_node_id, status, started_at, metadata, created_at, updated_at
-) VALUES (
-  $1, $2, 'running', $3, $4, $5, $6
+  workflow_run_id,
+  workflow_node_id,
+  status,
+  started_at,
+  metadata,
+  created_at,
+  updated_at
 )
-RETURNING id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
+VALUES ($1, $2, 'running', $3, $4, $5, $6)
+ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
+RETURNING id
 `
 
 type CreateWorkflowNodeRunParams struct {
@@ -68,12 +74,18 @@ type CreateWorkflowNodeRunParams struct {
 // CreateWorkflowNodeRun
 //
 //	INSERT INTO workflow_node_run (
-//	  workflow_run_id, workflow_node_id, status, started_at, metadata, created_at, updated_at
-//	) VALUES (
-//	  $1, $2, 'running', $3, $4, $5, $6
+//	  workflow_run_id,
+//	  workflow_node_id,
+//	  status,
+//	  started_at,
+//	  metadata,
+//	  created_at,
+//	  updated_at
 //	)
-//	RETURNING id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
-func (q *Queries) CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (*WorkflowNodeRun, error) {
+//	VALUES ($1, $2, 'running', $3, $4, $5, $6)
+//	ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
+//	RETURNING id
+func (q *Queries) CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (int32, error) {
 	row := q.db.QueryRow(ctx, createWorkflowNodeRun,
 		arg.WorkflowRunID,
 		arg.WorkflowNodeID,
@@ -82,6 +94,24 @@ func (q *Queries) CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflow
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getWorkflowNodeRun = `-- name: GetWorkflowNodeRun :one
+SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
+FROM workflow_node_run
+WHERE id = $1
+`
+
+// GetWorkflowNodeRun
+//
+//	SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
+//	FROM workflow_node_run
+//	WHERE id = $1
+func (q *Queries) GetWorkflowNodeRun(ctx context.Context, id int32) (*WorkflowNodeRun, error) {
+	row := q.db.QueryRow(ctx, getWorkflowNodeRun, id)
 	var i WorkflowNodeRun
 	err := row.Scan(
 		&i.ID,

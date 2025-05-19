@@ -59,6 +59,7 @@ type AppConfig interface {
 type WorkflowRepository interface {
 	GetWorkflow(ctx context.Context, id int32) (*Workflow, error)
 	GetUserWorkflows(ctx context.Context, userID string) ([]*Workflow, error)
+	GetChildNodeIDs(ctx context.Context, nodeID int32) ([]int32, error)
 	CreateWorkflow(
 		ctx context.Context,
 		userID string,
@@ -79,16 +80,24 @@ type WorkflowRepository interface {
 }
 
 type WorkflowRunRepository interface {
-	CreateWorkflowRun(ctx context.Context, workflowID int32) (*WorkflowRun, error)
-	CreateWorkflowNodeRun(
+	WithTransaction(
 		ctx context.Context,
-		workflowRunID, workflowNodeID int32,
-	) (*WorkflowRunNodeRun, error)
+		fn func(ctx context.Context, txRepo WorkflowRunRepository) error,
+	) error
+	GetWorkflowRun(ctx context.Context, id int32) (*WorkflowRun, error)
+	GetWorkflowRuns(ctx context.Context, workflowID int32) ([]*WorkflowRun, error)
+	GetWorkflowNodeRun(ctx context.Context, id int32) (*WorkflowRunNodeRun, error)
+	GetWorkflowNodeRuns(
+		ctx context.Context,
+		workflowRunID int32,
+		status *string,
+	) ([]*WorkflowRunNodeRun, error)
+	CreateWorkflowRun(ctx context.Context, workflowID int32) (*WorkflowRun, error)
+	CreateWorkflowNodeRun(ctx context.Context, workflowRunID, workflowNodeID int32) (*int32, error)
+	CompleteWorkflowRun(ctx context.Context, workflowRunID int32) error
+	CompleteWorkflowNodeRun(ctx context.Context, workflowNodeRunID int32) error
 	UpdateWorkflowRunStatus(ctx context.Context, id int32, status string) error
 	UpdateWorkflowNodeRunStatus(ctx context.Context, id int32, status string) error
-	GetWorkflowRun(ctx context.Context, id int32) (*WorkflowRun, error)
-	GetWorkflowNodeRuns(ctx context.Context, workflowRunID int32) ([]*WorkflowRunNodeRun, error)
-	ListWorkflowRuns(ctx context.Context, workflowID int32) ([]*WorkflowRun, error)
 }
 
 type WorkflowScheduleRepository interface {

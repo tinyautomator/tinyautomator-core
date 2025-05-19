@@ -38,7 +38,7 @@ func (s *Scheduler) PollAndRunScheduledWorkflows(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			s.logger.Info("ctx cancelled - stopping polling loop")
-			return nil
+			return context.Canceled
 		case <-ticker.C:
 			ws, err := s.service.GetDueWorkflows(ctx)
 			if err != nil {

@@ -11,43 +11,24 @@ import (
 )
 
 type Worker struct {
-	config             models.AppConfig
-	executor           models.ExecutorService
-	rabbitMQClient     rabbitmq.RabbitMQClient
-	logger             logrus.FieldLogger
-	shutdownCtx        context.Context
-	shutdownCancelFunc context.CancelFunc
+	executor       models.ExecutorService
+	rabbitMQClient rabbitmq.RabbitMQClient
+	logger         logrus.FieldLogger
 }
 
 func NewWorker(cfg models.AppConfig) *Worker {
-	ctx, cancel := context.WithCancel(context.Background())
-
 	return &Worker{
-		config:             cfg,
-		executor:           services.NewExecutorService(cfg),
-		rabbitMQClient:     cfg.GetRabbitMQClient(),
-		logger:             cfg.GetLogger(),
-		shutdownCtx:        ctx,
-		shutdownCancelFunc: cancel,
+		executor:       services.NewExecutorService(cfg),
+		rabbitMQClient: cfg.GetRabbitMQClient(),
+		logger:         cfg.GetLogger(),
 	}
 }
 
-func (w *Worker) Start() error {
-	// TODO: group these by projected cost
-	routingKeys := []string{
-		"node.schedule",
-		"node.send_email",
-		"node.send_sms",
-		// Add other node types as needed
-	}
-
-	// Start consuming messages
+func (w *Worker) Start(ctx context.Context) error {
 	err := w.rabbitMQClient.Subscribe(
-		w.shutdownCtx,
-		"workflow_node_taskqueue",
-		routingKeys,
+		ctx,
 		func(msg []byte) error {
-			return w.executor.ExecuteWorkflowNode(w.shutdownCtx, msg)
+			return w.executor.ExecuteWorkflowNode(ctx, msg)
 		},
 	)
 	if err != nil {
@@ -57,10 +38,4 @@ func (w *Worker) Start() error {
 	w.logger.Info("worker started successfully")
 
 	return nil
-}
-
-func (w *Worker) Shutdown() {
-	w.logger.Info("shutting down worker...")
-	w.shutdownCancelFunc()
-	w.logger.Info("worker shutdown complete")
 }

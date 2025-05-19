@@ -45,7 +45,7 @@ func main() {
 	}
 
 	logger := cfg.GetLogger()
-	logger.Info("initializing worker")
+	logger.Info("initializing scheduler")
 
 	s = NewScheduler(cfg)
 

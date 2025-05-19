@@ -2,36 +2,32 @@ package main
 
 import (
 	"context"
-	"os"
+	"fmt"
 	"os/signal"
 	"syscall"
 
-	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/config"
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	// Initialize configuration
 	cfg, err := config.NewAppConfig(ctx)
 	if err != nil {
-		logrus.WithError(err).Fatal("failed to initialize config")
+		panic("failed to initialize config " + err.Error())
 	}
+	defer cfg.CleanUp()
 
-	// Create worker
+	logger := cfg.GetLogger()
+	logger.Info("initializing worker")
+
 	w := NewWorker(cfg)
 
-	// Start worker
-	if err := w.Start(); err != nil {
-		logrus.WithError(err).Fatal("failed to start worker")
+	if err := w.Start(ctx); err != nil {
+		panic(fmt.Errorf("error in starting worker: %v", err))
 	}
 
-	// Wait for shutdown signal
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	<-sigChan
-
-	// Shutdown gracefully
-	w.Shutdown()
+	<-ctx.Done()
+	logger.Info("signal received - shutting down gracefully")
 }

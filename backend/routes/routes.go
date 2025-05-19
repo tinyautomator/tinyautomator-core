@@ -17,30 +17,33 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig) {
 	})
 
 	workflowController := controllers.NewWorkflowController(cfg)
-
 	workflowGroup := r.Group("/api/workflow")
-	workflowGroup.GET("", workflowController.GetUserWorkflows)
-	workflowGroup.GET("/:id", workflowController.GetWorkflow)
-	workflowGroup.GET("/:id/render", workflowController.GetWorkflowRender)
-	workflowGroup.POST("", timeout.New(
-		timeout.WithTimeout(3*time.Second),
-		timeout.WithHandler(workflowController.CreateWorkflow),
-	))
-	workflowGroup.PUT("/:id", timeout.New(
-		timeout.WithTimeout(3*time.Second),
-		timeout.WithHandler(workflowController.UpdateWorkflow),
-	))
+	{
+		workflowGroup.GET("", workflowController.GetUserWorkflows)
+		workflowGroup.GET("/:id", workflowController.GetWorkflow)
+		workflowGroup.GET("/:id/render", workflowController.GetWorkflowRender)
+		workflowGroup.POST("", timeout.New(
+			timeout.WithTimeout(3*time.Second),
+			timeout.WithHandler(workflowController.CreateWorkflow),
+		))
+		workflowGroup.PUT("/:id", timeout.New(
+			timeout.WithTimeout(3*time.Second),
+			timeout.WithHandler(workflowController.UpdateWorkflow),
+		))
+	}
 
 	workflowRunController := controllers.NewWorkflowRunController(cfg)
-
 	workflowRunGroup := r.Group("/api/workflow-run")
-	// TODO: add timeout
-	workflowRunGroup.POST("/:id", workflowRunController.RunWorkflow)
+	{
+		// TODO: add timeout
+		workflowRunGroup.POST("/:id", workflowRunController.RunWorkflow)
+	}
 
 	gmailController := controllers.NewGmailController(cfg)
-
 	gmailGroup := r.Group("/api/integrations/gmail")
-	gmailGroup.GET("/auth-url", gmailController.GetGmailAuthURL)
-	gmailGroup.GET("/callback", gmailController.HandleCallBack)
-	gmailGroup.POST("/send-email", gmailController.SendEmail)
+	{
+		gmailGroup.GET("/auth-url", gmailController.GetGmailAuthURL)
+		gmailGroup.GET("/callback", gmailController.HandleCallBack)
+		gmailGroup.POST("/send-email", gmailController.SendEmail)
+	}
 }
