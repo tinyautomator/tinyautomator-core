@@ -22,20 +22,10 @@ VALUES (
 )
 RETURNING *;
 
--- name: GetWorkflowNodes :many
-SELECT id,
-  workflow_id,
-  action_type,
-  config
-FROM workflow_node
-WHERE workflow_id = $1;
-
--- name: GetWorkflowEdges :many
-SELECT workflow_id,
-  source_node_id,
-  target_node_id
+-- name: GetChildNodeIDs :many
+SELECT target_node_id
 FROM workflow_edge
-WHERE workflow_id = $1;
+WHERE source_node_id = $1;
 
 -- name: CreateWorkflowNode :one
 INSERT INTO workflow_node (

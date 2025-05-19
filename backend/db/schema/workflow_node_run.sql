@@ -8,5 +8,7 @@ CREATE TABLE workflow_node_run (
   metadata JSONB,
   error_message TEXT,
   created_at BIGINT NOT NULL,
-  updated_at BIGINT NOT NULL
+  updated_at BIGINT NOT NULL,
+
+  CONSTRAINT unique_node_per_run UNIQUE (workflow_run_id, workflow_node_id)
 );

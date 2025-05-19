@@ -1,6 +1,8 @@
 package models
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/guregu/null/v6"
@@ -114,4 +116,20 @@ type WorkflowNodeTask struct {
 	RunID      int32 `json:"run_id"`
 	NodeID     int32 `json:"node_id"`
 	NodeRunID  int32 `json:"node_run_id"`
+}
+
+func BuildWorkflowNodeTaskPayload(workflowID, runID, nodeID, nodeRunID int32) ([]byte, error) {
+	task := WorkflowNodeTask{
+		WorkflowID: workflowID,
+		RunID:      runID,
+		NodeID:     nodeID,
+		NodeRunID:  nodeRunID,
+	}
+
+	data, err := json.Marshal(task)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal WorkflowNodeTask: %w", err)
+	}
+
+	return data, nil
 }

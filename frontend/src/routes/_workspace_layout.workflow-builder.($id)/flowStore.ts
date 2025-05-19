@@ -196,7 +196,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
 function computeHandleAnimations(edges: Edge[]): HandleAnimations {
   const handleAnimations: HandleAnimations = {};
-  edges.forEach((edge) => {
+  edges?.forEach((edge) => {
     if (edge.source) {
       handleAnimations[edge.source] = {
         ...(handleAnimations[edge.source] || {}),

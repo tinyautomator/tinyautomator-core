@@ -62,7 +62,7 @@ func (c *workflowRunController) GetWorkflowRuns(ctx *gin.Context) {
 		return
 	}
 
-	workflowRuns, err := c.workflowRunRepo.ListWorkflowRuns(ctx, int32(workflowID))
+	workflowRuns, err := c.workflowRunRepo.GetWorkflowRuns(ctx, int32(workflowID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get workflow runs"})
 		return
@@ -80,7 +80,7 @@ func (c *workflowRunController) GetWorkflowNodeRuns(ctx *gin.Context) {
 		return
 	}
 
-	workflowNodeRuns, err := c.workflowRunRepo.GetWorkflowNodeRuns(ctx, int32(workflowRunID))
+	workflowNodeRuns, err := c.workflowRunRepo.GetWorkflowNodeRuns(ctx, int32(workflowRunID), nil)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get workflow node runs"})
 		return
@@ -104,7 +104,7 @@ func (c *workflowRunController) RunWorkflow(ctx *gin.Context) {
 		ctx,
 		idStr,
 		"test_user",
-		10*time.Second, // TODO: replace this later
+		500*time.Millisecond, // TODO: replace this later
 	)
 	if err != nil {
 		c.logger.Error("failed to acquire workflow lock: %v", err)

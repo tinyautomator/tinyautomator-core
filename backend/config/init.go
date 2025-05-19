@@ -108,14 +108,14 @@ func (cfg *appConfig) initExternalServices(ctx context.Context) error {
 
 	redisClient, err := redis.NewRedisClient(cfg.envVars.RedisUrl, cfg.logger)
 	if err != nil {
-		return fmt.Errorf("failed to initialize Redis client: %w", err)
+		return fmt.Errorf("failed to initialize redis client: %w", err)
 	}
 
 	cfg.redisClient = redisClient
 
-	rabbitMQClient, err := rabbitmq.NewRabbitMQClient(cfg.envVars.RabbitMQUrl, cfg.logger)
+	rabbitMQClient, err := rabbitmq.NewRabbitMQClient(ctx, cfg.envVars.RabbitMQUrl, cfg.logger)
 	if err != nil {
-		return fmt.Errorf("failed to initialize RabbitMQ client: %w", err)
+		return fmt.Errorf("failed to initialize rabbitmq client: %w", err)
 	}
 
 	cfg.rabbitMQClient = rabbitMQClient

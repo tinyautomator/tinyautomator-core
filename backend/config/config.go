@@ -121,11 +121,11 @@ func (c *appConfig) GetGmailOAuthConfig() *oauth2.Config {
 
 func (c *appConfig) CleanUp() {
 	if err := c.redisClient.Close(); err != nil {
-		c.logger.WithError(err).Error("Failed to close Redis client")
+		c.logger.WithError(err).Error("failed to close redis client")
 	}
 
 	if err := c.rabbitMQClient.Close(); err != nil {
-		c.logger.WithError(err).Error("Failed to close RabbitMQ client")
+		c.logger.WithError(err).Error("failed to close rabbitmq client")
 	}
 
 	c.pgPool.Close()

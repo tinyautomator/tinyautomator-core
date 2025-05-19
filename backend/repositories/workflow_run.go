@@ -3,22 +3,57 @@ package repositories
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/guregu/null/v6"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tinyautomator/tinyautomator-core/backend/db/dao"
+	"github.com/tinyautomator/tinyautomator-core/backend/internal"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
 type workflowRunRepo struct {
 	q  *dao.Queries
 	db *pgxpool.Pool
+	tx *pgx.Tx
 }
 
 func NewWorkflowRunRepository(q *dao.Queries, db *pgxpool.Pool) models.WorkflowRunRepository {
-	return &workflowRunRepo{q, db}
+	return &workflowRunRepo{
+		q:  q,
+		db: db,
+		tx: nil,
+	}
+}
+
+func (r *workflowRunRepo) WithTransaction(
+	ctx context.Context,
+	fn func(ctx context.Context, txRepo models.WorkflowRunRepository) error,
+) error {
+	tx, err := r.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("db error begin tx: %w", err)
+	}
+
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	txRepo := &workflowRunRepo{
+		q:  r.q.WithTx(tx),
+		tx: &tx,
+	}
+
+	if err := fn(ctx, txRepo); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("db error commit tx: %w", err)
+	}
+
+	return nil
 }
 
 func (r *workflowRunRepo) CreateWorkflowRun(
@@ -49,10 +84,10 @@ func (r *workflowRunRepo) CreateWorkflowNodeRun(
 	ctx context.Context,
 	workflowRunID int32,
 	workflowNodeID int32,
-) (*models.WorkflowRunNodeRun, error) {
+) (*int32, error) {
 	now := time.Now().Unix()
 
-	run, err := r.q.CreateWorkflowNodeRun(ctx, &dao.CreateWorkflowNodeRunParams{
+	runID, err := r.q.CreateWorkflowNodeRun(ctx, &dao.CreateWorkflowNodeRunParams{
 		WorkflowRunID:  workflowRunID,
 		WorkflowNodeID: workflowNodeID,
 		StartedAt:      now,
@@ -61,39 +96,21 @@ func (r *workflowRunRepo) CreateWorkflowNodeRun(
 		UpdatedAt:      now,
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, internal.ErrNodeRunAlreadyExists
+		}
+
 		return nil, fmt.Errorf("db error create workflow node run: %w", err)
 	}
 
-	metadata := make(map[string]any)
-
-	metadataJSON, err := json.Marshal(metadata) // TODO: check if this is correct
-	if err != nil {
-		return nil, fmt.Errorf("db error marshal workflow node run metadata: %w", err)
-	}
-
-	return &models.WorkflowRunNodeRun{
-		ID:             run.ID,
-		WorkflowRunID:  run.WorkflowRunID,
-		WorkflowNodeID: run.WorkflowNodeID,
-		StartedAt:      time.UnixMilli(run.StartedAt),
-		Metadata:       null.StringFrom(string(metadataJSON)),
-		CreatedAt:      time.UnixMilli(run.CreatedAt),
-		Status:         run.Status,
-		FinishedAt:     null.TimeFrom(time.UnixMilli(run.FinishedAt.Int64)),
-		ErrorMessage:   null.StringFrom(run.ErrorMessage.String),
-	}, nil
+	return &runID, nil
 }
 
-func (r *workflowRunRepo) CompleteWorkflowRun(
-	ctx context.Context,
-	workflowRunID int32,
-	status string,
-	finishedAt time.Time,
-) error {
+func (r *workflowRunRepo) CompleteWorkflowRun(ctx context.Context, workflowRunID int32) error {
 	if err := r.q.CompleteWorkflowRun(ctx, &dao.CompleteWorkflowRunParams{
 		ID:         workflowRunID,
-		Status:     status,
-		FinishedAt: null.IntFrom(finishedAt.Unix()),
+		Status:     "success",
+		FinishedAt: null.IntFrom(time.Now().Unix()),
 	}); err != nil {
 		return fmt.Errorf("db error complete workflow run: %w", err)
 	}
@@ -101,7 +118,22 @@ func (r *workflowRunRepo) CompleteWorkflowRun(
 	return nil
 }
 
-func (r *workflowRunRepo) ListWorkflowRuns(
+func (r *workflowRunRepo) CompleteWorkflowNodeRun(
+	ctx context.Context,
+	workflowNodeRunID int32,
+) error {
+	if err := r.q.CompleteWorkflowNodeRun(ctx, &dao.CompleteWorkflowNodeRunParams{
+		ID:         workflowNodeRunID,
+		Status:     "success",
+		FinishedAt: null.IntFrom(time.Now().Unix()),
+	}); err != nil {
+		return fmt.Errorf("db error complete workflow node run: %w", err)
+	}
+
+	return nil
+}
+
+func (r *workflowRunRepo) GetWorkflowRuns(
 	ctx context.Context,
 	workflowID int32,
 ) ([]*models.WorkflowRun, error) {
@@ -143,9 +175,37 @@ func (r *workflowRunRepo) GetWorkflowRun(
 	}, nil
 }
 
+func (r *workflowRunRepo) GetWorkflowNodeRun(
+	ctx context.Context,
+	workflowNodeRunID int32,
+) (*models.WorkflowRunNodeRun, error) {
+	row, err := r.q.GetWorkflowNodeRun(ctx, workflowNodeRunID)
+	if err != nil {
+		return nil, fmt.Errorf("db error get workflow node run: %w", err)
+	}
+
+	var metadataJSON null.String
+	if row.Metadata != nil {
+		if err := json.Unmarshal(row.Metadata, &metadataJSON); err != nil {
+			return nil, fmt.Errorf("db error unmarshal workflow node run metadata: %w", err)
+		}
+	}
+
+	return &models.WorkflowRunNodeRun{
+		ID:             row.ID,
+		WorkflowRunID:  row.WorkflowRunID,
+		WorkflowNodeID: row.WorkflowNodeID,
+		Status:         row.Status,
+		StartedAt:      time.UnixMilli(row.StartedAt),
+		FinishedAt:     null.TimeFrom(time.UnixMilli(row.FinishedAt.Int64)),
+		Metadata:       metadataJSON,
+	}, nil
+}
+
 func (r *workflowRunRepo) GetWorkflowNodeRuns(
 	ctx context.Context,
 	workflowRunID int32,
+	status *string,
 ) ([]*models.WorkflowRunNodeRun, error) {
 	rows, err := r.q.GetWorkflowNodeRunsByRunID(ctx, workflowRunID)
 	if err != nil {
@@ -158,6 +218,10 @@ func (r *workflowRunRepo) GetWorkflowNodeRuns(
 		var metadataJSON string
 		if err := json.Unmarshal(row.Metadata, &metadataJSON); err != nil {
 			return nil, fmt.Errorf("db error unmarshal workflow node run metadata: %w", err)
+		}
+
+		if status != nil && *status != row.Status {
+			continue
 		}
 
 		workflowRunNodeRuns[i] = &models.WorkflowRunNodeRun{
