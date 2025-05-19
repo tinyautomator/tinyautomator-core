@@ -5,6 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Button } from "@/components/ui/button";
 import { Settings as GearIcon } from "lucide-react";
 import { SignInButton } from "@clerk/react-router";
+import { cn } from "@/lib/utils";
 
 export interface Block {
   heading: string
@@ -176,9 +177,10 @@ export default function App({
             ref={(el) => {
               sectionRefs.current[index] = el;
             }}
-            className={`mb-32 flex flex-col ${
+            className={cn(
+              "mb-32 flex flex-col items-center gap-8 md:gap-16",
               index % 2 === 1 ? "md:flex-row-reverse" : "md:flex-row"
-            } items-center gap-8 md:gap-16`}
+            )}
           >
             <div className="w-full md:w-1/2">
               <div className="aspect-square max-w-md mx-auto flex items-center justify-center bg-gray-900 rounded-2xl overflow-hidden">
@@ -187,7 +189,10 @@ export default function App({
                 </div>
               </div>
             </div>
-            <div className={`w-full md:w-1/2 ${index % 2 === 1 ? "text-right" : "text-left"}`}>
+            <div className={cn(
+              "w-full md:w-1/2",
+              index % 2 === 1 ? "text-right" : "text-left"
+              )}>
               <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">{block.heading}</h2>
               <p className="text-lg text-gray-400">{block.blurb}</p>
             </div>
