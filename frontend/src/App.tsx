@@ -129,76 +129,81 @@ export default function App({
   }, [accentColor])
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <section className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
-        <h1 className="text-6xl md:text-8xl font-bold mb-8 text-white mr-37 text-left">
-          <span
-            className="inline-block origin-center"
-            style={{
-              color: "#7c3aed", 
-              transform: "scale(0.4) rotate(-70deg) translateX(5vw) translateY(13vw)",
-            }}
-          >
-            Tiny
-          </span>
-          Aut
-          <span className="inline-block relative">
-            <GearIcon
-              ref={firstGearRef}
-              className={gearClass}
-              style={gearStyle}
-            />
-          </span>
-          mat
-          <span className="inline-block relative">
-            <GearIcon
-              ref={secondGearRef}
-              className={gearClass}
-              style={gearStyle}
-            />
-          </span>
-          r
-        </h1>
-        <p className="text-xl md:text-2xl mb-12 max-w-2xl text-gray-400">{subtitle}</p>
-        <SignInButton mode="modal">
-        <Button
-          ref={buttonRef}
-          className="px-8 py-6 text-lg transition-all duration-300 bg-white text-black"
-        >
-          {buttonText}
-        </Button>
-        </SignInButton>
-      </section>
+    <div className="relative min-h-screen w-screen overflow-hidden">
+      <div className="fixed inset-0 bg-black z-0 min-h-screen min-w-full" />
+      <div className="relative z-10">
+        <main>
+          <section className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
+            <h1 className="text-6xl md:text-8xl font-bold mb-8 text-white mr-37 text-left">
+              <span
+                className="inline-block origin-center"
+                style={{
+                  color: "#7c3aed", 
+                  transform: "scale(0.4) rotate(-70deg) translateX(5vw) translateY(13vw)",
+                }}
+              >
+                Tiny
+              </span>
+              Aut
+              <span className="inline-block relative">
+                <GearIcon
+                  ref={firstGearRef}
+                  className={gearClass}
+                  style={gearStyle}
+                />
+              </span>
+              mat
+              <span className="inline-block relative">
+                <GearIcon
+                  ref={secondGearRef}
+                  className={gearClass}
+                  style={gearStyle}
+                />
+              </span>
+              r
+            </h1>
+            <p className="text-xl md:text-2xl mb-12 max-w-2xl text-gray-400">{subtitle}</p>
+            <SignInButton mode="modal">
+            <Button
+              ref={buttonRef}
+              className="px-8 py-6 text-lg transition-all duration-300 bg-white text-black"
+            >
+              {buttonText}
+            </Button>
+            </SignInButton>
+          </section>
 
-      <div className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
-        {blocks.map((block, index) => (
-          <div
-            key={index}
-            ref={(el) => {
-              sectionRefs.current[index] = el;
-            }}
-            className={cn(
-              "mb-32 flex flex-col items-center gap-8 md:gap-16",
-              index % 2 === 1 ? "md:flex-row-reverse" : "md:flex-row"
-            )}
-          >
-            <div className="w-full md:w-1/2">
-              <div className="aspect-square max-w-md mx-auto flex items-center justify-center bg-gray-900 rounded-2xl overflow-hidden">
-                <div className="flex items-center justify-center w-full h-full text-6xl font-bold text-gray-700">
-                  {index + 1}
+          <div className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
+            {blocks.map((block, index) => (
+              <div
+                key={index}
+                ref={(el) => {
+                  sectionRefs.current[index] = el;
+                }}
+                className={cn(
+                  "mb-32 flex flex-col items-center gap-8 md:gap-16",
+                  index % 2 === 1 ? "md:flex-row-reverse" : "md:flex-row"
+                )}
+              >
+                <div className="w-full md:w-1/2">
+                  <div className="aspect-square max-w-md mx-auto flex items-center justify-center bg-gray-900 rounded-2xl overflow-hidden">
+                    <div className="flex items-center justify-center w-full h-full text-6xl font-bold text-gray-700">
+                      {index + 1}
+                    </div>
+                  </div>
+                </div>
+                <div className={cn(
+                  "w-full md:w-1/2",
+                  index % 2 === 1 ? "text-right" : "text-left"
+                  )}>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">{block.heading}</h2>
+                  <p className="text-lg text-gray-400">{block.blurb}</p>
                 </div>
               </div>
-            </div>
-            <div className={cn(
-              "w-full md:w-1/2",
-              index % 2 === 1 ? "text-right" : "text-left"
-              )}>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">{block.heading}</h2>
-              <p className="text-lg text-gray-400">{block.blurb}</p>
-            </div>
+            ))}
           </div>
-        ))}
+        </main>
       </div>
-    </main>
+    </div>
   )
 }
