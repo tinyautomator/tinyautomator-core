@@ -4,43 +4,44 @@ import { useValidatedSearchParams } from "./useSearchParams";
 import { getWorkflowData } from "../utils/filterWorkflows";
 import type { Workflow } from "../../route";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 8;
 
 export function useFilteredWorkflows() {
   const workflows = useLoaderData<Workflow[]>();
-  const [params, updateParams] = useValidatedSearchParams();
-  const page = Number(params.page) || 1;
 
+  // Get validated params first
+  const [params] = useValidatedSearchParams();
+
+  // Get filtered workflows using validated params
   const { workflows: filteredWorkflows, ...rest } = useMemo(
     () => getWorkflowData(workflows, params),
     [workflows, params]
   );
 
-  // Calculate pagination
+  // Calculate total pages based on filtered workflows
   const totalPages = Math.max(
     1,
     Math.ceil(filteredWorkflows.length / ITEMS_PER_PAGE)
   );
 
-  // Auto-correct invalid page numbers
-  const validPage = Math.min(Math.max(1, page), totalPages);
-  if (validPage !== page) {
-    // If page is invalid, update URL to valid page
-    updateParams({ page: String(validPage) });
-  }
+  // Update params with correct total pages
+  const [validatedParams] = useValidatedSearchParams(totalPages);
+
+  // Page is already validated and transformed to a number by the schema
+  const page = validatedParams.page;
 
   const paginatedWorkflows = filteredWorkflows.slice(
-    (validPage - 1) * ITEMS_PER_PAGE,
-    validPage * ITEMS_PER_PAGE
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
   );
 
   return {
     workflows: paginatedWorkflows,
     pagination: {
-      currentPage: validPage,
+      currentPage: page,
       totalPages,
-      hasNextPage: validPage < totalPages,
-      hasPrevPage: validPage > 1,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
       totalItems: filteredWorkflows.length,
     },
     ...rest,

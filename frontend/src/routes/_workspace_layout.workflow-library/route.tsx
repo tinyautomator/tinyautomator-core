@@ -2,7 +2,7 @@ import { CreateWorkflowButton } from "@/components/shared/CreatWorkflowButton";
 import { workflowApi } from "@/api";
 import { WorkflowTabs } from "./workflow-library/WorkflowTabs";
 import { WorkflowList } from "./workflow-library/WorkflowList";
-import { FilterBar } from "./workflow-library/FilterBar";
+import { WorkflowSearchBar } from "./workflow-library/WorkflowSearchBar";
 import { ActiveTagFilters } from "./workflow-library/ActiveTagFilters";
 import { sampleWorkflows } from "./workflow-library/utils/sampleWorkflows";
 
@@ -19,19 +19,19 @@ export interface Workflow {
 }
 // TODO: implement refetching of workflows periodically?
 export async function loader() {
-  const data = await workflowApi.getUserWorkflows();
-  const mappedData = data.map((workflow) => ({
-    id: workflow.id,
-    title: workflow.name,
-    description: workflow.description,
-    lastEdited: new Date().toISOString(),
-    status: "active" as const,
-    nodeCount: 20,
-    tags: ["type", "script", "paid"],
-  }));
+  // const data = await workflowApi.getUserWorkflows();
+  // const mappedData = data.map((workflow) => ({
+  //   id: workflow.id,
+  //   title: workflow.name,
+  //   description: workflow.description,
+  //   lastEdited: new Date().toISOString(),
+  //   status: "active" as const,
+  //   nodeCount: 20,
+  //   tags: ["type", "script", "paid"],
+  // }));
 
   // TODO: remove this once we update workflow schema
-  return [...mappedData, ...sampleWorkflows];
+  return [...sampleWorkflows];
 }
 
 export default function WorkflowLibrary() {
@@ -52,7 +52,7 @@ export default function WorkflowLibrary() {
 
         <div className="flex-1 min-h-0 flex flex-col">
           <div className="shrink-0">
-            <FilterBar />
+            <WorkflowSearchBar />
           </div>
           <div className="shrink-0">
             <WorkflowTabs />

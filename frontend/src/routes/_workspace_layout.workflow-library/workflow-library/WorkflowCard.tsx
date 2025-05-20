@@ -9,6 +9,7 @@ import {
   PauseCircle,
   Circle,
   LucideIcon,
+  Star,
 } from "lucide-react";
 import type { Workflow } from "../route";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface WorkflowAction {
   label: string;
@@ -214,13 +217,11 @@ export function WorkflowCard({
   });
 
   return (
-    <div
+    <Card
       className={cn(
-        "bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800",
-        "overflow-hidden flex flex-col group transition-all duration-200",
-        "shadow-sm hover:shadow-md",
-        "w-full h-[180px]",
-        "relative",
+        "w-full h-[260px] p-6 rounded-2xl transition-all duration-300 overflow-hidden relative bg-white border border-slate-200",
+        "shadow-md hover:shadow-lg hover:border-blue-200",
+        "flex flex-col group",
         isArchived && "opacity-75 grayscale"
       )}
     >
@@ -233,103 +234,150 @@ export function WorkflowCard({
         onRestore={() => onChangeStatus(workflow, "active")}
       />
 
-      <div className="p-3 flex-1 relative flex flex-col">
-        <div className="flex-1">
+      {/* Header section */}
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-start">
+          <button className="mr-2 text-xl text-slate-400 hover:text-yellow-400 transition-colors cursor-pointer">
+            <Star className="h-5 w-5" />
+          </button>
           <h3
             className={cn(
-              "text-base font-semibold text-slate-900 dark:text-white mb-1.5",
-              isArchived && "text-slate-500 dark:text-slate-400"
+              "font-bold text-lg text-slate-800 line-clamp-2 pr-2 hover:text-blue-600 cursor-pointer",
+              isArchived && "text-slate-500"
             )}
+            onClick={() => onConfigure(workflow.id)}
           >
             {workflow.title}
           </h3>
-
-          <div className="mb-2">
-            <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
-              {workflow.description}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {workflow.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {workflow.tags.slice(0, 2).map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="outline"
-                  className={cn(
-                    "bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-normal py-0.5 px-2 transition-colors duration-200 cursor-pointer whitespace-nowrap",
-                    isArchived && "opacity-70"
-                  )}
-                >
-                  {tag}
-                </Badge>
-              ))}
-              {workflow.tags.length > 2 && (
-                <Badge
-                  variant="outline"
-                  className="bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-normal py-0.5 px-2"
-                >
-                  +{workflow.tags.length - 2} more
-                </Badge>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Circle
-                className={cn(
-                  "h-3 w-3 transition-colors duration-200",
-                  STATUS_STYLES[workflow.status as WorkflowStatus].icon,
-                  workflow.status === "active" && "group-hover:animate-pulse"
-                )}
-              />
-              <span
-                className={cn(
-                  "text-xs font-medium capitalize",
-                  STATUS_STYLES[workflow.status as WorkflowStatus].text
-                )}
-              >
-                {workflow.status}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-              <Clock className="h-3 w-3" />
-              <span>{timeAgo}</span>
-            </div>
-          </div>
         </div>
       </div>
 
-      <div className="absolute bottom-2 right-2">
+      {/* Status and node count */}
+      <div className="flex items-center justify-between mb-3">
         <div
           className={cn(
-            "flex flex-col items-center justify-center rounded-md px-2 py-1",
+            "px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1",
             STATUS_STYLES[workflow.status as WorkflowStatus].bg,
-            "transition-all duration-200 group-hover:scale-105 group-hover:shadow-sm"
+            STATUS_STYLES[workflow.status as WorkflowStatus].text
           )}
         >
-          <span
+          <Circle
             className={cn(
-              "text-base font-bold",
-              STATUS_STYLES[workflow.status as WorkflowStatus].text
+              "h-3 w-3",
+              STATUS_STYLES[workflow.status as WorkflowStatus].icon
             )}
+          />
+          <span className="capitalize">{workflow.status}</span>
+        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <Badge
+                variant="outline"
+                className="bg-slate-50 text-slate-700 border-slate-200"
+              >
+                <i className="fa-solid fa-diagram-project mr-1.5"></i>
+                {workflow.nodeCount}{" "}
+                {workflow.nodeCount === 1 ? "Node" : "Nodes"}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Total nodes in workflow</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      {/* Description section */}
+      <p className="text-sm text-slate-600 mb-3 line-clamp-2 flex-grow">
+        {workflow.description}
+      </p>
+
+      {/* Tags section */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        {workflow.tags.slice(0, 3).map((tag) => (
+          <Badge
+            key={tag}
+            variant="secondary"
+            className="text-xs py-1 px-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200"
           >
-            {workflow.nodeCount}
-          </span>
-          <span
-            className={cn(
-              "text-xs",
-              STATUS_STYLES[workflow.status as WorkflowStatus].text
-            )}
-          >
-            nodes
-          </span>
+            {tag}
+          </Badge>
+        ))}
+        {workflow.tags.length > 3 && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge
+                  variant="outline"
+                  className="text-xs py-1 px-2.5 bg-slate-50 text-slate-500 border-slate-200"
+                >
+                  +{workflow.tags.length - 3} more
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="max-w-xs">
+                  {workflow.tags.slice(3).map((tag) => (
+                    <p key={tag} className="text-sm">
+                      {tag}
+                    </p>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+
+      {/* Progress bar for Success Rate */}
+      {typeof workflow.successRate === "number" && (
+        <div className="mb-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-slate-500 font-medium">
+              Success Rate
+            </span>
+            <span className="text-xs font-bold text-slate-700">
+              {Math.round(workflow.successRate * 100)}%
+            </span>
+          </div>
+          <Progress
+            value={workflow.successRate * 100}
+            className="h-2 bg-slate-100"
+          />
+        </div>
+      )}
+
+      {/* Footer section */}
+      <div className="mt-auto pt-3 border-t border-slate-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center text-xs text-slate-500">
+            <Clock className="h-4 w-4 mr-1.5" />
+            <span>Updated {timeAgo}</span>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Quick action buttons on hover */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white to-transparent p-3 pt-8 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+        <div className="flex gap-1">
+          <Button
+            size="sm"
+            variant="default"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-xs h-7"
+            onClick={() => onConfigure(workflow.id)}
+          >
+            <Settings className="h-3 w-3 mr-1" /> Edit
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50 text-xs h-7"
+            onClick={() => {}}
+          >
+            <Play className="h-3 w-3 mr-1" /> Run
+          </Button>
+        </div>
+      </div>
+    </Card>
   );
 }

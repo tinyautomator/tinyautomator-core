@@ -2,28 +2,27 @@ import { useValidatedSearchParams } from "./hooks/useSearchParams";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import { useOptimisticParamValue } from "./hooks/useOptimisticParamValue";
-import type { Workflow } from "../route";
 import { Counter } from "./Counters";
-
-const TAB_VALUES = ["active", "draft", "templates", "archived"] as const;
+import { Tab, TAB_VALUES } from "./utils/schemas";
 
 export function WorkflowTabs() {
   const [{ tab }, updateParams] = useValidatedSearchParams();
   const { statusCounts: counts } = useFilteredWorkflows();
   const [activeTab, setActiveTab] = useOptimisticParamValue(tab);
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as Workflow["status"]);
-    updateParams({ tab: value as Workflow["status"] });
+  const handleTabChange = (value: Tab) => {
+    setActiveTab(value as Tab);
+    updateParams({ tab: value as Tab });
   };
 
   return (
     <Tabs
       value={activeTab}
-      onValueChange={handleTabChange}
+      onValueChange={(value: string) => handleTabChange(value as Tab)}
       className="border-b border-slate-100 dark:border-slate-800"
     >
-      <TabsList className="h-12 rounded-none border-b border-slate-100 dark:border-slate-800 bg-transparent">
+      <TabsList className="h-12 rounded-none border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
+        {/* TODO: Fix styling of tabs */}
         {TAB_VALUES.map((tabValue) => (
           <TabsTrigger
             key={tabValue}

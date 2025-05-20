@@ -1,8 +1,8 @@
-import { useValidatedSearchParams } from "./hooks/useSearchParams";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useValidatedSearchParams } from "./hooks/useSearchParams";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -19,26 +19,22 @@ export function TagFilter() {
   const { tagCounts } = useFilteredWorkflows();
   const [open, setOpen] = useState(false);
 
-  // Get unique tags from tagCounts
+  // TODO: Derive this in useFilteredWorkflows...
   const uniqueTags = useMemo(() => {
-    return Array.from(tagCounts.keys()).sort();
+    return Array.from(tagCounts.keys()).sort(
+      (a, b) => tagCounts.get(b)! - tagCounts.get(a)!
+    );
   }, [tagCounts]);
-
-  const handleClear = () => {
-    updateParams({ tags: [] });
-    setOpen(false);
-  };
-
+  // TODO: Still stuttering when clearing tags, come back to this.
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
     const newTags = Array.from(formData.getAll("tags") as string[]);
+    setTimeout(() => setOpen(false), 100);
     updateParams({ tags: newTags });
-    // setOpen(false);
   };
 
-  // Derive active state from whether there are any selected tags
   const hasSelectedTags = selectedTags && selectedTags.length > 0;
 
   return (
@@ -52,7 +48,7 @@ export function TagFilter() {
         >
           <ListFilter
             size={16}
-            strokeWidth={2}
+            strokeWidth={3}
             aria-hidden="true"
             className={
               hasSelectedTags ? "text-slate-900 dark:text-slate-100" : ""
@@ -98,23 +94,13 @@ export function TagFilter() {
               aria-orientation="horizontal"
               className="-mx-3 my-1 h-px bg-border"
             />
-            <div className="flex justify-between gap-2">
+            <div className="flex justify-center">
               <Button
                 type="submit"
                 size="sm"
-                variant="outline"
-                className="h-7 px-2"
+                className="h-7 px-4 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
               >
                 Apply
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="h-7 px-2"
-                onClick={handleClear}
-              >
-                Clear
               </Button>
             </div>
           </Form>

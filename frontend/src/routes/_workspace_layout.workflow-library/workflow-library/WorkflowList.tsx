@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import { WorkflowCard } from "./WorkflowCard";
 import { WorkflowCardSkeleton } from "./WorkflowCardSkeleton";
@@ -21,15 +20,17 @@ import { cn } from "@/lib/utils";
 
 function WorkflowPagination() {
   const { pagination } = useFilteredWorkflows();
-  const [{ page }, updateParams] = useValidatedSearchParams();
-  const [currentPage, setCurrentPage] = useOptimisticParamValue(page ?? "1");
+  const [{ page }, updateParams] = useValidatedSearchParams(
+    pagination.totalPages
+  );
+  const [currentPage, setCurrentPage] = useOptimisticParamValue(page);
 
   if (pagination.totalPages <= 1) return null;
 
   // Calculate the window of page numbers to show
   const windowSize = 5;
   const halfWindow = Math.floor(windowSize / 2);
-  let startPage = Math.max(1, Number(currentPage) - halfWindow);
+  let startPage = Math.max(1, page - halfWindow);
   let endPage = Math.min(pagination.totalPages, startPage + windowSize - 1);
 
   // Adjust the window if we're near the end
@@ -43,21 +44,19 @@ function WorkflowPagination() {
   );
 
   const handlePageChange = (newPage: number) => {
-    setCurrentPage(String(newPage));
-    updateParams({ page: String(newPage) });
+    setCurrentPage(newPage);
+    updateParams({ page: newPage });
   };
 
-  const isFirstPage = Number(currentPage) <= 1;
-  const isLastPage = Number(currentPage) >= pagination.totalPages;
+  const isFirstPage = page <= 1;
+  const isLastPage = page >= pagination.totalPages;
 
   return (
     <Pagination>
       <PaginationContent className="select-none">
         <PaginationItem>
           <PaginationPrevious
-            onClick={() =>
-              !isFirstPage && handlePageChange(Number(currentPage) - 1)
-            }
+            onClick={() => !isFirstPage && handlePageChange(page - 1)}
             className={cn(isFirstPage && "pointer-events-none opacity-50")}
           />
         </PaginationItem>
@@ -65,7 +64,7 @@ function WorkflowPagination() {
           <PaginationItem key={pageNum}>
             <PaginationLink
               onClick={() => handlePageChange(pageNum)}
-              isActive={pageNum === Number(currentPage)}
+              isActive={pageNum === page}
             >
               {pageNum}
             </PaginationLink>
@@ -73,9 +72,7 @@ function WorkflowPagination() {
         ))}
         <PaginationItem>
           <PaginationNext
-            onClick={() =>
-              !isLastPage && handlePageChange(Number(currentPage) + 1)
-            }
+            onClick={() => !isLastPage && handlePageChange(page + 1)}
             className={cn(isLastPage && "pointer-events-none opacity-50")}
           />
         </PaginationItem>
@@ -88,9 +85,8 @@ export function WorkflowList() {
   const { workflows } = useFilteredWorkflows();
   const navigation = useNavigation();
   const navigate = useNavigate();
-  const [workflowToDelete, setWorkflowToDelete] = useState<Workflow | null>(
-    null
-  );
+  const [workflowToDelete, setWorkflowToDelete] =
+    useOptimisticParamValue<Workflow | null>(null);
 
   // Debounce the loading state by 150ms to prevent flash
   const [showLoading] = useDebounce(navigation.state !== "idle", 150);

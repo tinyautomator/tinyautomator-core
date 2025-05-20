@@ -1,20 +1,14 @@
-import {
-  Search,
-  Archive,
-  FileText,
-  PlusCircle,
-  BlocksIcon,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, Archive, FileText, BlocksIcon } from "lucide-react";
+
+import { CreateWorkflowButton } from "@/components/shared/CreatWorkflowButton";
 import { useValidatedSearchParams } from "./hooks/useSearchParams";
-import { useNavigate } from "react-router";
 
 type StateContent = {
   title: string;
   description: string;
   icon: typeof Search;
 };
-// TODO: Refactor
+// TODO: Refactor icons to be more specific
 const getContent = (query?: string, tab?: string): StateContent => {
   if (query) {
     return {
@@ -37,9 +31,15 @@ const getContent = (query?: string, tab?: string): StateContent => {
         description: "Archived workflows will appear here",
         icon: Archive,
       };
+    case "draft":
+      return {
+        title: "No drafted workflows",
+        description: "Drafted workflows will appear here",
+        icon: FileText,
+      };
     default:
       return {
-        title: "No workflows found",
+        title: "No active workflows found",
         description: "Create your first workflow to get started",
         icon: FileText,
       };
@@ -47,10 +47,7 @@ const getContent = (query?: string, tab?: string): StateContent => {
 };
 
 export function EmptyState() {
-  const navigate = useNavigate();
-  const [params] = useValidatedSearchParams();
-  const { q: searchQuery, tab: selectedTab } = params;
-
+  const [{ q: searchQuery, tab: selectedTab }] = useValidatedSearchParams();
   const state = getContent(searchQuery, selectedTab);
   const Icon = state.icon;
 
@@ -67,15 +64,7 @@ export function EmptyState() {
       </p>
       {!searchQuery &&
         selectedTab !== "archived" &&
-        selectedTab !== "templates" && (
-          <Button
-            onClick={() => navigate("/workflow-builder")}
-            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 active:translate-y-0.5 transition-all duration-200"
-          >
-            <PlusCircle className="h-4 w-4" />
-            Create Workflow
-          </Button>
-        )}
+        selectedTab !== "templates" && <CreateWorkflowButton />}
     </div>
   );
 }

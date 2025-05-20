@@ -1,18 +1,10 @@
-// TODO : Improve this schema for better validation and error handling
-
 import { z } from "zod";
 
-// Tab types with const assertion for type safety
 export const TAB_VALUES = ["active", "draft", "templates", "archived"] as const;
 export type Tab = (typeof TAB_VALUES)[number];
 
-// Schema definitions
 export const searchParamsSchema = z.object({
-  q: z
-    .string()
-    .optional()
-    .transform((val) => (val?.trim() ? val.toLowerCase().trim() : undefined))
-    .catch(""),
+  q: z.string().optional().default(""),
 
   tab: z
     .string()
@@ -30,11 +22,8 @@ export const searchParamsSchema = z.object({
   page: z
     .string()
     .regex(/^\d+$/)
-    .transform(Number)
-    .refine((val) => val > 0, "Page must be positive")
-    .transform(String)
-    .catch("1"),
+    .transform((val) => parseInt(val, 10))
+    .catch(1),
 });
 
-// Type exports
 export type SearchParams = z.infer<typeof searchParamsSchema>;
