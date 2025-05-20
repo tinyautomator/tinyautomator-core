@@ -110,7 +110,7 @@ function WorkflowActions({
     "h-7 w-7",
     "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm",
     "hover:bg-white dark:hover:bg-slate-900",
-    "shadow-sm hover:shadow-md transition-all duration-200"
+    "shadow-sm hover:shadow-md transition-all duration-200",
   );
 
   return (
@@ -133,7 +133,7 @@ function WorkflowActions({
               <TooltipContent side="left">{label} workflow</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        )
+        ),
       )}
       {menuActions.length > 0 && (
         <DropdownMenu>
@@ -192,7 +192,7 @@ interface WorkflowCardProps {
   onDelete: (workflow: Workflow) => void;
   onChangeStatus: (
     workflow: Workflow,
-    newStatus: "active" | "archived"
+    newStatus: "active" | "archived",
   ) => void;
 }
 
@@ -213,7 +213,7 @@ export function WorkflowCard({
         "w-full h-[260px] p-6 rounded-2xl transition-all duration-300 overflow-hidden relative bg-white border border-slate-200",
         "shadow-md hover:shadow-lg hover:border-blue-200",
         "flex flex-col group",
-        isArchived && "opacity-75 grayscale"
+        isArchived && "opacity-75 grayscale",
       )}
     >
       <WorkflowActions
@@ -234,7 +234,7 @@ export function WorkflowCard({
           <h3
             className={cn(
               "font-bold text-lg text-slate-800 line-clamp-2 pr-2 hover:text-blue-600 cursor-pointer",
-              isArchived && "text-slate-500"
+              isArchived && "text-slate-500",
             )}
             onClick={() => onConfigure(workflow.id)}
           >
@@ -249,13 +249,13 @@ export function WorkflowCard({
           className={cn(
             "px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1",
             STATUS_STYLES[workflow.status as WorkflowStatus].bg,
-            STATUS_STYLES[workflow.status as WorkflowStatus].text
+            STATUS_STYLES[workflow.status as WorkflowStatus].text,
           )}
         >
           <Circle
             className={cn(
               "h-3 w-3",
-              STATUS_STYLES[workflow.status as WorkflowStatus].icon
+              STATUS_STYLES[workflow.status as WorkflowStatus].icon,
             )}
           />
           <span className="capitalize">{workflow.status}</span>

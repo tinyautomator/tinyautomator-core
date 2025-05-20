@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 function WorkflowPagination() {
   const { pagination } = useFilteredWorkflows();
   const [{ page }, updateParams] = useValidatedSearchParams(
-    pagination.totalPages
+    pagination.totalPages,
   );
   const [, setCurrentPage] = useOptimisticParamValue(page);
 
@@ -40,7 +40,7 @@ function WorkflowPagination() {
 
   const pageNumbers = Array.from(
     { length: endPage - startPage + 1 },
-    (_, i) => startPage + i
+    (_, i) => startPage + i,
   );
 
   const handlePageChange = (newPage: number) => {
@@ -108,7 +108,7 @@ export function WorkflowList() {
 
   const handleChangeStatus = (
     workflow: Workflow,
-    newStatus: "active" | "archived"
+    newStatus: "active" | "archived",
   ) => {
     console.log(`Changing status of workflow ${workflow.id} to ${newStatus}`);
     // TODO: Implement status change
