@@ -8,7 +8,7 @@ export function WorkflowCardSkeleton() {
         "overflow-hidden flex flex-col",
         "shadow-sm",
         "w-full h-[180px]",
-        "relative"
+        "relative",
       )}
     >
       <div className="p-3 flex-1 relative flex flex-col">

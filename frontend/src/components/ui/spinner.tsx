@@ -1,34 +1,34 @@
-import { Loader } from "lucide-react"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils"
+import { Loader } from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface SpinnerProps {
-  size?: string
-  color?: string
+  size?: string;
+  color?: string;
 }
 
 interface SizeProps {
-  xs: string
-  sm: string
-  md: string
-  lg: string
-  xl: string
+  xs: string;
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
 }
 
 interface FillProps {
-  slate: string
-  blue: string
-  red: string
-  green: string
-  white: string
+  slate: string;
+  blue: string;
+  red: string;
+  green: string;
+  white: string;
 }
 
 interface StrokeProps {
-  slate: string
-  blue: string
-  red: string
-  green: string
-  white: string
+  slate: string;
+  blue: string;
+  red: string;
+  green: string;
+  white: string;
 }
 
 const sizesClasses: SizeProps = {
@@ -37,7 +37,7 @@ const sizesClasses: SizeProps = {
   md: "w-6 h-6",
   lg: "w-8 h-8",
   xl: "w-10 h-10",
-}
+};
 
 const fillClasses = {
   slate: "fill-foreground",
@@ -45,7 +45,7 @@ const fillClasses = {
   red: "fill-red-500",
   green: "fill-emerald-500",
   white: "fill-background",
-} as FillProps
+} as FillProps;
 
 const strokeClasses = {
   slate: "stroke-foreground",
@@ -53,7 +53,7 @@ const strokeClasses = {
   red: "stroke-red-500",
   green: "stroke-emerald-500",
   white: "stroke-background",
-} as StrokeProps
+} as StrokeProps;
 
 export const Spinner = ({ size = "md", color = "slate" }: SpinnerProps) => {
   return (
@@ -66,8 +66,8 @@ export const Spinner = ({ size = "md", color = "slate" }: SpinnerProps) => {
         )}
       />
     </div>
-  )
-}
+  );
+};
 
 export const RoundSpinner = ({
   size = "md",
@@ -90,29 +90,29 @@ export const RoundSpinner = ({
         <path d="M16.9497 7.05015C14.2161 4.31648 9.78392 4.31648 7.05025 7.05015C6.65973 7.44067 6.02656 7.44067 5.63604 7.05015C5.24551 6.65962 5.24551 6.02646 5.63604 5.63593C9.15076 2.12121 14.8492 2.12121 18.364 5.63593C18.7545 6.02646 18.7545 6.65962 18.364 7.05015C17.9734 7.44067 17.3403 7.44067 16.9497 7.05015Z"></path>
       </svg>
     </div>
-  )
-}
+  );
+};
 
 interface DotsProps extends SpinnerProps {
-  variant?: "v1" | "v2" | "v3" | "v4" | "v5"
+  variant?: "v1" | "v2" | "v3" | "v4" | "v5";
 }
 
 export const Dots = ({ variant = "v1", ...props }: DotsProps) => {
   switch (variant) {
     case "v1":
-      return <Dots_v1 {...props} />
+      return <Dots_v1 {...props} />;
     case "v2":
-      return <Dots_v2 {...props} />
+      return <Dots_v2 {...props} />;
     case "v3":
-      return <Dots_v3 {...props} />
+      return <Dots_v3 {...props} />;
     case "v4":
-      return <Dots_v4 {...props} />
+      return <Dots_v4 {...props} />;
     case "v5":
-      return <Dots_v5 {...props} />
+      return <Dots_v5 {...props} />;
     default:
-      return <Dots_v1 {...props} />
+      return <Dots_v1 {...props} />;
   }
-}
+};
 
 export const Dots_v1 = () => (
   <div className="w-fit">
@@ -143,7 +143,7 @@ export const Dots_v1 = () => (
       ></motion.span>
     </div>
   </div>
-)
+);
 
 export const Dots_v2 = () => (
   <div className="flex items-center justify-center ">
@@ -188,7 +188,7 @@ export const Dots_v2 = () => (
       />
     </div>
   </div>
-)
+);
 
 export const Dots_v3 = () => {
   return (
@@ -197,8 +197,8 @@ export const Dots_v3 = () => {
       <div className="size-3.5 animate-bounce rounded-full bg-current [animation-delay:-0.13s]"></div>
       <div className="size-3.5 animate-bounce rounded-full bg-current"></div>
     </div>
-  )
-}
+  );
+};
 
 export const Dots_v4 = () => (
   <div className="flex items-center justify-center space-x-2">
@@ -216,18 +216,18 @@ export const Dots_v4 = () => (
       ></motion.span>
     ))}
   </div>
-)
+);
 
 export const Dots_v5 = () => {
-  const dots = 8
-  const radius = 24
+  const dots = 8;
+  const radius = 24;
 
   return (
     <div className="relative size-20 border">
       {[...Array(dots)].map((_, i) => {
-        const angle = (i / dots) * (2 * Math.PI)
-        const x = radius * Math.cos(angle)
-        const y = radius * Math.sin(angle)
+        const angle = (i / dots) * (2 * Math.PI);
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
 
         return (
           <motion.div
@@ -248,8 +248,8 @@ export const Dots_v5 = () => {
               ease: "easeInOut",
             }}
           />
-        )
+        );
       })}
     </div>
-  )
-}
+  );
+};

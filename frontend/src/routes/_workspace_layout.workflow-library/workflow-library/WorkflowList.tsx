@@ -23,7 +23,7 @@ function WorkflowPagination() {
   const [{ page }, updateParams] = useValidatedSearchParams(
     pagination.totalPages
   );
-  const [currentPage, setCurrentPage] = useOptimisticParamValue(page);
+  const [, setCurrentPage] = useOptimisticParamValue(page);
 
   if (pagination.totalPages <= 1) return null;
 
@@ -31,7 +31,7 @@ function WorkflowPagination() {
   const windowSize = 5;
   const halfWindow = Math.floor(windowSize / 2);
   let startPage = Math.max(1, page - halfWindow);
-  let endPage = Math.min(pagination.totalPages, startPage + windowSize - 1);
+  const endPage = Math.min(pagination.totalPages, startPage + windowSize - 1);
 
   // Adjust the window if we're near the end
   if (endPage - startPage + 1 < windowSize) {

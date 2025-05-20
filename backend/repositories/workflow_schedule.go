@@ -81,7 +81,7 @@ func (r *workflowScheduleRepo) Create(
 	executionState string,
 	next_run int64,
 	schedule_type string,
-) (*models.WorkflowSchedule, error) {
+) (*dao.WorkflowSchedule, error) {
 	now := time.Now().UTC().UnixMilli()
 
 	s, err := r.q.CreateWorkflowSchedule(ctx, &dao.CreateWorkflowScheduleParams{

@@ -144,22 +144,13 @@ function WorkflowActions({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" side="left">
-            {menuActions.map(({ label, icon: Icon, onClick, variant }) => (
+            {menuActions.map(({ label, icon: Icon, onClick }) => (
               <DropdownMenuItem
                 key={label}
                 onClick={onClick}
-                className={cn(
-                  "flex items-center gap-2",
-                  variant === "danger" &&
-                    "text-red-500 dark:text-red-400 hover:!bg-red-50 dark:hover:!bg-red-950/30"
-                )}
+                className={cn("flex items-center gap-2")}
               >
-                <Icon
-                  className={cn(
-                    "h-3.5 w-3.5",
-                    variant === "danger" && "text-red-500 dark:text-red-400"
-                  )}
-                />
+                <Icon className={cn("h-3.5 w-3.5")} />
                 {label}
               </DropdownMenuItem>
             ))}

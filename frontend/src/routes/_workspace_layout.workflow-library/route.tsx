@@ -1,5 +1,4 @@
 import { CreateWorkflowButton } from "@/components/shared/CreatWorkflowButton";
-import { workflowApi } from "@/api";
 import { WorkflowTabs } from "./workflow-library/WorkflowTabs";
 import { WorkflowList } from "./workflow-library/WorkflowList";
 import { WorkflowSearchBar } from "./workflow-library/WorkflowSearchBar";
@@ -16,6 +15,7 @@ export interface Workflow {
   // I like these extra fields for presentation purposes
   nodeCount: number;
   tags: string[];
+  successRate?: number;
 }
 // TODO: implement refetching of workflows periodically?
 export async function loader() {

@@ -22,7 +22,7 @@ export function TagFilter() {
   // TODO: Derive this in useFilteredWorkflows...
   const uniqueTags = useMemo(() => {
     return Array.from(tagCounts.keys()).sort(
-      (a, b) => tagCounts.get(b)! - tagCounts.get(a)!
+      (a, b) => tagCounts.get(b)! - tagCounts.get(a)!,
     );
   }, [tagCounts]);
   // TODO: Still stuttering when clearing tags, come back to this.
