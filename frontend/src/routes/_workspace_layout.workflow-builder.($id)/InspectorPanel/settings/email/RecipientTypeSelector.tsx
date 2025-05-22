@@ -1,4 +1,4 @@
-type InputMode = "manual" | "csv" | "google" | "contacts";
+type InputMode = 'manual' | 'csv' | 'google' | 'contacts';
 
 interface RecipientInputSelectorProps {
   inputMode: InputMode;
@@ -15,7 +15,7 @@ export function RecipientTypeSelector({
       <select
         className="w-full rounded-md border border-slate-200 p-2 text-sm"
         value={inputMode}
-        onChange={(e) => onInputModeChange(e.target.value as InputMode)}
+        onChange={e => onInputModeChange(e.target.value as InputMode)}
       >
         <option value="manual">Manual Entry</option>
         <option value="csv">Upload CSV</option>

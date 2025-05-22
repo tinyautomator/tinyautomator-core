@@ -1,7 +1,7 @@
-import EmailProviderCard from "./EmailProviderCard";
-import { GmailIcon } from "@/components/icons/EmailIcons";
+import EmailProviderCard from './EmailProviderCard';
+import { GmailIcon } from '@/components/icons/EmailIcons';
 
-import { useEmailIntegrationContext } from "@/components/email-integration/EmailIntegrationContext";
+import { useEmailIntegrationContext } from '@/components/email-integration/EmailIntegrationContext';
 
 export const EmailProviders = () => {
   const { connectGmail, isLoading } = useEmailIntegrationContext();

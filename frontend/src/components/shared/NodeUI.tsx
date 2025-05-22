@@ -1,62 +1,42 @@
-import "@xyflow/react/dist/style.css";
-import { Handle, Position, NodeProps } from "@xyflow/react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Loader,
-  LucideProps,
-} from "lucide-react";
-import {
-  RefAttributes,
-  memo,
-  useMemo,
-  useRef,
-  useState,
-  useEffect,
-} from "react";
-import { cn } from "@/lib/utils";
-import { useFlowStore } from "@/routes/_workspace_layout.workflow-builder.($id)/flowStore";
+import '@xyflow/react/dist/style.css';
+import { Handle, Position, NodeProps } from '@xyflow/react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, CheckCircle2, Clock, Loader, LucideProps } from 'lucide-react';
+import { RefAttributes, memo, useMemo, useRef, useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import { useFlowStore } from '@/routes/_workspace_layout.workflow-builder.($id)/flowStore';
 
 const statusVariants = {
   success: {
     icon: CheckCircle2,
-    color: "text-green-500",
+    color: 'text-green-500',
   },
   failed: {
     icon: AlertCircle,
-    color: "text-red-500",
+    color: 'text-red-500',
   },
   pending: {
     icon: Clock,
-    color: "text-yellow-500",
+    color: 'text-yellow-500',
   },
   running: {
     icon: Loader,
-    color: "text-blue-400",
+    color: 'text-blue-400',
   },
 };
 
-export const NodeUI = memo(function NodeUI({
-  id,
-  type,
-  data,
-  selected,
-  height,
-  width,
-}: NodeProps) {
-  const handleAnimations = useFlowStore((state) => state.handleAnimations);
+export const NodeUI = memo(function NodeUI({ id, type, data, selected, height, width }: NodeProps) {
+  const handleAnimations = useFlowStore(state => state.handleAnimations);
 
   const getIcon = useMemo(
     () => () => {
       const Icon = data.icon as React.ForwardRefExoticComponent<
-        Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+        Omit<LucideProps, 'ref'> & RefAttributes<SVGSVGElement>
       >;
       return Icon ? <Icon size={16} /> : null;
     },
-    [data.icon],
+    [data.icon]
   );
 
   const StatusIcon = data.status
@@ -65,15 +45,13 @@ export const NodeUI = memo(function NodeUI({
 
   const rx = 8;
   const strokeWidth = 3;
-  const dashLength =
-    0.3 * (2 * ((width as number) + (height as number) - 2 * rx)); // 30% of perimeter
-  const gapLength =
-    0.7 * (2 * ((width as number) + (height as number) - 2 * rx)); // 70% of perimeter
+  const dashLength = 0.3 * (2 * ((width as number) + (height as number) - 2 * rx)); // 30% of perimeter
+  const gapLength = 0.7 * (2 * ((width as number) + (height as number) - 2 * rx)); // 70% of perimeter
   const perimeter = 2 * ((width as number) + (height as number) - 2 * rx);
 
   return (
     <div className="relative">
-      {data.status === "running" && width && height && (
+      {data.status === 'running' && width && height && (
         <svg
           className="absolute z-20 pointer-events-none rounded-lg"
           width={width}
@@ -118,10 +96,8 @@ export const NodeUI = memo(function NodeUI({
           <div className="flex items-center">
             <div
               className={cn(
-                "flex items-center justify-center h-6 w-6 rounded-md mr-2",
-                type === "action"
-                  ? "bg-purple-100 text-purple-600"
-                  : "bg-amber-100 text-amber-600",
+                'flex items-center justify-center h-6 w-6 rounded-md mr-2',
+                type === 'action' ? 'bg-purple-100 text-purple-600' : 'bg-amber-100 text-amber-600'
               )}
             >
               {getIcon()}
@@ -129,43 +105,38 @@ export const NodeUI = memo(function NodeUI({
             <div className="font-medium text-sm">{data.label as string}</div>
             <StatusIcon
               className={cn(
-                "ml-auto h-4 w-4",
-                statusVariants[data.status as keyof typeof statusVariants]
-                  .color,
-                data.status === "running" && "animate-spin-slow",
+                'ml-auto h-4 w-4',
+                statusVariants[data.status as keyof typeof statusVariants].color,
+                data.status === 'running' && 'animate-spin-slow'
               )}
             />
           </div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            {data.description as string}
-          </div>
+          <div className="mt-1 text-xs text-muted-foreground">{data.description as string}</div>
         </div>
         <div className="px-3 py-2 border-t border-border bg-muted/40 rounded-b-md">
           <div className="flex justify-between items-center">
             <Badge
               variant="outline"
               className={cn(
-                "text-xs font-medium px-2.5 py-0.5 rounded-full",
-                type === "action"
-                  ? "bg-purple-100 text-purple-800"
-                  : "bg-amber-100 text-amber-800",
+                'text-xs font-medium px-2.5 py-0.5 rounded-full',
+                type === 'action' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'
               )}
             >
-              {type === "action" ? "Action" : "Trigger"}
+              {type === 'action' ? 'Action' : 'Trigger'}
             </Badge>
             <Button
               variant="outline"
               className={cn(
-                "text-xs font-medium text-gray-500 px-2.5 py-0.5",
-                "h-auto rounded-full transition-colors",
-                "!hover:text-gray-700 !hover:bg-gray-50",
+                'text-xs font-medium text-gray-500 px-2.5 py-0.5',
+                'h-auto rounded-full transition-colors',
+                '!hover:text-gray-700 !hover:bg-gray-50'
               )}
             >
               Configure
             </Button>
           </div>
         </div>
-        {type === "action" && (
+        {type === 'action' && (
           <CustomHandle
             type="target"
             position={Position.Top}
@@ -183,8 +154,8 @@ export const NodeUI = memo(function NodeUI({
         />
         <div
           className={cn(
-            "absolute inset-0 border-1 border-blue-400 rounded-md opacity-0 pointer-events-none",
-            selected ? "opacity-100" : "",
+            'absolute inset-0 border-1 border-blue-400 rounded-md opacity-0 pointer-events-none',
+            selected ? 'opacity-100' : ''
           )}
         />
       </div>
@@ -193,9 +164,9 @@ export const NodeUI = memo(function NodeUI({
 });
 
 interface CustomHandleProps {
-  type: "source" | "target";
+  type: 'source' | 'target';
   position: Position;
-  handleType: "input" | "output";
+  handleType: 'input' | 'output';
   animateHandle: boolean | undefined;
   nodeType: string;
 }
@@ -213,34 +184,34 @@ export const CustomHandle = ({
 
   // Color scheme based on nodeType
   const borderColor =
-    nodeType === "action"
+    nodeType === 'action'
       ? isActive
-        ? "border-purple-700"
+        ? 'border-purple-700'
         : isHovered || animateHandle
-          ? "border-purple-600"
-          : "border-purple-500"
-      : nodeType === "trigger"
+          ? 'border-purple-600'
+          : 'border-purple-500'
+      : nodeType === 'trigger'
         ? isActive
-          ? "border-amber-700"
+          ? 'border-amber-700'
           : isHovered || animateHandle
-            ? "border-amber-600"
-            : "border-amber-500"
-        : "border-blue-400";
+            ? 'border-amber-600'
+            : 'border-amber-500'
+        : 'border-blue-400';
 
   const innerBgColor =
-    nodeType === "action"
+    nodeType === 'action'
       ? isActive
-        ? "bg-purple-500"
+        ? 'bg-purple-500'
         : isHovered || animateHandle
-          ? "bg-purple-400"
-          : "bg-purple-300"
-      : nodeType === "trigger"
+          ? 'bg-purple-400'
+          : 'bg-purple-300'
+      : nodeType === 'trigger'
         ? isActive
-          ? "bg-amber-500"
+          ? 'bg-amber-500'
           : isHovered || animateHandle
-            ? "bg-amber-400"
-            : "bg-amber-300"
-        : "bg-blue-200";
+            ? 'bg-amber-400'
+            : 'bg-amber-300'
+        : 'bg-blue-200';
 
   useEffect(() => {
     const el = handleRef.current;
@@ -248,50 +219,48 @@ export const CustomHandle = ({
 
     const handleMouseUp = () => {
       setIsActive(false);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener('mouseup', handleMouseUp);
     };
 
     const handleMouseDown = () => {
       setIsActive(true);
-      document.addEventListener("mouseup", handleMouseUp);
+      document.addEventListener('mouseup', handleMouseUp);
     };
 
-    el.addEventListener("mousedown", handleMouseDown);
+    el.addEventListener('mousedown', handleMouseDown);
 
     return () => {
-      el.removeEventListener("mousedown", handleMouseDown);
+      el.removeEventListener('mousedown', handleMouseDown);
     };
   }, []);
 
   return (
     <div
       className={cn(
-        "absolute left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300 pointer-events-none",
-        isHovered || isActive || animateHandle ? "opacity-100" : "opacity-70",
-        handleType === "output" ? "top-full mt-3" : "bottom-full mb-3",
+        'absolute left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300 pointer-events-none',
+        isHovered || isActive || animateHandle ? 'opacity-100' : 'opacity-70',
+        handleType === 'output' ? 'top-full mt-3' : 'bottom-full mb-3'
       )}
     >
       <div className="relative group/handle flex items-center justify-center pointer-events-none">
         {/* Animated connection guide */}
         <div
           className={cn(
-            "absolute left-1/2 w-[2px] h-3 transition-all duration-500",
-            handleType === "input" ? "top-[100%]" : "bottom-[100%]",
-            isHovered || animateHandle
-              ? "opacity-100 scale-y-100"
-              : "opacity-0 scale-y-0",
-            nodeType === "action"
-              ? "bg-gradient-to-b from-purple-600 to-transparent"
-              : nodeType === "trigger"
-                ? "bg-gradient-to-b from-amber-500 to-transparent"
-                : "bg-gradient-to-b from-blue-400 to-transparent",
+            'absolute left-1/2 w-[2px] h-3 transition-all duration-500',
+            handleType === 'input' ? 'top-[100%]' : 'bottom-[100%]',
+            isHovered || animateHandle ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0',
+            nodeType === 'action'
+              ? 'bg-gradient-to-b from-purple-600 to-transparent'
+              : nodeType === 'trigger'
+                ? 'bg-gradient-to-b from-amber-500 to-transparent'
+                : 'bg-gradient-to-b from-blue-400 to-transparent'
           )}
         />
         {/* Main handle container */}
         <div
           className={cn(
-            "relative flex items-center justify-center w-5 h-5 transition-all duration-300 ease-out pointer-events-none",
-            isActive || isHovered ? "scale-110" : "scale-100",
+            'relative flex items-center justify-center w-5 h-5 transition-all duration-300 ease-out pointer-events-none',
+            isActive || isHovered ? 'scale-110' : 'scale-100'
           )}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -302,38 +271,34 @@ export const CustomHandle = ({
             type={type}
             position={position}
             className={cn(
-              "!absolute !inset-0 !w-full !h-full !m-0 !p-0",
-              "!translate-x-0 !translate-y-0 !transform-none",
-              "!bg-transparent !border-none !rounded-none",
-              "pointer-events-auto",
+              '!absolute !inset-0 !w-full !h-full !m-0 !p-0',
+              '!translate-x-0 !translate-y-0 !transform-none',
+              '!bg-transparent !border-none !rounded-none',
+              'pointer-events-auto'
             )}
             // className="!transform-none !translate-x-0 !translate-y-0 !static !border-0 !bg-transparent"
           />
           {/* Outer ring - magnetic effect */}
           <div
             className={cn(
-              "absolute inset-0 rounded-full transition-all duration-300 border-1 border-dashed",
-              animateHandle && "animate-handle-spin-slow",
-              borderColor,
+              'absolute inset-0 rounded-full transition-all duration-300 border-1 border-dashed',
+              animateHandle && 'animate-handle-spin-slow',
+              borderColor
             )}
           />
           {/* Inner connection point */}
           <div
             className={cn(
-              "absolute inset-1 rounded-full transition-all duration-300 transform",
+              'absolute inset-1 rounded-full transition-all duration-300 transform',
               innerBgColor,
-              isActive
-                ? "scale-125"
-                : isHovered || animateHandle
-                  ? "scale-100"
-                  : "scale-75",
+              isActive ? 'scale-125' : isHovered || animateHandle ? 'scale-100' : 'scale-75'
             )}
           />
           {/* Center dot */}
           <div
             className={cn(
-              "absolute inset-2 rounded-full bg-white transition-all duration-300",
-              isActive || animateHandle ? "scale-0" : "scale-100",
+              'absolute inset-2 rounded-full bg-white transition-all duration-300',
+              isActive || animateHandle ? 'scale-0' : 'scale-100'
             )}
           />
         </div>
@@ -341,29 +306,25 @@ export const CustomHandle = ({
         {!animateHandle && (
           <div
             className={cn(
-              "absolute",
-              handleType === "input" ? "bottom-full mb-1" : "top-full mt-1",
-              "left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-medium transition-all duration-300",
+              'absolute',
+              handleType === 'input' ? 'bottom-full mb-1' : 'top-full mt-1',
+              'left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-medium transition-all duration-300',
               isHovered
-                ? "opacity-100 transform translate-y-0"
-                : "opacity-0 transform " +
-                    (handleType === "input"
-                      ? "translate-y-1"
-                      : "-translate-y-1"),
+                ? 'opacity-100 transform translate-y-0'
+                : 'opacity-0 transform ' +
+                    (handleType === 'input' ? 'translate-y-1' : '-translate-y-1')
             )}
           >
             <span
               className={
-                nodeType === "action"
-                  ? "text-purple-400"
-                  : nodeType === "trigger"
-                    ? "text-amber-500"
-                    : "text-blue-400"
+                nodeType === 'action'
+                  ? 'text-purple-400'
+                  : nodeType === 'trigger'
+                    ? 'text-amber-500'
+                    : 'text-blue-400'
               }
             >
-              {handleType === "input"
-                ? "⌄ Drop connection here"
-                : "⌃ Drag to connect"}
+              {handleType === 'input' ? '⌄ Drop connection here' : '⌃ Drag to connect'}
             </span>
           </div>
         )}
@@ -371,12 +332,12 @@ export const CustomHandle = ({
         {isActive && (
           <div
             className={cn(
-              "absolute inset-[-8px] rounded-full animate-handle-ping-slow opacity-30",
-              nodeType === "action"
-                ? "bg-purple-200"
-                : nodeType === "trigger"
-                  ? "bg-amber-200"
-                  : "bg-blue-200",
+              'absolute inset-[-8px] rounded-full animate-handle-ping-slow opacity-30',
+              nodeType === 'action'
+                ? 'bg-purple-200'
+                : nodeType === 'trigger'
+                  ? 'bg-amber-200'
+                  : 'bg-blue-200'
             )}
           />
         )}

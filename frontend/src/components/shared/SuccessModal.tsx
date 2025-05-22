@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { CheckCircle } from "lucide-react";
+import { CheckCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface SuccessModalProps {
   open: boolean;
@@ -23,8 +23,8 @@ interface SuccessModalProps {
 export function SuccessModal({
   open,
   onOpenChange,
-  title = "Workflow Saved",
-  description = "Your workflow has been saved successfully.",
+  title = 'Workflow Saved',
+  description = 'Your workflow has been saved successfully.',
   workflowId,
   onViewWorkflow,
 }: SuccessModalProps) {
@@ -41,12 +41,8 @@ export function SuccessModal({
               {description}
               {workflowId && (
                 <div className="mt-2">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Workflow ID:{" "}
-                  </span>
-                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
-                    {workflowId}
-                  </code>
+                  <span className="text-xs font-medium text-muted-foreground">Workflow ID: </span>
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">{workflowId}</code>
                 </div>
               )}
             </>
@@ -56,9 +52,7 @@ export function SuccessModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-          {onViewWorkflow && (
-            <Button onClick={onViewWorkflow}>View Workflow</Button>
-          )}
+          {onViewWorkflow && <Button onClick={onViewWorkflow}>View Workflow</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

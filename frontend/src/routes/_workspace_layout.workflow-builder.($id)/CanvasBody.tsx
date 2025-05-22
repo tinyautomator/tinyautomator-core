@@ -1,18 +1,18 @@
-import { MiniMap, useReactFlow } from "@xyflow/react";
+import { MiniMap, useReactFlow } from '@xyflow/react';
 
-import { Background, Controls } from "@xyflow/react";
+import { Background, Controls } from '@xyflow/react';
 
-import { ReactFlow, Node } from "@xyflow/react";
-import { NodeUI } from "@/components/shared/NodeUI";
-import { useFlowStore } from "./flowStore";
-import { useCallback, useMemo } from "react";
-import { actionTypeToBlockMap } from "./BlockCategories";
-import { v4 as uuidv4 } from "uuid";
+import { ReactFlow, Node } from '@xyflow/react';
+import { NodeUI } from '@/components/shared/NodeUI';
+import { useFlowStore } from './flowStore';
+import { useCallback, useMemo } from 'react';
+import { actionTypeToBlockMap } from './BlockCategories';
+import { v4 as uuidv4 } from 'uuid';
 
 export const NodeBuilder = (
   id: string,
   position: { x: number; y: number },
-  actionType: string,
+  actionType: string
 ): Node => {
   const block = actionTypeToBlockMap[actionType];
   return {
@@ -21,28 +21,28 @@ export const NodeBuilder = (
     position,
     data: {
       actionType,
-      config: { provider: "gmail" },
+      config: { provider: 'gmail' },
       label: block.label,
       description: block.description,
       icon: block.icon,
       status:
-        block.node_type === "trigger"
-          ? "success"
-          : block.action_type === "send_email"
-            ? "failed"
-            : block.action_type === "http_request"
-              ? "pending"
-              : "pending",
+        block.node_type === 'trigger'
+          ? 'success'
+          : block.action_type === 'send_email'
+            ? 'failed'
+            : block.action_type === 'http_request'
+              ? 'pending'
+              : 'pending',
     },
   };
 };
 
 export default function CanvasBody() {
-  const nodes = useFlowStore((s) => s.nodes);
-  const edges = useFlowStore((s) => s.edges);
-  const onNodesChange = useFlowStore((s) => s.onNodesChange);
-  const onEdgesChange = useFlowStore((s) => s.onEdgesChange);
-  const onConnect = useFlowStore((s) => s.onConnect);
+  const nodes = useFlowStore(s => s.nodes);
+  const edges = useFlowStore(s => s.edges);
+  const onNodesChange = useFlowStore(s => s.onNodesChange);
+  const onEdgesChange = useFlowStore(s => s.onEdgesChange);
+  const onConnect = useFlowStore(s => s.onConnect);
   const { screenToFlowPosition } = useReactFlow();
 
   const nodeTypes = useMemo(
@@ -50,18 +50,18 @@ export default function CanvasBody() {
       action: NodeUI,
       trigger: NodeUI,
     }),
-    [],
+    []
   );
 
-  const setSelectedNode = useFlowStore((s) => s.setSelectedNode);
-  const setNodes = useFlowStore((s) => s.setNodes);
-  const addRecentlyUsedBlock = useFlowStore((s) => s.addRecentlyUsedBlock);
+  const setSelectedNode = useFlowStore(s => s.setSelectedNode);
+  const setNodes = useFlowStore(s => s.setNodes);
+  const addRecentlyUsedBlock = useFlowStore(s => s.addRecentlyUsedBlock);
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
       setSelectedNode(node);
     },
-    [setSelectedNode],
+    [setSelectedNode]
   );
 
   const onPaneClick = useCallback(() => {
@@ -70,7 +70,7 @@ export default function CanvasBody() {
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
+    event.dataTransfer.dropEffect = 'move';
   }, []);
 
   const onDrop = useCallback(
@@ -78,9 +78,7 @@ export default function CanvasBody() {
       event.preventDefault();
       setSelectedNode(null);
 
-      const data = JSON.parse(
-        event.dataTransfer.getData("application/reactflow"),
-      ) as {
+      const data = JSON.parse(event.dataTransfer.getData('application/reactflow')) as {
         actionType: string;
       };
 
@@ -91,16 +89,10 @@ export default function CanvasBody() {
 
       const newNode = NodeBuilder(uuidv4(), position, data.actionType);
 
-      setNodes([...nodes.map((n) => ({ ...n, selected: false })), newNode]);
+      setNodes([...nodes.map(n => ({ ...n, selected: false })), newNode]);
       addRecentlyUsedBlock(actionTypeToBlockMap[data.actionType]);
     },
-    [
-      setSelectedNode,
-      addRecentlyUsedBlock,
-      screenToFlowPosition,
-      setNodes,
-      nodes,
-    ],
+    [setSelectedNode, addRecentlyUsedBlock, screenToFlowPosition, setNodes, nodes]
   );
 
   return (

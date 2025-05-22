@@ -1,16 +1,10 @@
-import { Badge } from "@/components/ui/badge";
-import { useRef, useState } from "react";
-import { Pencil, Check } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useEmailRecipients } from "./utils/useEmailRecipents";
+import { Badge } from '@/components/ui/badge';
+import { useRef, useState } from 'react';
+import { Pencil, Check } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useEmailRecipients } from './utils/useEmailRecipents';
 
-function RecipientChip({
-  recipient,
-  isValid,
-}: {
-  recipient: string;
-  isValid: boolean;
-}) {
+function RecipientChip({ recipient, isValid }: { recipient: string; isValid: boolean }) {
   const { updateEmail, removeEmail } = useEmailRecipients();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(recipient);
@@ -27,9 +21,9 @@ function RecipientChip({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       handleSave();
-    } else if (e.key === "Escape") {
+    } else if (e.key === 'Escape') {
       setIsEditing(false);
       setEditValue(recipient);
     }
@@ -37,14 +31,11 @@ function RecipientChip({
 
   if (isEditing) {
     return (
-      <Badge
-        variant={isValid ? "default" : "destructive"}
-        className="flex items-center gap-1 py-1"
-      >
+      <Badge variant={isValid ? 'default' : 'destructive'} className="flex items-center gap-1 py-1">
         <Input
           ref={inputRef}
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={e => setEditValue(e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
           className="h-5 bg-transparent border-none p-0 w-32 focus:outline-none focus:ring-0"
@@ -63,10 +54,7 @@ function RecipientChip({
   }
 
   return (
-    <Badge
-      variant={isValid ? "default" : "destructive"}
-      className="flex items-center gap-1 py-1"
-    >
+    <Badge variant={isValid ? 'default' : 'destructive'} className="flex items-center gap-1 py-1">
       {recipient}
       <button
         onClick={handleEdit}
@@ -95,10 +83,10 @@ export function RecipientChips() {
       ref={containerRef}
       className="recipient-scroll max-h-40 overflow-y-auto flex flex-wrap gap-2 p-1 border rounded-md"
     >
-      {validRecipients.map((recipient) => (
+      {validRecipients.map(recipient => (
         <RecipientChip key={recipient} recipient={recipient} isValid={true} />
       ))}
-      {invalidRecipients.map((recipient) => (
+      {invalidRecipients.map(recipient => (
         <RecipientChip key={recipient} recipient={recipient} isValid={false} />
       ))}
     </div>

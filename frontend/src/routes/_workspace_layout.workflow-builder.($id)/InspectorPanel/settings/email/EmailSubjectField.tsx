@@ -1,9 +1,6 @@
-import { useFormContext } from "react-hook-form";
-import {
-  EmailFormValues,
-  MAX_SUBJECT_CHAR_COUNT,
-} from "./utils/emailValidation";
-import { Input } from "@/components/ui/input";
+import { useFormContext } from 'react-hook-form';
+import { EmailFormValues, MAX_SUBJECT_CHAR_COUNT } from './utils/emailValidation';
+import { Input } from '@/components/ui/input';
 
 export function EmailSubjectField() {
   const {
@@ -12,10 +9,10 @@ export function EmailSubjectField() {
 
     formState: { errors },
   } = useFormContext<EmailFormValues>();
-  const subject = watch("subject") || "";
+  const subject = watch('subject') || '';
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault();
     }
   };
@@ -24,11 +21,7 @@ export function EmailSubjectField() {
     <div className="space-y-2">
       <label className="text-sm font-medium">Subject</label>
       <div className="space-y-1">
-        <Input
-          {...register("subject")}
-          aria-invalid={!!errors.subject}
-          onKeyDown={handleKeyDown}
-        />
+        <Input {...register('subject')} aria-invalid={!!errors.subject} onKeyDown={handleKeyDown} />
         <div className="flex justify-end">
           <span className="text-xs text-muted-foreground">
             {subject.length}/{MAX_SUBJECT_CHAR_COUNT} characters

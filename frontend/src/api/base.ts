@@ -4,21 +4,18 @@ class ApiError extends Error {
   constructor(
     public status: number,
     public message: string,
-    public details?: string,
+    public details?: string
   ) {
     super(message);
-    this.name = "ApiError";
+    this.name = 'ApiError';
   }
 }
 
 export class BaseApiClient {
-  protected async request<T>(
-    endpoint: string,
-    options: RequestInit = {},
-  ): Promise<T> {
+  protected async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     const headers = {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...options.headers,
     };
 
@@ -27,11 +24,7 @@ export class BaseApiClient {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new ApiError(
-          response.status,
-          data.error || "An error occurred",
-          data.details || "",
-        );
+        throw new ApiError(response.status, data.error || 'An error occurred', data.details || '');
       }
 
       return data;
@@ -45,33 +38,30 @@ export class BaseApiClient {
         throw error;
       }
       console.error(error);
-      throw new ApiError(500, "Network error occurred");
+      throw new ApiError(500, 'Network error occurred');
     }
   }
 
-  protected async get<T>(
-    endpoint: string,
-    params?: Record<string, string>,
-  ): Promise<T> {
-    const queryString = params ? `?${new URLSearchParams(params)}` : "";
-    return this.request<T>(`${endpoint}${queryString}`, { method: "GET" });
+  protected async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
+    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    return this.request<T>(`${endpoint}${queryString}`, { method: 'GET' });
   }
 
   protected async post<T>(endpoint: string, body?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
-      method: "POST",
+      method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     });
   }
 
   protected async put<T>(endpoint: string, body?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
-      method: "PUT",
+      method: 'PUT',
       body: body ? JSON.stringify(body) : undefined,
     });
   }
 
   protected async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: "DELETE" });
+    return this.request<T>(endpoint, { method: 'DELETE' });
   }
 }

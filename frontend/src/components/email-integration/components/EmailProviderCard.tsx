@@ -1,6 +1,6 @@
-import { RefreshCw, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { RefreshCw, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 export type ProviderCardProps = {
   icon: React.ReactNode;

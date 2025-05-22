@@ -1,5 +1,5 @@
-import { useFlowStore } from "@/routes/_workspace_layout.workflow-builder.($id)/flowStore";
-import { EmailSettings } from "./email";
+import { useFlowStore } from '@/routes/_workspace_layout.workflow-builder.($id)/flowStore';
+import { EmailSettings } from './email';
 
 export function SettingsTab() {
   const { selectedNode } = useFlowStore();
@@ -7,7 +7,7 @@ export function SettingsTab() {
   if (!selectedNode) return null;
 
   switch (selectedNode.data.label as string) {
-    case "Send Email":
+    case 'Send Email':
       return <EmailSettings />;
     default:
       return null;

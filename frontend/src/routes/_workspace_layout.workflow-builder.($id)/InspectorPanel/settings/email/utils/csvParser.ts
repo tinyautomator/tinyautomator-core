@@ -1,6 +1,6 @@
 // TODO: Make a more advanced parser that can select the correct column for the email address
 
-import Papa from "papaparse";
+import Papa from 'papaparse';
 
 export async function parseEmailCsv(file: File) {
   try {
@@ -16,12 +16,12 @@ export async function parseEmailCsv(file: File) {
       };
     }
 
-    const emails = result.data.flat().filter((email) => email.trim());
+    const emails = result.data.flat().filter(email => email.trim());
 
     if (emails.length === 0) {
       return {
         emails: [],
-        error: "No emails found in this file",
+        error: 'No emails found in this file',
       };
     }
 
@@ -32,7 +32,7 @@ export async function parseEmailCsv(file: File) {
       error:
         error instanceof Error
           ? `Error parsing CSV: ${error.message}`
-          : "Unknown error parsing CSV",
+          : 'Unknown error parsing CSV',
     };
   }
 }

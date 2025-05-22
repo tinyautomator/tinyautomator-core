@@ -1,13 +1,9 @@
-import { HelpCircle, Zap } from "lucide-react";
-import { UserButton } from "@clerk/react-router";
-import { Link } from "react-router";
-import { Button } from "@/components/ui/button";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { HelpCircle, Zap } from 'lucide-react';
+import { UserButton } from '@clerk/react-router';
+import { Link } from 'react-router';
+import { Button } from '@/components/ui/button';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function Navbar() {
   return (
@@ -38,9 +34,7 @@ export default function Navbar() {
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-foreground"
-              onClick={() =>
-                window.open("https://docs.tinyautomator.com", "_blank")
-              }
+              onClick={() => window.open('https://docs.tinyautomator.com', '_blank')}
             >
               <HelpCircle className="h-5 w-5" />
               <span className="sr-only">Support</span>

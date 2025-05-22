@@ -1,13 +1,9 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WorkflowCard } from "@/routes/_workspace_layout.dashboard/WorkFlowCard";
-import { Recent } from "@/routes/_workspace_layout.dashboard/Recent";
-import { Workflow } from "@/api/workflow/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { WorkflowCard } from '@/routes/_workspace_layout.dashboard/WorkFlowCard';
+import { Recent } from '@/routes/_workspace_layout.dashboard/Recent';
+import { Workflow } from '@/api/workflow/types';
 
-export function DashboardTabs({
-  userWorkflows,
-}: {
-  userWorkflows: Workflow[];
-}) {
+export function DashboardTabs({ userWorkflows }: { userWorkflows: Workflow[] }) {
   return (
     <Tabs defaultValue="active" className="space-y-4">
       <TabsList>
@@ -17,7 +13,7 @@ export function DashboardTabs({
 
       <TabsContent value="active" className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {userWorkflows?.map((workflow) => (
+          {userWorkflows?.map(workflow => (
             <WorkflowCard
               key={workflow.id}
               id={workflow.id}

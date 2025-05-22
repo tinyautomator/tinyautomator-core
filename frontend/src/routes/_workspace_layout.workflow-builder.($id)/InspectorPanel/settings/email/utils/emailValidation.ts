@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -18,21 +18,19 @@ export const MAX_SUBJECT_CHAR_COUNT = 100;
 export const emailFormSchema = z.object({
   recipients: z
     .array(z.string())
-    .transform((emails) =>
-      emails.map(parseEmail).filter((email): email is string => email !== null),
-    )
-    .refine((emails) => emails.length > 0, {
-      message: "At least one valid email recipient is required",
+    .transform(emails => emails.map(parseEmail).filter((email): email is string => email !== null))
+    .refine(emails => emails.length > 0, {
+      message: 'At least one valid email recipient is required',
     }),
   subject: z
     .string()
-    .min(1, { message: "Subject is required" })
+    .min(1, { message: 'Subject is required' })
     .max(MAX_SUBJECT_CHAR_COUNT, {
       message: `Subject must be under ${MAX_SUBJECT_CHAR_COUNT} characters`,
     }),
   message: z
     .string()
-    .min(1, { message: "Message body is required" })
+    .min(1, { message: 'Message body is required' })
     .max(MAX_MESSAGE_CHAR_COUNT, {
       message: `Message must be under ${MAX_MESSAGE_CHAR_COUNT} characters`,
     }),

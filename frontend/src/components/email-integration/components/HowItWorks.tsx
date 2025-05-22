@@ -1,23 +1,13 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const HowItWorks = () => {
-  const steps = [
-    ["1", "Click the Connect Button", "AND CLICK ACCEPT LIL BITCH"],
-  ];
+  const steps = [['1', 'Click the Connect Button', 'AND CLICK ACCEPT LIL BITCH']];
 
   return (
     <Card className="mb-8">
       <CardHeader>
         <CardTitle>How It Works</CardTitle>
-        <CardDescription>
-          Follow these steps to connect your email account
-        </CardDescription>
+        <CardDescription>Follow these steps to connect your email account</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

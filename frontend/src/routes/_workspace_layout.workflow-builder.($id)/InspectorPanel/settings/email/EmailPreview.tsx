@@ -5,27 +5,25 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
-import { useFormContext } from "react-hook-form";
-import { EmailFormValues } from "./utils/emailValidation";
-import { useEmailRecipients } from "./utils/useEmailRecipents";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Eye } from 'lucide-react';
+import { useFormContext } from 'react-hook-form';
+import { EmailFormValues } from './utils/emailValidation';
+import { useEmailRecipients } from './utils/useEmailRecipents';
 
 export function EmailPreview() {
   const { getValues } = useFormContext<EmailFormValues>();
   const { validRecipients } = useEmailRecipients();
-  const subject = getValues("subject");
-  const body = getValues("message");
+  const subject = getValues('subject');
+  const body = getValues('message');
 
   const recipientLengthLimit = 3;
   const formatPreviewRecipients = () => {
     const visible = validRecipients.slice(0, recipientLengthLimit);
     const hiddenCount = validRecipients.length - visible.length;
 
-    return hiddenCount > 0
-      ? `${visible.join(", ")} +${hiddenCount} more`
-      : visible.join(", ");
+    return hiddenCount > 0 ? `${visible.join(', ')} +${hiddenCount} more` : visible.join(', ');
   };
 
   return (
@@ -53,9 +51,7 @@ export function EmailPreview() {
           <p>
             <strong>Subject:</strong> {subject}
           </p>
-          <div className="mt-4 p-3 border rounded bg-slate-50 whitespace-pre-wrap">
-            {body}
-          </div>
+          <div className="mt-4 p-3 border rounded bg-slate-50 whitespace-pre-wrap">{body}</div>
         </div>
       </DialogContent>
     </Dialog>

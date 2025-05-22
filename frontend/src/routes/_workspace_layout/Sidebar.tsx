@@ -10,27 +10,22 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-} from "@/components/ui/sidebar";
-import "../../App.css";
-import { WORKSPACE_ITEMS, INTEGRATION_ITEMS, FOOTER_ITEMS } from "./constants";
-import { NavLink } from "react-router";
+} from '@/components/ui/sidebar';
+import '../../App.css';
+import { WORKSPACE_ITEMS, INTEGRATION_ITEMS, FOOTER_ITEMS } from './constants';
+import { NavLink } from 'react-router';
 
 export default function () {
   return (
-    <Sidebar
-      collapsible="icon"
-      className="relative flex h-full flex-col justify-between"
-    >
+    <Sidebar collapsible="icon" className="relative flex h-full flex-col justify-between">
       <SidebarHeader>
-        <SidebarGroupLabel aria-label="Workspace Section">
-          Workspace
-        </SidebarGroupLabel>
+        <SidebarGroupLabel aria-label="Workspace Section">Workspace</SidebarGroupLabel>
       </SidebarHeader>
       <SidebarContent className="scrollbar-hidden">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {WORKSPACE_ITEMS.map((item) => (
+              {WORKSPACE_ITEMS.map(item => (
                 <SidebarMenuItem key={item.label}>
                   <NavLink to={item.path}>
                     {({ isActive }) => (
@@ -59,7 +54,7 @@ export default function () {
           <SidebarGroupLabel className="pb-3">Integrations</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {INTEGRATION_ITEMS.map((item) => (
+              {INTEGRATION_ITEMS.map(item => (
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton tooltip={item.label}>
                     {item.icon}
@@ -74,7 +69,7 @@ export default function () {
 
       <SidebarFooter>
         <SidebarMenu>
-          {FOOTER_ITEMS.map((item) => (
+          {FOOTER_ITEMS.map(item => (
             <SidebarMenuItem key={item.label}>
               <SidebarMenuButton tooltip={item.label}>
                 {item.icon}
