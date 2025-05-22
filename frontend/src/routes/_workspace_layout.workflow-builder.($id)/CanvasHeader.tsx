@@ -1,12 +1,12 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { RenderedWorkflow, workflowApi } from "@/api";
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Menu } from "lucide-react";
-import { useReactFlow } from "@xyflow/react";
-import { useFlowStore } from "./flowStore";
-import { toast } from "sonner";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { RenderedWorkflow, workflowApi } from '@/api';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Menu } from 'lucide-react';
+import { useReactFlow } from '@xyflow/react';
+import { useFlowStore } from './flowStore';
+import { toast } from 'sonner';
 
 export default function CanvasHeader({
   workflowToEdit,
@@ -19,7 +19,7 @@ export default function CanvasHeader({
 }) {
   const { nodes, edges } = useFlowStore();
   const { fitView } = useReactFlow();
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
 
   return (
     <div className="flex h-1/15 items-center justify-between bg-white px-4">
@@ -39,9 +39,7 @@ export default function CanvasHeader({
                 });
               }, 500);
             }}
-            aria-label={
-              collapsed ? "Expand block panel" : "Collapse block panel"
-            }
+            aria-label={collapsed ? 'Expand block panel' : 'Collapse block panel'}
           >
             <Menu className="w-5 h-5" />
           </Button>
@@ -50,7 +48,7 @@ export default function CanvasHeader({
           type="text"
           placeholder="Enter workflow name..."
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={e => setName(e.target.value)}
         />
         <Badge variant="outline" className="text-xs">
           Draft
@@ -65,39 +63,39 @@ export default function CanvasHeader({
               workflowApi.updateWorkflow(workflowToEdit.id, {
                 name: name || workflowToEdit.name,
                 description: workflowToEdit.description,
-                nodes: nodes.map((node) => ({
+                nodes: nodes.map(node => ({
                   id: node.id,
-                  type: node.type || "default",
+                  type: node.type || 'default',
                   action_type: node.data.actionType as string,
-                  config: { provider: "gmail" },
+                  config: { provider: 'gmail' },
                   position: node.position,
                 })),
-                edges: edges.map((edge) => ({
+                edges: edges.map(edge => ({
                   id: edge.id,
                   source_node_id: edge.source,
                   target_node_id: edge.target,
                 })),
               });
-              toast.success("Workflow updated successfully");
+              toast.success('Workflow updated successfully');
             } else {
               workflowApi.createWorkflow({
                 name: name,
-                description: "New Workflow Description",
-                status: "draft",
-                nodes: nodes.map((node) => ({
+                description: 'New Workflow Description',
+                status: 'draft',
+                nodes: nodes.map(node => ({
                   id: node.id,
-                  type: node.type || "default",
+                  type: node.type || 'default',
                   action_type: node.data.actionType as string,
-                  config: { provider: "gmail" },
+                  config: { provider: 'gmail' },
                   position: node.position,
                 })),
-                edges: edges.map((edge) => ({
+                edges: edges.map(edge => ({
                   id: edge.id,
                   source_node_id: edge.source,
                   target_node_id: edge.target,
                 })),
               });
-              toast.success("Workflow saved successfully");
+              toast.success('Workflow saved successfully');
             }
           }}
         >
