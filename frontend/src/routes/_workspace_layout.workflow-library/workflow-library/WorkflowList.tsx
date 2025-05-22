@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 function WorkflowPagination() {
   const { pagination } = useFilteredWorkflows();
   const [{ page }, updateParams] = useValidatedSearchParams(
-    pagination.totalPages,
+    pagination.totalPages
   );
   const [, setCurrentPage] = useOptimisticParamValue(page);
 
@@ -40,7 +40,7 @@ function WorkflowPagination() {
 
   const pageNumbers = Array.from(
     { length: endPage - startPage + 1 },
-    (_, i) => startPage + i,
+    (_, i) => startPage + i
   );
 
   const handlePageChange = (newPage: number) => {
@@ -108,7 +108,7 @@ export function WorkflowList() {
 
   const handleChangeStatus = (
     workflow: Workflow,
-    newStatus: "active" | "archived",
+    newStatus: "active" | "archived"
   ) => {
     console.log(`Changing status of workflow ${workflow.id} to ${newStatus}`);
     // TODO: Implement status change
@@ -119,33 +119,34 @@ export function WorkflowList() {
   }
 
   return (
-    <>
-      <div className="grid grid-cols-3 gap-3 p-3 h-[calc(100%-5rem)]">
-        {showLoading
-          ? Array.from({ length: 6 }).map((_, index) => (
-              <WorkflowCardSkeleton key={index} />
-            ))
-          : workflows.map((workflow) => (
-              <WorkflowCard
-                key={workflow.id}
-                workflow={workflow}
-                onConfigure={() => handleConfigure(workflow.id)}
-                onDelete={() => handleDelete(workflow)}
-                onChangeStatus={handleChangeStatus}
-              />
-            ))}
+    <div className={cn("flex flex-col h-full")}>
+      <div className={cn("flex-1 overflow-hidden flex flex-col items-center")}>
+        <div
+          className={cn(
+            "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr",
+            "p-4 gap-8 w-3/4 h-full"
+          )}
+        >
+          {workflows.map((workflow) => (
+            <WorkflowCard
+              key={workflow.id}
+              workflow={workflow}
+              onConfigure={() => handleConfigure(workflow.id)}
+              onDelete={() => handleDelete(workflow)}
+              onChangeStatus={handleChangeStatus}
+            />
+          ))}
+        </div>
       </div>
-
-      <div className="h-20 flex items-center justify-center pt-6">
+      <div className="flex-shrink-0 flex items-center justify-center border-1">
         <WorkflowPagination />
       </div>
-
       <DeleteWorkflowDialog
         workflow={workflowToDelete}
         open={!!workflowToDelete}
         onOpenChange={(open) => !open && setWorkflowToDelete(null)}
         onConfirm={handleDeleteConfirm}
       />
-    </>
+    </div>
   );
 }

@@ -36,8 +36,8 @@ export async function loader() {
 
 export default function WorkflowLibrary() {
   return (
-    <div className="h-full p-4 overflow-hidden">
-      <div className="h-full flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+    <div className="h-full overflow-hidden border-4">
+      <div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-xl">
         <div className="shrink-0 p-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -50,11 +50,9 @@ export default function WorkflowLibrary() {
           <CreateWorkflowButton />
         </div>
 
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           <div className="shrink-0">
             <WorkflowSearchBar />
-          </div>
-          <div className="shrink-0">
             <WorkflowTabs />
             <ActiveTagFilters />
           </div>
