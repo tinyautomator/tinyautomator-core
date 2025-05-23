@@ -94,7 +94,7 @@ func (r *workflowRepo) CreateWorkflow(
 
 	tx, err := r.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction in create workflow: %w", err)
+		return nil, fmt.Errorf("db error failed to begin tx in create workflow: %w", err)
 	}
 
 	qtx := r.q.WithTx(tx)
@@ -175,16 +175,17 @@ func (r *workflowRepo) CreateWorkflow(
 		return nil, fmt.Errorf("failed to commit transaction in create workflow: %w", err)
 	}
 
-	m := &models.Workflow{}
-	m.ID = w.ID
-	m.Name = w.Name
-	m.Description = w.Description
-	m.Status = w.Status
-	m.CreatedAt = w.CreatedAt
-	m.UpdatedAt = w.UpdatedAt
-	m.UserID = w.UserID
-
-	return m, nil
+	return &models.Workflow{
+		WorkflowCore: models.WorkflowCore{
+			ID:          w.ID,
+			Name:        w.Name,
+			Description: w.Description,
+			Status:      w.Status,
+			CreatedAt:   w.CreatedAt,
+			UpdatedAt:   w.UpdatedAt,
+		},
+		UserID: w.UserID,
+	}, nil
 }
 
 func (r workflowRepo) UpdateWorkflow(

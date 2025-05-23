@@ -36,12 +36,11 @@ type WorkflowNodeRun struct {
 	WorkflowRunID  int32       `json:"workflow_run_id"`
 	WorkflowNodeID int32       `json:"workflow_node_id"`
 	Status         string      `json:"status"`
-	StartedAt      int64       `json:"started_at"`
+	RetryCount     int32       `json:"retry_count"`
+	StartedAt      null.Int    `json:"started_at"`
 	FinishedAt     null.Int    `json:"finished_at"`
 	Metadata       []byte      `json:"metadata"`
 	ErrorMessage   null.String `json:"error_message"`
-	CreatedAt      int64       `json:"created_at"`
-	UpdatedAt      int64       `json:"updated_at"`
 }
 
 type WorkflowNodeUi struct {
@@ -54,10 +53,8 @@ type WorkflowRun struct {
 	ID         int32    `json:"id"`
 	WorkflowID int32    `json:"workflow_id"`
 	Status     string   `json:"status"`
-	StartedAt  int64    `json:"started_at"`
 	FinishedAt null.Int `json:"finished_at"`
 	CreatedAt  int64    `json:"created_at"`
-	UpdatedAt  int64    `json:"updated_at"`
 }
 
 type WorkflowSchedule struct {

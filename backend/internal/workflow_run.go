@@ -20,46 +20,65 @@ func EnqueueChildNodes(
 	rabbitMQClient rabbitmq.RabbitMQClient,
 	workflowID int32,
 	parentNodeID int32,
-	runID int32,
+	workflowRunID int32,
 ) error {
 	c, err := workflowRepo.GetChildNodeIDs(ctx, parentNodeID)
 	if err != nil {
 		return fmt.Errorf("failed to get child node ids: %w", err)
 	}
 
+	type NodeToEnqueue struct {
+		NodeID    int32
+		NodeRunID int32
+	}
+
+	nodesNotAlreadyQueued := []NodeToEnqueue{}
+
 	for _, childNodeID := range c {
-		if err := workflowRunRepo.WithTransaction(ctx, func(txCtx context.Context, txRepo models.WorkflowRunRepository) error {
-			nodeRunID, err := txRepo.CreateWorkflowNodeRun(ctx, runID, childNodeID)
-			if err != nil {
-				if errors.Is(err, ErrNodeRunAlreadyExists) {
-					logger.WithField("node_id", childNodeID).Info("node run already exists, skipping enqueue")
-					return nil
-				}
-				return fmt.Errorf("failed to create node run for child node %d: %w", childNodeID, err)
-			}
-
-			taskBytes, err := models.BuildWorkflowNodeTaskPayload(workflowID, runID, childNodeID, *nodeRunID)
-			if err != nil {
-				return fmt.Errorf("failed to marshal task for child node %d: %w", childNodeID, err)
-			}
-
-			err = rabbitMQClient.Publish(ctx, taskBytes)
-			if err != nil {
-				return fmt.Errorf("failed to dispatch task for child node %d: %w", childNodeID, err)
-			}
-
-			logger.WithFields(logrus.Fields{
-				"node_id": childNodeID,
-				"run_id":  runID,
-			}).Info("successfully enqueued child node")
-
-			return nil
-		}); err != nil {
-			logger.WithError(err).WithFields(logrus.Fields{
-				"node_id": childNodeID,
-				"run_id":  runID,
-			}).Warn("enqueue child node failed and rolled back")
+		nodeRun, err := workflowRunRepo.GetWorkflowNodeRun(ctx, workflowRunID, childNodeID)
+		if err != nil {
+			return fmt.Errorf("failed to get node run for child node %d: %w", childNodeID, err)
 		}
+
+		if nodeRun.Status != "pending" {
+			logger.WithFields(logrus.Fields{
+				"workflow_id":     workflowID,
+				"workflow_run_id": workflowRunID,
+				"node_id":         childNodeID,
+				"node_run_id":     nodeRun.ID,
+			}).Info("node run already in progress, skipping enqueue")
+
+			continue
+		}
+
+		nodesNotAlreadyQueued = append(nodesNotAlreadyQueued, NodeToEnqueue{
+			NodeID:    childNodeID,
+			NodeRunID: nodeRun.ID,
+		})
+	}
+
+	for _, n := range nodesNotAlreadyQueued {
+		taskBytes, err := models.BuildWorkflowNodeTaskPayload(
+			workflowID,
+			workflowRunID,
+			n.NodeID,
+			n.NodeRunID,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to marshal task for child node %d: %w", n.NodeID, err)
+		}
+
+		err = rabbitMQClient.Publish(ctx, taskBytes)
+		if err != nil {
+			return fmt.Errorf("failed to publish message for child node %d: %w", n.NodeID, err)
+		}
+
+		logger.WithFields(logrus.Fields{
+			"workflow_id":     workflowID,
+			"workflow_run_id": workflowRunID,
+			"node_id":         n.NodeID,
+			"node_run_id":     n.NodeRunID,
+		}).Info("successfully enqueued child node")
 	}
 
 	return nil
