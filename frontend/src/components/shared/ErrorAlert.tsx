@@ -15,9 +15,7 @@ export const ErrorAlert = ({
   return (
     <Alert
       variant="destructive"
-      className={`mb-6 ${
-        centered ? "flex flex-col items-center text-center space-y-1.5" : ""
-      }`}
+      className={`mb-6 ${centered ? "flex flex-col items-center text-center space-y-1.5" : ""}`}
     >
       <div className="flex items-center gap-2">
         <AlertCircle className="h-4 w-4 text-destructive" />
