@@ -1,9 +1,14 @@
-import { BaseApiClient } from '../base';
-import { Workflow, CreateWorkflowDto, RenderedWorkflow, UpdateWorkflowDto } from './types';
+import { BaseApiClient } from "../base";
+import {
+  Workflow,
+  CreateWorkflowDto,
+  RenderedWorkflow,
+  UpdateWorkflowDto,
+} from "./types";
 
 export class WorkflowApiClient extends BaseApiClient {
   async getUserWorkflows(): Promise<Workflow[]> {
-    return await this.get<Workflow[]>('/api/workflow');
+    return await this.get<Workflow[]>("/api/workflow");
   }
 
   async renderWorkflow(id: string): Promise<RenderedWorkflow> {
@@ -12,7 +17,7 @@ export class WorkflowApiClient extends BaseApiClient {
 
   async createWorkflow(data: CreateWorkflowDto): Promise<number> {
     console.log(data);
-    return await this.post<number>('/api/workflow', data);
+    return await this.post<number>("/api/workflow", data);
   }
 
   async updateWorkflow(id: string, data: UpdateWorkflowDto): Promise<void> {

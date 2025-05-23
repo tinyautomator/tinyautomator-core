@@ -14,8 +14,8 @@ import {
   // FOOTER
   Sparkles,
   Settings,
-} from 'lucide-react';
-import { JSX } from 'react';
+} from "lucide-react";
+import { JSX } from "react";
 
 export const WORKSPACE_ITEMS: {
   label: string;
@@ -23,19 +23,19 @@ export const WORKSPACE_ITEMS: {
   path: string;
 }[] = [
   {
-    label: 'Dashboard',
+    label: "Dashboard",
     icon: <LayoutDashboard className="h-4 w-4" />,
-    path: '/dashboard',
+    path: "/dashboard",
   },
   {
-    label: 'Workflow Builder',
+    label: "Workflow Builder",
     icon: <Zap className="h-4 w-4" />,
-    path: '/workflow-builder',
+    path: "/workflow-builder",
   },
   {
-    label: 'Workflow Library',
+    label: "Workflow Library",
     icon: <BookOpen className="h-4 w-4" />,
-    path: '/workflow-library',
+    path: "/workflow-library",
   },
 ];
 
@@ -43,15 +43,15 @@ export const INTEGRATION_ITEMS: {
   label: string;
   icon: JSX.Element;
 }[] = [
-  { label: 'Email', icon: <Mail className="h-4 w-4" /> },
-  { label: 'Calendar', icon: <Calendar className="h-4 w-4" /> },
-  { label: 'Slack', icon: <MessageSquare className="h-4 w-4" /> },
-  { label: 'Spreadsheets', icon: <Database className="h-4 w-4" /> },
-  { label: 'Forms', icon: <FileText className="h-4 w-4" /> },
-  { label: 'Custom Code', icon: <Code className="h-4 w-4" /> },
+  { label: "Email", icon: <Mail className="h-4 w-4" /> },
+  { label: "Calendar", icon: <Calendar className="h-4 w-4" /> },
+  { label: "Slack", icon: <MessageSquare className="h-4 w-4" /> },
+  { label: "Spreadsheets", icon: <Database className="h-4 w-4" /> },
+  { label: "Forms", icon: <FileText className="h-4 w-4" /> },
+  { label: "Custom Code", icon: <Code className="h-4 w-4" /> },
 ];
 
 export const FOOTER_ITEMS = [
-  { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
-  { label: 'Upgrade Plan', icon: <Sparkles className="h-4 w-4" /> },
+  { label: "Settings", icon: <Settings className="h-4 w-4" /> },
+  { label: "Upgrade Plan", icon: <Sparkles className="h-4 w-4" /> },
 ];

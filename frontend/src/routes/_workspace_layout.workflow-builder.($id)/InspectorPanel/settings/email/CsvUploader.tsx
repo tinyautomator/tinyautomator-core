@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
-import { Upload, Loader2, AlertCircle } from 'lucide-react';
-import { useEmailRecipients } from './utils/useEmailRecipents';
-import { parseEmailCsv } from './utils/csvParser';
-import { Button } from '@/components/ui/button';
+import { useState, useRef } from "react";
+import { Upload, Loader2, AlertCircle } from "lucide-react";
+import { useEmailRecipients } from "./utils/useEmailRecipents";
+import { parseEmailCsv } from "./utils/csvParser";
+import { Button } from "@/components/ui/button";
 export function CsvUploader() {
   const { addEmail } = useEmailRecipients();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -31,7 +31,7 @@ export function CsvUploader() {
     } catch (err: unknown) {
       console.error(err);
       if (err instanceof Error) {
-        setError(err.message || 'Failed to parse CSV.');
+        setError(err.message || "Failed to parse CSV.");
       }
       setTimeout(() => setError(null), 3000);
     } finally {
@@ -43,17 +43,17 @@ export function CsvUploader() {
     <div className="space-y-3">
       <div
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          isDragging ? 'border-primary bg-primary/10' : 'border-muted'
-        } ${isLoading ? 'opacity-70' : ''}`}
-        onDragOver={e => {
+          isDragging ? "border-primary bg-primary/10" : "border-muted"
+        } ${isLoading ? "opacity-70" : ""}`}
+        onDragOver={(e) => {
           e.preventDefault();
           setIsDragging(true);
         }}
-        onDragLeave={e => {
+        onDragLeave={(e) => {
           e.preventDefault();
           setIsDragging(false);
         }}
-        onDrop={e => {
+        onDrop={(e) => {
           e.preventDefault();
           setIsDragging(false);
           const file = e.dataTransfer.files[0];
@@ -71,7 +71,11 @@ export function CsvUploader() {
             <p className="text-sm text-muted-foreground mb-4">
               Drag & drop CSV file or click to browse
             </p>
-            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+            >
               Select File
             </Button>
             <input

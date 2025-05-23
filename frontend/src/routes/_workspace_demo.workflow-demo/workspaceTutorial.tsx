@@ -1,5 +1,5 @@
-import Joyride, { CallBackProps, Step } from 'react-joyride';
-import { useEffect, useState } from 'react';
+import Joyride, { CallBackProps, Step } from "react-joyride";
+import { useEffect, useState } from "react";
 
 interface WorkspaceTutorialProps {
   run: boolean;
@@ -22,12 +22,12 @@ export default function WorkspaceTutorial({
 
   const steps: Step[] = [
     {
-      target: '.tutorial-search',
+      target: ".tutorial-search",
       content: "You can press '/' to begin a block search.",
       disableBeacon: true,
     },
     {
-      target: '.scroll-area',
+      target: ".scroll-area",
       content: (
         <div>
           <p>Blocks come in two types:</p>
@@ -37,7 +37,7 @@ export default function WorkspaceTutorial({
       disableBeacon: true,
     },
     {
-      target: '.scroll-area',
+      target: ".scroll-area",
       content: (
         <div>
           <p>Triggers are the starting point of a workflow.</p>
@@ -46,7 +46,7 @@ export default function WorkspaceTutorial({
       disableBeacon: true,
     },
     {
-      target: '.scroll-area',
+      target: ".scroll-area",
       content: (
         <div>
           <p>Actions are the actions that are performed by the workflow.</p>
@@ -59,7 +59,7 @@ export default function WorkspaceTutorial({
     const { status, index, type } = data;
 
     const prevIndex = index - 1;
-    if (type === 'step:after') {
+    if (type === "step:after") {
       if (prevIndex in categorySteps) {
         const prevCategory = categorySteps[prevIndex];
         onToggleCategory(prevCategory); // toggles closed
@@ -71,7 +71,7 @@ export default function WorkspaceTutorial({
       }
     }
 
-    const finished = status === 'finished' || status === 'skipped';
+    const finished = status === "finished" || status === "skipped";
     if (finished && onFinish) {
       onFinish(); // reset run flag from parent
     }
@@ -91,18 +91,18 @@ export default function WorkspaceTutorial({
       styles={{
         options: { zIndex: 9999 },
         tooltip: {
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '16px',
+          backgroundColor: "white",
+          borderRadius: "8px",
+          padding: "16px",
         },
         buttonNext: {
-          backgroundColor: '#DBEAFE',
-          color: '#336CCD',
+          backgroundColor: "#DBEAFE",
+          color: "#336CCD",
         },
       }}
       floaterProps={{
         styles: {
-          arrow: { color: '#DBEAFE' },
+          arrow: { color: "#DBEAFE" },
         },
       }}
       callback={handleCallback}

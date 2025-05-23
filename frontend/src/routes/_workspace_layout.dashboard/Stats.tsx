@@ -1,14 +1,16 @@
-'use client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+"use client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { CheckCircle, Clock, LineChart, Zap } from 'lucide-react';
+import { CheckCircle, Clock, LineChart, Zap } from "lucide-react";
 
 export function Stats() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Active Workflows</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Active Workflows
+          </CardTitle>
           <Zap className="h-4 w-4 text-blue-600" />
         </CardHeader>
         <CardContent>
