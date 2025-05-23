@@ -10,8 +10,9 @@ import CanvasHeader from './CanvasHeader';
 import { workflowApi } from '@/api';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { useSidebar } from '@/components/ui/sidebar';
 import { useFlowStore } from './flowStore';
+import WorkspaceTutorial from './workspaceTutorial';
+import { Button } from '@/components/ui/button';
 
 export async function loader({ params }: Route.LoaderArgs) {
   if (params.id) {
@@ -30,8 +31,8 @@ export default function WorkflowBuilder({ loaderData: workflowToEdit }: Route.Co
   const [toggleBlockPanel, setToggleBlockPanel] = useState(true);
   const [toggleInspectorPanel, setToggleInspectorPanel] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
-  const { open, setOpen } = useSidebar();
   const { fitView } = useReactFlow();
+  const toggleCategory = useFlowStore(s => s.toggleCategory);
 
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
@@ -51,9 +52,8 @@ export default function WorkflowBuilder({ loaderData: workflowToEdit }: Route.Co
         }, 500);
       } else if (e.key === 'f' && !isTextInput) {
         e.preventDefault();
-        const isFullscreen = !(toggleBlockPanel || toggleInspectorPanel || open);
+        const isFullscreen = !(toggleBlockPanel || toggleInspectorPanel);
 
-        setOpen(isFullscreen);
         setToggleInspectorPanel(isFullscreen);
         setToggleBlockPanel(isFullscreen);
         setTimeout(() => {
@@ -65,11 +65,10 @@ export default function WorkflowBuilder({ loaderData: workflowToEdit }: Route.Co
         }, 500);
       }
     },
-    [open, toggleBlockPanel, toggleInspectorPanel, fitView, setOpen]
+    [toggleBlockPanel, toggleInspectorPanel, fitView]
   );
 
   useEffect(() => {
-    setOpen(false);
     setTimeout(() => {
       fitView({
         duration: 500,
@@ -108,8 +107,28 @@ export default function WorkflowBuilder({ loaderData: workflowToEdit }: Route.Co
     }
   }, [workflowToEdit, setNodes, setEdges]);
 
+  const [tutorialRun, setTutorialRun] = useState(true);
+  useEffect(() => {
+    setTutorialRun(true);
+  }, []);
+
   return (
     <div className="flex h-full overflow-hidden">
+      <>
+        <Button className="absolute bottom-4 left-100 z-50" onClick={() => setTutorialRun(true)}>
+          Start Tutorial
+        </Button>
+
+        <WorkspaceTutorial
+          run={tutorialRun}
+          onFinish={() => setTutorialRun(false)}
+          onToggleCategory={toggleCategory}
+          categorySteps={{
+            1: 'triggers',
+            2: 'actions',
+          }}
+        />
+      </>
       <div
         className={cn(
           'transition-all duration-300 overflow-hidden bg-white dark:bg-gray-900 flex flex-col h-full max-w-72',
