@@ -3,30 +3,35 @@ INSERT INTO workflow_node_run (
   workflow_run_id,
   workflow_node_id,
   status,
-  started_at,
-  metadata,
-  created_at,
-  updated_at
+  metadata
 )
-VALUES ($1, $2, 'running', $3, $4, $5, $6)
+VALUES ($1, $2, 'pending', $3)
 ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
-RETURNING id;
+RETURNING *;
 
--- name: CompleteWorkflowNodeRun :exec
-UPDATE workflow_node_run
-SET status = $2,
-    finished_at = $3,
-    metadata = $4,
-    error_message = $5
-WHERE id = $1;
-
--- name: GetWorkflowNodeRun :one
+-- name: GetWorkflowNodeRunByWorkflowRunIDAndNodeID :one
 SELECT *
 FROM workflow_node_run
-WHERE id = $1;
+WHERE workflow_run_id = $1
+  AND workflow_node_id = $2;
 
 -- name: GetWorkflowNodeRunsByRunID :many
 SELECT *
 FROM workflow_node_run
 WHERE workflow_run_id = $1
 ORDER BY started_at ASC;
+
+-- name: MarkWorkflowNodeAsRunning :exec
+UPDATE workflow_node_run
+SET status = 'running',
+    started_at = $2,
+    retry_count = $3
+WHERE id = $1;
+
+-- name: UpdateWorkflowNodeRun :exec
+UPDATE workflow_node_run
+SET status = $2,
+    finished_at = $3,
+    metadata = $4,
+    error_message = $5
+WHERE id = $1;

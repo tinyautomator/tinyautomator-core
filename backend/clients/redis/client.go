@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -21,8 +23,28 @@ type RedisClient interface {
 	InitializeRunningNodeSet(ctx context.Context, runID int32, nodeIDs []int32) error
 	GetRunningNodeIDs(ctx context.Context, runID int32) (map[int32]struct{}, error)
 	TryAcquireWorkflowRunFinalizationLock(ctx context.Context, runID int32) (bool, error)
-	MarkNodeCompleteAndCountRemaining(ctx context.Context, runID int32, nodeID int32) (int, error)
+	MarkNodeCompleteAndCountRemaining(
+		ctx context.Context,
+		runID int32,
+		nodeID int32,
+		nodeStatus string,
+	) (*int, error)
+	PublishNodeStatusUpdate(
+		ctx context.Context,
+		runID int32,
+		nodeID int32,
+		status string,
+		details map[string]interface{},
+	) error
 	Close() error
+}
+
+type NodeStatusUpdate struct {
+	RunID     int32                  `json:"runId"`
+	NodeID    int32                  `json:"nodeId"`
+	Status    string                 `json:"status"`
+	Timestamp time.Time              `json:"timestamp"`
+	Details   map[string]interface{} `json:"details,omitempty"`
 }
 
 type redisClient struct {
@@ -186,7 +208,8 @@ func (c *redisClient) MarkNodeCompleteAndCountRemaining(
 	ctx context.Context,
 	runID int32,
 	nodeID int32,
-) (int, error) {
+	nodeStatus string,
+) (*int, error) {
 	key := c.generateRunningNodeSetKey(runID)
 
 	popNodeAndCountScript := redis.NewScript(`
@@ -208,12 +231,66 @@ func (c *redisClient) MarkNodeCompleteAndCountRemaining(
 			"node_id": nodeID,
 		}).Error("failed to mark node complete in redis")
 
-		return 0, fmt.Errorf("failed to mark node complete in redis: %w", err)
+		return nil, fmt.Errorf("failed to mark node complete in redis: %w", err)
 	}
 
 	if result == -1 {
-		return result, fmt.Errorf("key not set in redis")
+		return nil, errors.New(
+			"attempted to mark node complete but running node set did not exist in redis",
+		)
 	}
 
-	return result, nil
+	return &result, nil
+}
+
+func (c *redisClient) generateProgressChannel(runID int32) string {
+	return fmt.Sprintf("workflow-progress:%d", runID)
+}
+
+func (c *redisClient) PublishNodeStatusUpdate(
+	ctx context.Context,
+	runID int32,
+	nodeID int32,
+	status string,
+	details map[string]interface{},
+) error {
+	channel := c.generateProgressChannel(runID)
+	payload := NodeStatusUpdate{
+		RunID:     runID,
+		NodeID:    nodeID,
+		Status:    status,
+		Timestamp: time.Now().UTC(),
+		Details:   details,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		c.logger.WithError(err).WithFields(logrus.Fields{
+			"run_id":  runID,
+			"node_id": nodeID,
+			"status":  status,
+		}).Error("failed to marshal node status update payload")
+
+		return fmt.Errorf("failed to marshal node status update payload: %w", err)
+	}
+
+	if err := c.client.Publish(ctx, channel, payloadBytes).Err(); err != nil {
+		c.logger.WithError(err).WithFields(logrus.Fields{
+			"run_id":  runID,
+			"node_id": nodeID,
+			"status":  status,
+			"channel": channel,
+		}).Error("failed to publish node status update to redis")
+
+		return fmt.Errorf("failed to publish node status update to redis: %w", err)
+	}
+
+	c.logger.WithFields(logrus.Fields{
+		"run_id":  runID,
+		"node_id": nodeID,
+		"status":  status,
+		"channel": channel,
+	}).Info("successfully published node status update")
+
+	return nil
 }

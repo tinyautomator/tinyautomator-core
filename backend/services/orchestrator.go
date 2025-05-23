@@ -72,10 +72,16 @@ func (s *OrchestratorService) OrchestrateWorkflow(ctx context.Context, workflowI
 		return fmt.Errorf("orchestrate workflow failed to validate workflow graph: %w", err)
 	}
 
-	run, err := s.workflowRunRepo.CreateWorkflowRun(ctx, workflowID)
+	run, err := s.workflowRunRepo.CreateWorkflowRun(ctx, workflowID, nIDs)
 	if err != nil {
 		return fmt.Errorf("orchestrate workflow failed to create workflow run: %w", err)
 	}
+
+	s.logger.WithFields(logrus.Fields{
+		"workflow_id": workflowID,
+		"n_ids":       nIDs,
+		"run_id":      run.ID,
+	}).Info("created workflow run")
 
 	err = s.redisClient.InitializeRunningNodeSet(ctx, run.ID, nIDs)
 	if err != nil {

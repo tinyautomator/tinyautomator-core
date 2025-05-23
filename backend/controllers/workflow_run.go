@@ -17,6 +17,7 @@ type WorkflowRunController interface {
 	GetWorkflowRuns(ctx *gin.Context)
 	GetWorkflowNodeRuns(ctx *gin.Context)
 	RunWorkflow(ctx *gin.Context)
+	StreamWorkflowRunProgress(ctx *gin.Context)
 }
 
 type workflowRunController struct {
@@ -95,7 +96,7 @@ func (c *workflowRunController) RunWorkflow(ctx *gin.Context) {
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.logger.Error("failed to convert id to int: %v", err)
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid workflow id"})
 
 		return
 	}
@@ -124,11 +125,21 @@ func (c *workflowRunController) RunWorkflow(ctx *gin.Context) {
 	err = c.orchestrator.OrchestrateWorkflow(ctx, int32(workflowID))
 	if err != nil {
 		// TODO: don't return the error to the client
-		c.logger.Error("failed to execute workflow: %v", err)
+		c.logger.WithError(err).Error("failed to execute workflow")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 
 		return
 	}
 
 	ctx.JSON(http.StatusOK, workflowID)
+}
+
+func (c *workflowRunController) StreamWorkflowRunProgress(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+
+	_, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.logger.Error("failed to convert id to int: %v", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid workflow id"})
+	}
 }

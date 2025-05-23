@@ -32,17 +32,27 @@ func NewExecutorService(cfg models.AppConfig) models.ExecutorService {
 	}
 }
 
-func (s *ExecutorService) checkIfNodeTaskIsAlreadyCompleted(
+func (s *ExecutorService) shouldSkipNodeTaskExecution(
 	ctx context.Context,
-	task models.WorkflowNodeTask,
+	task *models.WorkflowNodeTask,
 ) (bool, error) {
-	workflowNodeRun, err := s.workflowRunRepo.GetWorkflowNodeRun(ctx, task.NodeRunID)
+	var shouldSkipExecution bool
+
+	workflowNodeRun, err := s.workflowRunRepo.GetWorkflowNodeRun(ctx, task.RunID, task.NodeID)
 	if err != nil {
 		s.logger.WithError(err).Warn("failed to get workflow node run status from db")
 		return false, fmt.Errorf("failed to get workflow node run status from db: %w", err)
 	}
 
-	return workflowNodeRun.Status == "completed", nil
+	shouldSkipExecution = workflowNodeRun.Status == "success"
+	task.RetryCount = workflowNodeRun.RetryCount
+
+	if task.RetryCount == 3 {
+		shouldSkipExecution = true
+		return shouldSkipExecution, nil
+	}
+
+	return shouldSkipExecution, nil
 }
 
 func (s *ExecutorService) reinitializeRunningNodeSet(
@@ -53,11 +63,13 @@ func (s *ExecutorService) reinitializeRunningNodeSet(
 	// 5 second TTL
 	lockAcquired, err := s.redisClient.TryAcquireWorkflowRunFinalizationLock(ctx, runID)
 	if err != nil {
-		return fmt.Errorf("failed to acquire workflow finalization lock: %w", err)
+		return fmt.Errorf("failed to acquire workflow reinitialization lock: %w", err)
 	}
 
 	if !lockAcquired {
-		return errors.New("workflow finalization already in progress by another worker")
+		return errors.New(
+			"workflow run reinitialization in redis already in progress by another worker",
+		)
 	}
 
 	// refresh cache
@@ -71,9 +83,14 @@ func (s *ExecutorService) reinitializeRunningNodeSet(
 
 func (s *ExecutorService) shouldFinalizeWorkflowRun(
 	ctx context.Context,
-	task models.WorkflowNodeTask,
+	task *models.WorkflowNodeTask,
 ) (bool, error) {
-	remaining, err := s.redisClient.MarkNodeCompleteAndCountRemaining(ctx, task.RunID, task.NodeID)
+	remaining, err := s.redisClient.MarkNodeCompleteAndCountRemaining(
+		ctx,
+		task.RunID,
+		task.NodeID,
+		task.Status,
+	)
 	if err != nil {
 		// cache load failed, need to get the remaining nodes from the database
 		pending := "pending"
@@ -100,55 +117,90 @@ func (s *ExecutorService) shouldFinalizeWorkflowRun(
 			s.logger.WithError(err).Warn("failed to reinitialize running node set")
 		}
 
-		remaining = len(workflowNodeRuns)
+		r := len(workflowNodeRuns)
+		remaining = &r
 	}
 
-	return remaining == 0, nil
+	return *remaining == 0, nil
 }
 
 func (s *ExecutorService) runWorkflowNodeTask(
 	ctx context.Context,
-	task models.WorkflowNodeTask,
+	task *models.WorkflowNodeTask,
 ) error {
-	s.logger.WithFields(logrus.Fields{
+	kv := logrus.Fields{
 		"workflow_id": task.WorkflowID,
 		"run_id":      task.RunID,
 		"node_id":     task.NodeID,
 		"node_run_id": task.NodeRunID,
-	}).Info("executing workflow node")
-
-	if err := s.workflowRunRepo.WithTransaction(ctx, func(txCtx context.Context, txRepo models.WorkflowRunRepository) error {
-		if err := txRepo.CompleteWorkflowNodeRun(txCtx, task.NodeRunID); err != nil {
-			return fmt.Errorf("failed to mark node run as completed: %w", err)
-		}
-
-		// TODO: execute real task logic
-		// if err := executeWorkflowNode(task); err != nil {
-		// 	return fmt.Errorf("task execution failed: %w", err)
-		// }
-		time.Sleep(5 * time.Second)
-
-		// TODO: if the api call fails we mark the node run as failed
-
-		return nil
-	}); err != nil {
-		s.logger.WithError(err).Warn("workflow node execution failed and transaction rolled back")
-		return fmt.Errorf("workflow node execution failed and transaction rolled back: %w", err)
 	}
 
-	s.logger.WithField("node_id", task.NodeID).Info("workflow node executed successfully")
+	s.logger.WithFields(kv).Info("executing workflow node")
 
-	return nil
+	now := time.Now().UnixMilli()
+
+	if err := s.workflowRunRepo.MarkWorkflowNodeAsRunning(ctx, task.NodeRunID, now, task.RetryCount+1); err != nil {
+		return fmt.Errorf("failed to mark node run as running: %w", err)
+	}
+
+	doTask := func() error {
+		if task.NodeID == 111 {
+			time.Sleep(5 * time.Second)
+			return errors.New("test error")
+		}
+
+		time.Sleep(10 * time.Second)
+
+		return nil
+	}
+
+	var taskErr error
+
+	if err := doTask(); err != nil {
+		s.logger.WithFields(kv).WithError(err).Warn("workflow node execution failed")
+
+		errMsg := err.Error()
+		if err := s.workflowRunRepo.UpdateWorkflowNodeRunStatus(ctx, task.NodeRunID, "failed", &errMsg); err != nil {
+			return fmt.Errorf("failed to mark node run as failed: %w", err)
+		}
+
+		task.Status = "failed"
+		taskErr = fmt.Errorf("task execution failed: %w", err)
+	} else {
+		if err := s.workflowRunRepo.UpdateWorkflowNodeRunStatus(ctx, task.NodeRunID, "success", nil); err != nil {
+			return fmt.Errorf("failed to mark node run as success: %w", err)
+		}
+
+		task.Status = "success"
+
+		s.logger.WithFields(kv).Info("workflow node executed successfully")
+	}
+
+	statusDetails := map[string]interface{}{
+		"message": "Node processing finished.",
+	}
+	if errPub := s.redisClient.PublishNodeStatusUpdate(ctx, task.RunID, task.NodeID, task.Status, statusDetails); errPub != nil {
+		s.logger.WithError(errPub).WithFields(logrus.Fields{
+			"run_id":  task.RunID,
+			"node_id": task.NodeID,
+			"status":  task.Status,
+		}).Warn("failed to publish status update after marking node complete; primary operation succeeded")
+	}
+
+	return taskErr
 }
 
 func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) error {
-	var task models.WorkflowNodeTask
+	var task *models.WorkflowNodeTask
 	if err := json.Unmarshal(msg, &task); err != nil {
 		return fmt.Errorf("failed to unmarshal task: %w", err)
 	}
 
-	// first we check if we've already completed the node task but failed on the publish child nodes step
-	shouldSkipExecution, err := s.checkIfNodeTaskIsAlreadyCompleted(ctx, task)
+	// first we check if we've:
+	// 1. already completed the node task
+	// 2. failed on the publish child nodes step
+	// 3. OR exceeded the max retry count
+	shouldSkipExecution, err := s.shouldSkipNodeTaskExecution(ctx, task)
 	if err != nil {
 		// not ideal - we might end up processing the task > 1 time
 		return fmt.Errorf("failed to check if node task is already completed: %w", err)
@@ -164,7 +216,9 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 			"workflow_id": task.WorkflowID,
 			"run_id":      task.RunID,
 			"node_id":     task.NodeID,
-		}).Info("node task already completed")
+			"retry_count": task.RetryCount,
+			"max_retries": 3,
+		}).Info("node task marked as should skip execution")
 	}
 
 	err = internal.EnqueueChildNodes(
@@ -187,7 +241,21 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 	}
 
 	if shouldFinalize {
-		err = s.workflowRunRepo.CompleteWorkflowRun(ctx, task.RunID)
+		workflowNodeRuns, err := s.workflowRunRepo.GetWorkflowNodeRuns(ctx, task.RunID, nil)
+		if err != nil {
+			return fmt.Errorf("failed to get workflow node runs: %w", err)
+		}
+
+		status := "completed"
+
+		for _, nodeRun := range workflowNodeRuns {
+			if nodeRun.Status == "failed" {
+				status = "failed"
+				break
+			}
+		}
+
+		err = s.workflowRunRepo.CompleteWorkflowRun(ctx, task.RunID, status)
 		if err != nil {
 			return fmt.Errorf("failed to complete workflow run: %w", err)
 		}
@@ -195,6 +263,7 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 		s.logger.WithFields(logrus.Fields{
 			"run_id":      task.RunID,
 			"workflow_id": task.WorkflowID,
+			"status":      status,
 		}).Info("workflow run completed")
 	}
 
