@@ -1,39 +1,39 @@
-import { useState, KeyboardEvent } from 'react';
-import { Input } from '@/components/ui/input';
-import { useFormContext } from 'react-hook-form';
-import { EmailFormValues } from './utils/emailValidation';
-import { useEmailRecipients } from './utils/useEmailRecipents';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, KeyboardEvent } from "react";
+import { Input } from "@/components/ui/input";
+import { useFormContext } from "react-hook-form";
+import { EmailFormValues } from "./utils/emailValidation";
+import { useEmailRecipients } from "./utils/useEmailRecipents";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function RecipientInputField() {
   const {
     formState: { errors },
   } = useFormContext<EmailFormValues>();
   const { addEmail } = useEmailRecipients();
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
 
   const handleAdd = (email: string) => {
     addEmail(email);
-    setInputValue('');
+    setInputValue("");
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (['Enter', ',', 'Tab'].includes(e.key)) {
+    if (["Enter", ",", "Tab"].includes(e.key)) {
       e.preventDefault();
       handleAdd(inputValue);
     }
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
-    const pastedText = e.clipboardData.getData('text');
+    const pastedText = e.clipboardData.getData("text");
     if (/\s/.test(pastedText)) {
       e.preventDefault();
       pastedText
         .split(/[\s,]+/)
-        .map(email => email.trim())
+        .map((email) => email.trim())
         .filter(Boolean)
-        .forEach(email => handleAdd(email));
+        .forEach((email) => handleAdd(email));
     }
   };
 
@@ -44,7 +44,7 @@ export function RecipientInputField() {
         <div className="flex gap-2">
           <Input
             value={inputValue}
-            onChange={e => setInputValue(e.target.value)}
+            onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             placeholder="Type or paste email addresses"

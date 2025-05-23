@@ -1,17 +1,17 @@
-import Navbar from './Navbar';
+import Navbar from "./Navbar";
 
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { Outlet, redirect } from 'react-router';
-import { getAuth } from '@clerk/react-router/ssr.server';
-import { Route } from './+types/route';
-import { ReactFlowProvider } from '@xyflow/react';
-import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Outlet, redirect } from "react-router";
+import { getAuth } from "@clerk/react-router/ssr.server";
+import { Route } from "./+types/route";
+import { ReactFlowProvider } from "@xyflow/react";
+import { Toaster } from "@/components/ui/sonner";
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
 
   if (!userId) {
-    return redirect('/');
+    return redirect("/");
   }
 }
 

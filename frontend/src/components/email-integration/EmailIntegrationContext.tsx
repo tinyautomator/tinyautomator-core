@@ -1,11 +1,17 @@
-'use client';
+"use client";
 
-import { createContext, useContext } from 'react';
-import { useEmailIntegration } from './useEmailIntegration';
+import { createContext, useContext } from "react";
+import { useEmailIntegration } from "./useEmailIntegration";
 
-const EmailIntegrationContext = createContext<ReturnType<typeof useEmailIntegration> | null>(null);
+const EmailIntegrationContext = createContext<ReturnType<
+  typeof useEmailIntegration
+> | null>(null);
 
-export function EmailIntegrationProvider({ children }: { children: React.ReactNode }) {
+export function EmailIntegrationProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const integration = useEmailIntegration();
   return (
     <EmailIntegrationContext.Provider value={integration}>
@@ -17,7 +23,9 @@ export function EmailIntegrationProvider({ children }: { children: React.ReactNo
 export function useEmailIntegrationContext() {
   const ctx = useContext(EmailIntegrationContext);
   if (!ctx) {
-    throw new Error('useEmailIntegrationContext must be used within EmailIntegrationProvider');
+    throw new Error(
+      "useEmailIntegrationContext must be used within EmailIntegrationProvider",
+    );
   }
   return ctx;
 }

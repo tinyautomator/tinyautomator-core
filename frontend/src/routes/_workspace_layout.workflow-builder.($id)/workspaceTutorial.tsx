@@ -1,12 +1,15 @@
-import Joyride, { CallBackProps, Step } from 'react-joyride';
-import { useEffect, useState } from 'react';
+import Joyride, { CallBackProps, Step } from "react-joyride";
+import { useEffect, useState } from "react";
 
 interface WorkspaceTutorialProps {
   run: boolean;
   onFinish?: () => void;
 }
 
-export default function WorkspaceTutorial({ run, onFinish }: WorkspaceTutorialProps) {
+export default function WorkspaceTutorial({
+  run,
+  onFinish,
+}: WorkspaceTutorialProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -15,14 +18,14 @@ export default function WorkspaceTutorial({ run, onFinish }: WorkspaceTutorialPr
 
   const steps: Step[] = [
     {
-      target: '.tutorial-search',
+      target: ".tutorial-search",
       content: "You can press '/' to begin searching instantly",
       disableBeacon: true,
     },
   ];
 
   const handleCallback = (data: CallBackProps) => {
-    const finished = data.status === 'finished' || data.status === 'skipped';
+    const finished = data.status === "finished" || data.status === "skipped";
     if (finished && onFinish) {
       onFinish(); // reset run flag from parent
     }
@@ -42,18 +45,18 @@ export default function WorkspaceTutorial({ run, onFinish }: WorkspaceTutorialPr
       styles={{
         options: { zIndex: 9999 },
         tooltip: {
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '16px',
+          backgroundColor: "white",
+          borderRadius: "8px",
+          padding: "16px",
         },
         buttonNext: {
-          backgroundColor: '#DBEAFE',
-          color: '#336CCD',
+          backgroundColor: "#DBEAFE",
+          color: "#336CCD",
         },
       }}
       floaterProps={{
         styles: {
-          arrow: { color: '#DBEAFE' },
+          arrow: { color: "#DBEAFE" },
         },
       }}
       callback={handleCallback}

@@ -1,7 +1,7 @@
-import { useFormContext } from 'react-hook-form';
-import { EmailFormValues, parseEmail } from './emailValidation';
-import { toast } from 'sonner';
-import { useMemo } from 'react';
+import { useFormContext } from "react-hook-form";
+import { EmailFormValues, parseEmail } from "./emailValidation";
+import { toast } from "sonner";
+import { useMemo } from "react";
 
 export function useEmailRecipients() {
   const {
@@ -10,7 +10,7 @@ export function useEmailRecipients() {
     formState: { isDirty, isSubmitting },
   } = useFormContext<EmailFormValues>();
 
-  const recipients = getValues('recipients');
+  const recipients = getValues("recipients");
 
   const { validRecipients, invalidRecipients } = useMemo(() => {
     return recipients.reduce(
@@ -23,7 +23,7 @@ export function useEmailRecipients() {
         }
         return acc;
       },
-      { validRecipients: [] as string[], invalidRecipients: [] as string[] }
+      { validRecipients: [] as string[], invalidRecipients: [] as string[] },
     );
   }, [recipients]);
 
@@ -31,14 +31,14 @@ export function useEmailRecipients() {
     if (!email) return;
 
     const parsed = parseEmail(email);
-    const currentRecipients = getValues('recipients');
+    const currentRecipients = getValues("recipients");
 
     if (currentRecipients.includes(parsed || email)) {
       toast.error(`Email ${parsed || email} has already been added`);
       return;
     }
 
-    setValue('recipients', [...currentRecipients, parsed || email], {
+    setValue("recipients", [...currentRecipients, parsed || email], {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true,
@@ -49,34 +49,38 @@ export function useEmailRecipients() {
     if (!newEmail) return;
 
     const parsed = parseEmail(newEmail);
-    const currentRecipients = getValues('recipients');
+    const currentRecipients = getValues("recipients");
 
-    if (currentRecipients.some(r => r === (parsed || newEmail) && r !== oldEmail)) {
-      toast.error('Email already added');
+    if (
+      currentRecipients.some(
+        (r) => r === (parsed || newEmail) && r !== oldEmail,
+      )
+    ) {
+      toast.error("Email already added");
       return;
     }
 
     setValue(
-      'recipients',
-      currentRecipients.map(r => (r === oldEmail ? parsed || newEmail : r)),
+      "recipients",
+      currentRecipients.map((r) => (r === oldEmail ? parsed || newEmail : r)),
       {
         shouldValidate: true,
         shouldDirty: true,
         shouldTouch: true,
-      }
+      },
     );
   };
 
   const removeEmail = (email: string) => {
-    const currentRecipients = getValues('recipients');
+    const currentRecipients = getValues("recipients");
     setValue(
-      'recipients',
-      currentRecipients.filter(r => r !== email),
+      "recipients",
+      currentRecipients.filter((r) => r !== email),
       {
         shouldValidate: true,
         shouldDirty: true,
         shouldTouch: true,
-      }
+      },
     );
   };
 

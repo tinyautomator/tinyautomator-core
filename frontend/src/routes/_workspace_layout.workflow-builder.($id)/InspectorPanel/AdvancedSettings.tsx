@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 
 interface AdvancedSettingsProps {
   nodeId: string;
@@ -32,7 +32,9 @@ export function AdvancedSettings({ nodeId }: AdvancedSettingsProps) {
             defaultValue="30"
             className="w-20 rounded-md border border-slate-200 p-2 text-sm"
           />
-          <span className="flex items-center text-sm text-slate-500">seconds</span>
+          <span className="flex items-center text-sm text-slate-500">
+            seconds
+          </span>
         </div>
       </div>
       <Button className="w-full">Apply Changes</Button>
