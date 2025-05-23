@@ -81,24 +81,29 @@ type WorkflowSchedule struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
-type WorkflowRun struct {
+type WorkflowRunCore struct {
 	ID         int32     `json:"id"`
 	WorkflowID int32     `json:"workflow_id"`
 	Status     string    `json:"status"`
-	StartedAt  time.Time `json:"started_at"`
 	FinishedAt null.Time `json:"finished_at"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
-type WorkflowRunNodeRun struct {
+type WorkflowRunWithNodesDTO struct {
+	WorkflowRunCore
+	Nodes []*WorkflowNodeRunCore `json:"nodes"`
+}
+
+type WorkflowNodeRunCore struct {
 	ID             int32       `json:"id"`
 	WorkflowRunID  int32       `json:"workflow_run_id"`
 	WorkflowNodeID int32       `json:"workflow_node_id"`
 	Status         string      `json:"status"`
-	StartedAt      time.Time   `json:"started_at"`
+	RetryCount     int32       `json:"retry_count"`
+	StartedAt      null.Time   `json:"started_at"`
 	FinishedAt     null.Time   `json:"finished_at"`
 	Metadata       null.String `json:"metadata"`
 	ErrorMessage   null.String `json:"error_message"`
-	CreatedAt      time.Time   `json:"created_at"`
 }
 
 type ValidateNode struct {
@@ -112,10 +117,12 @@ type ValidateEdge struct {
 }
 
 type WorkflowNodeTask struct {
-	WorkflowID int32 `json:"workflow_id"`
-	RunID      int32 `json:"run_id"`
-	NodeID     int32 `json:"node_id"`
-	NodeRunID  int32 `json:"node_run_id"`
+	WorkflowID int32  `json:"workflow_id"`
+	RunID      int32  `json:"run_id"`
+	NodeID     int32  `json:"node_id"`
+	NodeRunID  int32  `json:"node_run_id"`
+	RetryCount int32  `json:"retry_count,omitempty"`
+	Status     string `json:"status,omitempty"`
 }
 
 func BuildWorkflowNodeTaskPayload(workflowID, runID, nodeID, nodeRunID int32) ([]byte, error) {

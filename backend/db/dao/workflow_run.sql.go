@@ -37,86 +37,138 @@ func (q *Queries) CompleteWorkflowRun(ctx context.Context, arg *CompleteWorkflow
 
 const createWorkflowRun = `-- name: CreateWorkflowRun :one
 INSERT INTO workflow_run (
-  workflow_id, status, started_at, created_at, updated_at
+  workflow_id, status, created_at
 ) VALUES (
-  $1, 'running', $2, $3, $4
+  $1, 'running', $2
 )
-RETURNING id, workflow_id, status, started_at, finished_at, created_at, updated_at
+RETURNING id, workflow_id, status, finished_at, created_at
 `
 
 type CreateWorkflowRunParams struct {
 	WorkflowID int32 `json:"workflow_id"`
-	StartedAt  int64 `json:"started_at"`
 	CreatedAt  int64 `json:"created_at"`
-	UpdatedAt  int64 `json:"updated_at"`
 }
 
 // CreateWorkflowRun
 //
 //	INSERT INTO workflow_run (
-//	  workflow_id, status, started_at, created_at, updated_at
+//	  workflow_id, status, created_at
 //	) VALUES (
-//	  $1, 'running', $2, $3, $4
+//	  $1, 'running', $2
 //	)
-//	RETURNING id, workflow_id, status, started_at, finished_at, created_at, updated_at
+//	RETURNING id, workflow_id, status, finished_at, created_at
 func (q *Queries) CreateWorkflowRun(ctx context.Context, arg *CreateWorkflowRunParams) (*WorkflowRun, error) {
-	row := q.db.QueryRow(ctx, createWorkflowRun,
-		arg.WorkflowID,
-		arg.StartedAt,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-	)
+	row := q.db.QueryRow(ctx, createWorkflowRun, arg.WorkflowID, arg.CreatedAt)
 	var i WorkflowRun
 	err := row.Scan(
 		&i.ID,
 		&i.WorkflowID,
 		&i.Status,
-		&i.StartedAt,
 		&i.FinishedAt,
 		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return &i, err
 }
 
-const getWorkflowRun = `-- name: GetWorkflowRun :one
-SELECT id, workflow_id, status, started_at, finished_at, created_at, updated_at FROM workflow_run
-WHERE id = $1
+const getWorkflowRunWithNodeRuns = `-- name: GetWorkflowRunWithNodeRuns :many
+SELECT
+  wr.id AS workflow_run_id,
+  wr.workflow_id,
+  wr.status AS workflow_run_status,
+  wr.finished_at AS workflow_run_finished_at,
+  wr.created_at AS workflow_run_created_at,
+  wnr.id AS node_run_id,
+  wnr.workflow_node_id,
+  wnr.status AS node_run_status,
+  wnr.started_at AS node_run_started_at,
+  wnr.finished_at AS node_run_finished_at,
+  wnr.metadata,
+  wnr.error_message
+FROM workflow_run wr
+INNER JOIN workflow_node_run wnr ON wr.id = wnr.workflow_run_id
+WHERE wr.id = $1
 `
 
-// GetWorkflowRun
+type GetWorkflowRunWithNodeRunsRow struct {
+	WorkflowRunID         int32       `json:"workflow_run_id"`
+	WorkflowID            int32       `json:"workflow_id"`
+	WorkflowRunStatus     string      `json:"workflow_run_status"`
+	WorkflowRunFinishedAt null.Int    `json:"workflow_run_finished_at"`
+	WorkflowRunCreatedAt  int64       `json:"workflow_run_created_at"`
+	NodeRunID             int32       `json:"node_run_id"`
+	WorkflowNodeID        int32       `json:"workflow_node_id"`
+	NodeRunStatus         string      `json:"node_run_status"`
+	NodeRunStartedAt      null.Int    `json:"node_run_started_at"`
+	NodeRunFinishedAt     null.Int    `json:"node_run_finished_at"`
+	Metadata              []byte      `json:"metadata"`
+	ErrorMessage          null.String `json:"error_message"`
+}
+
+// GetWorkflowRunWithNodeRuns
 //
-//	SELECT id, workflow_id, status, started_at, finished_at, created_at, updated_at FROM workflow_run
-//	WHERE id = $1
-func (q *Queries) GetWorkflowRun(ctx context.Context, id int32) (*WorkflowRun, error) {
-	row := q.db.QueryRow(ctx, getWorkflowRun, id)
-	var i WorkflowRun
-	err := row.Scan(
-		&i.ID,
-		&i.WorkflowID,
-		&i.Status,
-		&i.StartedAt,
-		&i.FinishedAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return &i, err
+//	SELECT
+//	  wr.id AS workflow_run_id,
+//	  wr.workflow_id,
+//	  wr.status AS workflow_run_status,
+//	  wr.finished_at AS workflow_run_finished_at,
+//	  wr.created_at AS workflow_run_created_at,
+//	  wnr.id AS node_run_id,
+//	  wnr.workflow_node_id,
+//	  wnr.status AS node_run_status,
+//	  wnr.started_at AS node_run_started_at,
+//	  wnr.finished_at AS node_run_finished_at,
+//	  wnr.metadata,
+//	  wnr.error_message
+//	FROM workflow_run wr
+//	INNER JOIN workflow_node_run wnr ON wr.id = wnr.workflow_run_id
+//	WHERE wr.id = $1
+func (q *Queries) GetWorkflowRunWithNodeRuns(ctx context.Context, id int32) ([]*GetWorkflowRunWithNodeRunsRow, error) {
+	rows, err := q.db.Query(ctx, getWorkflowRunWithNodeRuns, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetWorkflowRunWithNodeRunsRow
+	for rows.Next() {
+		var i GetWorkflowRunWithNodeRunsRow
+		if err := rows.Scan(
+			&i.WorkflowRunID,
+			&i.WorkflowID,
+			&i.WorkflowRunStatus,
+			&i.WorkflowRunFinishedAt,
+			&i.WorkflowRunCreatedAt,
+			&i.NodeRunID,
+			&i.WorkflowNodeID,
+			&i.NodeRunStatus,
+			&i.NodeRunStartedAt,
+			&i.NodeRunFinishedAt,
+			&i.Metadata,
+			&i.ErrorMessage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listWorkflowRuns = `-- name: ListWorkflowRuns :many
-SELECT id, workflow_id, status, started_at, finished_at, created_at, updated_at
+SELECT id, workflow_id, status, finished_at, created_at
 FROM workflow_run
 WHERE workflow_id = $1
-ORDER BY started_at DESC
+ORDER BY created_at DESC
 LIMIT 25
 `
 
 // ListWorkflowRuns
 //
-//	SELECT id, workflow_id, status, started_at, finished_at, created_at, updated_at
+//	SELECT id, workflow_id, status, finished_at, created_at
 //	FROM workflow_run
 //	WHERE workflow_id = $1
-//	ORDER BY started_at DESC
+//	ORDER BY created_at DESC
 //	LIMIT 25
 func (q *Queries) ListWorkflowRuns(ctx context.Context, workflowID int32) ([]*WorkflowRun, error) {
 	rows, err := q.db.Query(ctx, listWorkflowRuns, workflowID)
@@ -131,10 +183,8 @@ func (q *Queries) ListWorkflowRuns(ctx context.Context, workflowID int32) ([]*Wo
 			&i.ID,
 			&i.WorkflowID,
 			&i.Status,
-			&i.StartedAt,
 			&i.FinishedAt,
 			&i.CreatedAt,
-			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}

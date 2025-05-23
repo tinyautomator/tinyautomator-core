@@ -11,64 +11,22 @@ import (
 	null "github.com/guregu/null/v6"
 )
 
-const completeWorkflowNodeRun = `-- name: CompleteWorkflowNodeRun :exec
-UPDATE workflow_node_run
-SET status = $2,
-    finished_at = $3,
-    metadata = $4,
-    error_message = $5
-WHERE id = $1
-`
-
-type CompleteWorkflowNodeRunParams struct {
-	ID           int32       `json:"id"`
-	Status       string      `json:"status"`
-	FinishedAt   null.Int    `json:"finished_at"`
-	Metadata     []byte      `json:"metadata"`
-	ErrorMessage null.String `json:"error_message"`
-}
-
-// CompleteWorkflowNodeRun
-//
-//	UPDATE workflow_node_run
-//	SET status = $2,
-//	    finished_at = $3,
-//	    metadata = $4,
-//	    error_message = $5
-//	WHERE id = $1
-func (q *Queries) CompleteWorkflowNodeRun(ctx context.Context, arg *CompleteWorkflowNodeRunParams) error {
-	_, err := q.db.Exec(ctx, completeWorkflowNodeRun,
-		arg.ID,
-		arg.Status,
-		arg.FinishedAt,
-		arg.Metadata,
-		arg.ErrorMessage,
-	)
-	return err
-}
-
 const createWorkflowNodeRun = `-- name: CreateWorkflowNodeRun :one
 INSERT INTO workflow_node_run (
   workflow_run_id,
   workflow_node_id,
   status,
-  started_at,
-  metadata,
-  created_at,
-  updated_at
+  metadata
 )
-VALUES ($1, $2, 'running', $3, $4, $5, $6)
+VALUES ($1, $2, 'pending', $3)
 ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
-RETURNING id
+RETURNING id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
 `
 
 type CreateWorkflowNodeRunParams struct {
 	WorkflowRunID  int32  `json:"workflow_run_id"`
 	WorkflowNodeID int32  `json:"workflow_node_id"`
-	StartedAt      int64  `json:"started_at"`
 	Metadata       []byte `json:"metadata"`
-	CreatedAt      int64  `json:"created_at"`
-	UpdatedAt      int64  `json:"updated_at"`
 }
 
 // CreateWorkflowNodeRun
@@ -77,59 +35,65 @@ type CreateWorkflowNodeRunParams struct {
 //	  workflow_run_id,
 //	  workflow_node_id,
 //	  status,
-//	  started_at,
-//	  metadata,
-//	  created_at,
-//	  updated_at
+//	  metadata
 //	)
-//	VALUES ($1, $2, 'running', $3, $4, $5, $6)
+//	VALUES ($1, $2, 'pending', $3)
 //	ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
-//	RETURNING id
-func (q *Queries) CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (int32, error) {
-	row := q.db.QueryRow(ctx, createWorkflowNodeRun,
-		arg.WorkflowRunID,
-		arg.WorkflowNodeID,
-		arg.StartedAt,
-		arg.Metadata,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-	)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
-}
-
-const getWorkflowNodeRun = `-- name: GetWorkflowNodeRun :one
-SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
-FROM workflow_node_run
-WHERE id = $1
-`
-
-// GetWorkflowNodeRun
-//
-//	SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
-//	FROM workflow_node_run
-//	WHERE id = $1
-func (q *Queries) GetWorkflowNodeRun(ctx context.Context, id int32) (*WorkflowNodeRun, error) {
-	row := q.db.QueryRow(ctx, getWorkflowNodeRun, id)
+//	RETURNING id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
+func (q *Queries) CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (*WorkflowNodeRun, error) {
+	row := q.db.QueryRow(ctx, createWorkflowNodeRun, arg.WorkflowRunID, arg.WorkflowNodeID, arg.Metadata)
 	var i WorkflowNodeRun
 	err := row.Scan(
 		&i.ID,
 		&i.WorkflowRunID,
 		&i.WorkflowNodeID,
 		&i.Status,
+		&i.RetryCount,
 		&i.StartedAt,
 		&i.FinishedAt,
 		&i.Metadata,
 		&i.ErrorMessage,
-		&i.CreatedAt,
-		&i.UpdatedAt,
+	)
+	return &i, err
+}
+
+const getWorkflowNodeRunByWorkflowRunIDAndNodeID = `-- name: GetWorkflowNodeRunByWorkflowRunIDAndNodeID :one
+SELECT id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
+FROM workflow_node_run
+WHERE workflow_run_id = $1
+  AND workflow_node_id = $2
+`
+
+type GetWorkflowNodeRunByWorkflowRunIDAndNodeIDParams struct {
+	WorkflowRunID  int32 `json:"workflow_run_id"`
+	WorkflowNodeID int32 `json:"workflow_node_id"`
+}
+
+// GetWorkflowNodeRunByWorkflowRunIDAndNodeID
+//
+//	SELECT id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
+//	FROM workflow_node_run
+//	WHERE workflow_run_id = $1
+//	  AND workflow_node_id = $2
+func (q *Queries) GetWorkflowNodeRunByWorkflowRunIDAndNodeID(ctx context.Context, arg *GetWorkflowNodeRunByWorkflowRunIDAndNodeIDParams) (*WorkflowNodeRun, error) {
+	row := q.db.QueryRow(ctx, getWorkflowNodeRunByWorkflowRunIDAndNodeID, arg.WorkflowRunID, arg.WorkflowNodeID)
+	var i WorkflowNodeRun
+	err := row.Scan(
+		&i.ID,
+		&i.WorkflowRunID,
+		&i.WorkflowNodeID,
+		&i.Status,
+		&i.RetryCount,
+		&i.StartedAt,
+		&i.FinishedAt,
+		&i.Metadata,
+		&i.ErrorMessage,
 	)
 	return &i, err
 }
 
 const getWorkflowNodeRunsByRunID = `-- name: GetWorkflowNodeRunsByRunID :many
-SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
+SELECT id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
 FROM workflow_node_run
 WHERE workflow_run_id = $1
 ORDER BY started_at ASC
@@ -137,7 +101,7 @@ ORDER BY started_at ASC
 
 // GetWorkflowNodeRunsByRunID
 //
-//	SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
+//	SELECT id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
 //	FROM workflow_node_run
 //	WHERE workflow_run_id = $1
 //	ORDER BY started_at ASC
@@ -155,12 +119,11 @@ func (q *Queries) GetWorkflowNodeRunsByRunID(ctx context.Context, workflowRunID 
 			&i.WorkflowRunID,
 			&i.WorkflowNodeID,
 			&i.Status,
+			&i.RetryCount,
 			&i.StartedAt,
 			&i.FinishedAt,
 			&i.Metadata,
 			&i.ErrorMessage,
-			&i.CreatedAt,
-			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -170,4 +133,66 @@ func (q *Queries) GetWorkflowNodeRunsByRunID(ctx context.Context, workflowRunID 
 		return nil, err
 	}
 	return items, nil
+}
+
+const markWorkflowNodeAsRunning = `-- name: MarkWorkflowNodeAsRunning :exec
+UPDATE workflow_node_run
+SET status = 'running',
+    started_at = $2,
+    retry_count = $3
+WHERE id = $1
+`
+
+type MarkWorkflowNodeAsRunningParams struct {
+	ID         int32    `json:"id"`
+	StartedAt  null.Int `json:"started_at"`
+	RetryCount int32    `json:"retry_count"`
+}
+
+// MarkWorkflowNodeAsRunning
+//
+//	UPDATE workflow_node_run
+//	SET status = 'running',
+//	    started_at = $2,
+//	    retry_count = $3
+//	WHERE id = $1
+func (q *Queries) MarkWorkflowNodeAsRunning(ctx context.Context, arg *MarkWorkflowNodeAsRunningParams) error {
+	_, err := q.db.Exec(ctx, markWorkflowNodeAsRunning, arg.ID, arg.StartedAt, arg.RetryCount)
+	return err
+}
+
+const updateWorkflowNodeRun = `-- name: UpdateWorkflowNodeRun :exec
+UPDATE workflow_node_run
+SET status = $2,
+    finished_at = $3,
+    metadata = $4,
+    error_message = $5
+WHERE id = $1
+`
+
+type UpdateWorkflowNodeRunParams struct {
+	ID           int32       `json:"id"`
+	Status       string      `json:"status"`
+	FinishedAt   null.Int    `json:"finished_at"`
+	Metadata     []byte      `json:"metadata"`
+	ErrorMessage null.String `json:"error_message"`
+}
+
+// UpdateWorkflowNodeRun
+//
+//	UPDATE workflow_node_run
+//	SET status = $2,
+//	    finished_at = $3,
+//	    metadata = $4,
+//	    error_message = $5
+//	WHERE id = $1
+func (q *Queries) UpdateWorkflowNodeRun(ctx context.Context, arg *UpdateWorkflowNodeRunParams) error {
+	_, err := q.db.Exec(ctx, updateWorkflowNodeRun,
+		arg.ID,
+		arg.Status,
+		arg.FinishedAt,
+		arg.Metadata,
+		arg.ErrorMessage,
+	)
+	return err
 }

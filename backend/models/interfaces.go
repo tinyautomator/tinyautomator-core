@@ -84,20 +84,36 @@ type WorkflowRunRepository interface {
 		ctx context.Context,
 		fn func(ctx context.Context, txRepo WorkflowRunRepository) error,
 	) error
-	GetWorkflowRun(ctx context.Context, id int32) (*WorkflowRun, error)
-	GetWorkflowRuns(ctx context.Context, workflowID int32) ([]*WorkflowRun, error)
-	GetWorkflowNodeRun(ctx context.Context, id int32) (*WorkflowRunNodeRun, error)
+	GetWorkflowRun(ctx context.Context, id int32) (*WorkflowRunWithNodesDTO, error)
+	GetWorkflowRuns(ctx context.Context, workflowID int32) ([]*WorkflowRunCore, error)
+	GetWorkflowNodeRun(
+		ctx context.Context,
+		workflowRunID int32,
+		nodeID int32,
+	) (*WorkflowNodeRunCore, error)
 	GetWorkflowNodeRuns(
 		ctx context.Context,
 		workflowRunID int32,
 		status *string,
-	) ([]*WorkflowRunNodeRun, error)
-	CreateWorkflowRun(ctx context.Context, workflowID int32) (*WorkflowRun, error)
-	CreateWorkflowNodeRun(ctx context.Context, workflowRunID, workflowNodeID int32) (*int32, error)
-	CompleteWorkflowRun(ctx context.Context, workflowRunID int32) error
-	CompleteWorkflowNodeRun(ctx context.Context, workflowNodeRunID int32) error
-	UpdateWorkflowRunStatus(ctx context.Context, id int32, status string) error
-	UpdateWorkflowNodeRunStatus(ctx context.Context, id int32, status string) error
+	) ([]*WorkflowNodeRunCore, error)
+	CreateWorkflowRun(
+		ctx context.Context,
+		workflowID int32,
+		nodeIDs []int32,
+	) (*WorkflowRunWithNodesDTO, error)
+	CompleteWorkflowRun(ctx context.Context, workflowRunID int32, status string) error
+	MarkWorkflowNodeAsRunning(
+		ctx context.Context,
+		workflowNodeRunID int32,
+		startedAt int64,
+		retryCount int32,
+	) error
+	UpdateWorkflowNodeRunStatus(
+		ctx context.Context,
+		workflowNodeRunID int32,
+		status string,
+		errorMessage *string,
+	) error
 }
 
 type WorkflowScheduleRepository interface {

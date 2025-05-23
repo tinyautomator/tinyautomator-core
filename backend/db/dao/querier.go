@@ -9,15 +9,6 @@ import (
 )
 
 type Querier interface {
-	//CompleteWorkflowNodeRun
-	//
-	//  UPDATE workflow_node_run
-	//  SET status = $2,
-	//      finished_at = $3,
-	//      metadata = $4,
-	//      error_message = $5
-	//  WHERE id = $1
-	CompleteWorkflowNodeRun(ctx context.Context, arg *CompleteWorkflowNodeRunParams) error
 	//CompleteWorkflowRun
 	//
 	//  UPDATE workflow_run
@@ -70,15 +61,12 @@ type Querier interface {
 	//    workflow_run_id,
 	//    workflow_node_id,
 	//    status,
-	//    started_at,
-	//    metadata,
-	//    created_at,
-	//    updated_at
+	//    metadata
 	//  )
-	//  VALUES ($1, $2, 'running', $3, $4, $5, $6)
+	//  VALUES ($1, $2, 'pending', $3)
 	//  ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
-	//  RETURNING id
-	CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (int32, error)
+	//  RETURNING id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
+	CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (*WorkflowNodeRun, error)
 	//CreateWorkflowNodeUi
 	//
 	//  INSERT INTO workflow_node_ui (
@@ -94,11 +82,11 @@ type Querier interface {
 	//CreateWorkflowRun
 	//
 	//  INSERT INTO workflow_run (
-	//    workflow_id, status, started_at, created_at, updated_at
+	//    workflow_id, status, created_at
 	//  ) VALUES (
-	//    $1, 'running', $2, $3, $4
+	//    $1, 'running', $2
 	//  )
-	//  RETURNING id, workflow_id, status, started_at, finished_at, created_at, updated_at
+	//  RETURNING id, workflow_id, status, finished_at, created_at
 	CreateWorkflowRun(ctx context.Context, arg *CreateWorkflowRunParams) (*WorkflowRun, error)
 	//CreateWorkflowSchedule
 	//
@@ -185,32 +173,55 @@ type Querier interface {
 	//    AND we.source_node_id = wn.id
 	//  WHERE w.id = $1
 	GetWorkflowGraph(ctx context.Context, id int32) ([]*GetWorkflowGraphRow, error)
-	//GetWorkflowNodeRun
+	//GetWorkflowNodeRunByWorkflowRunIDAndNodeID
 	//
-	//  SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
+	//  SELECT id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
 	//  FROM workflow_node_run
-	//  WHERE id = $1
-	GetWorkflowNodeRun(ctx context.Context, id int32) (*WorkflowNodeRun, error)
+	//  WHERE workflow_run_id = $1
+	//    AND workflow_node_id = $2
+	GetWorkflowNodeRunByWorkflowRunIDAndNodeID(ctx context.Context, arg *GetWorkflowNodeRunByWorkflowRunIDAndNodeIDParams) (*WorkflowNodeRun, error)
 	//GetWorkflowNodeRunsByRunID
 	//
-	//  SELECT id, workflow_run_id, workflow_node_id, status, started_at, finished_at, metadata, error_message, created_at, updated_at
+	//  SELECT id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
 	//  FROM workflow_node_run
 	//  WHERE workflow_run_id = $1
 	//  ORDER BY started_at ASC
 	GetWorkflowNodeRunsByRunID(ctx context.Context, workflowRunID int32) ([]*WorkflowNodeRun, error)
-	//GetWorkflowRun
+	//GetWorkflowRunWithNodeRuns
 	//
-	//  SELECT id, workflow_id, status, started_at, finished_at, created_at, updated_at FROM workflow_run
-	//  WHERE id = $1
-	GetWorkflowRun(ctx context.Context, id int32) (*WorkflowRun, error)
+	//  SELECT
+	//    wr.id AS workflow_run_id,
+	//    wr.workflow_id,
+	//    wr.status AS workflow_run_status,
+	//    wr.finished_at AS workflow_run_finished_at,
+	//    wr.created_at AS workflow_run_created_at,
+	//    wnr.id AS node_run_id,
+	//    wnr.workflow_node_id,
+	//    wnr.status AS node_run_status,
+	//    wnr.started_at AS node_run_started_at,
+	//    wnr.finished_at AS node_run_finished_at,
+	//    wnr.metadata,
+	//    wnr.error_message
+	//  FROM workflow_run wr
+	//  INNER JOIN workflow_node_run wnr ON wr.id = wnr.workflow_run_id
+	//  WHERE wr.id = $1
+	GetWorkflowRunWithNodeRuns(ctx context.Context, id int32) ([]*GetWorkflowRunWithNodeRunsRow, error)
 	//ListWorkflowRuns
 	//
-	//  SELECT id, workflow_id, status, started_at, finished_at, created_at, updated_at
+	//  SELECT id, workflow_id, status, finished_at, created_at
 	//  FROM workflow_run
 	//  WHERE workflow_id = $1
-	//  ORDER BY started_at DESC
+	//  ORDER BY created_at DESC
 	//  LIMIT 25
 	ListWorkflowRuns(ctx context.Context, workflowID int32) ([]*WorkflowRun, error)
+	//MarkWorkflowNodeAsRunning
+	//
+	//  UPDATE workflow_node_run
+	//  SET status = 'running',
+	//      started_at = $2,
+	//      retry_count = $3
+	//  WHERE id = $1
+	MarkWorkflowNodeAsRunning(ctx context.Context, arg *MarkWorkflowNodeAsRunningParams) error
 	//RenderWorkflowGraph
 	//
 	//  SELECT
@@ -248,6 +259,15 @@ type Querier interface {
 	//      config = $3
 	//  WHERE id = $1
 	UpdateWorkflowNode(ctx context.Context, arg *UpdateWorkflowNodeParams) error
+	//UpdateWorkflowNodeRun
+	//
+	//  UPDATE workflow_node_run
+	//  SET status = $2,
+	//      finished_at = $3,
+	//      metadata = $4,
+	//      error_message = $5
+	//  WHERE id = $1
+	UpdateWorkflowNodeRun(ctx context.Context, arg *UpdateWorkflowNodeRunParams) error
 	//UpdateWorkflowNodeUI
 	//
 	//  UPDATE workflow_node_ui

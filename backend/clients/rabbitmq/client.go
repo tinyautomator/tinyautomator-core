@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"sync"
 	"time"
@@ -13,7 +14,16 @@ import (
 )
 
 const (
-	queue = "process_node_run"
+	queue              = "process_node_run"
+	retryExchange      = "retry_delayed_exchange"
+	deadLetterExchange = "dlx_exchange"
+	deadLetterQueue    = "process_node_run_dlq"
+
+	// Retry configuration
+	maxRetries        = 3
+	initialDelayMs    = 2000   // 2 seconds in milliseconds
+	maxDelayMs        = 120000 // 2 minutes in milliseconds
+	backoffMultiplier = 2
 )
 
 type RabbitMQClient interface {
@@ -55,15 +65,8 @@ func NewRabbitMQClient(
 		return nil, fmt.Errorf("failed to connect to rabbitmq: %w", err)
 	}
 
-	if _, err := c.channel.QueueDeclare(
-		queue,
-		true,  // durable
-		false, // auto-deleted
-		false, // exclusive
-		false, // no-wait
-		nil,
-	); err != nil {
-		return nil, fmt.Errorf("failed to declare queue: %w", err)
+	if err := c.setupQueuesAndExchanges(); err != nil {
+		return nil, fmt.Errorf("failed to setup retry infrastructure: %w", err)
 	}
 
 	go c.monitorConnection()
@@ -71,9 +74,82 @@ func NewRabbitMQClient(
 	return c, nil
 }
 
+func (c *rabbitMQClient) setupQueuesAndExchanges() error {
+	if err := c.channel.ExchangeDeclare(
+		retryExchange,
+		"x-delayed-message", // Special exchange type from plugin
+		true,                // durable
+		false,               // auto-delete
+		false,               // internal
+		false,               // no-wait
+		amqp.Table{
+			"x-delayed-type": "direct", // Underlying exchange type
+		},
+	); err != nil {
+		return fmt.Errorf("failed to declare retry exchange: %w", err)
+	}
+
+	if err := c.channel.ExchangeDeclare(
+		deadLetterExchange,
+		"direct",
+		true,  // durable
+		false, // auto-delete
+		false, // internal
+		false, // no-wait
+		nil,
+	); err != nil {
+		return fmt.Errorf("failed to declare dead letter exchange: %w", err)
+	}
+
+	if _, err := c.channel.QueueDeclare(
+		deadLetterQueue,
+		true,  // durable
+		false, // auto-delete
+		false, // exclusive
+		false, // no-wait
+		nil,
+	); err != nil {
+		return fmt.Errorf("failed to declare dead letter queue: %w", err)
+	}
+
+	if err := c.channel.QueueBind(
+		deadLetterQueue,
+		"failed", // routing key
+		deadLetterExchange,
+		false, // no-wait
+		nil,
+	); err != nil {
+		return fmt.Errorf("failed to bind dead letter queue: %w", err)
+	}
+
+	if _, err := c.channel.QueueDeclare(
+		queue,
+		true,  // durable
+		false, // auto-delete
+		false, // exclusive
+		false, // no-wait
+		amqp.Table{
+			"x-dead-letter-exchange":    deadLetterExchange,
+			"x-dead-letter-routing-key": "failed",
+		},
+	); err != nil {
+		return fmt.Errorf("failed to declare main queue: %w", err)
+	}
+
+	if err := c.channel.QueueBind(
+		queue,
+		"retry", // routing key for retries
+		retryExchange,
+		false, // no-wait
+		nil,
+	); err != nil {
+		return fmt.Errorf("failed to bind retry exchange to main queue: %w", err)
+	}
+
+	return nil
+}
+
 func (c *rabbitMQClient) Publish(ctx context.Context, msg []byte) error {
-	// janky way to make sure the listener is registered on
-	// the server instance only and not the worker instance
 	c.StartReturnListener()
 
 	if err := c.channel.PublishWithContext(ctx,
@@ -129,10 +205,7 @@ func (c *rabbitMQClient) Subscribe(ctx context.Context, handler func([]byte) err
 
 				if err := handler(msg.Body); err != nil {
 					c.logger.WithError(err).Error("Failed to process message")
-
-					if err := msg.Nack(false, true); err != nil {
-						c.logger.WithError(err).Error("failed to nack message")
-					}
+					c.handleFailedMessage(msg)
 
 					continue
 				}
@@ -145,6 +218,74 @@ func (c *rabbitMQClient) Subscribe(ctx context.Context, handler func([]byte) err
 	}()
 
 	return nil
+}
+
+func (c *rabbitMQClient) handleFailedMessage(msg amqp.Delivery) {
+	retryCount := 0
+
+	if msg.Headers != nil {
+		if count, ok := msg.Headers["x-retry-count"]; ok {
+			if countInt, ok := count.(int32); ok {
+				retryCount = int(countInt)
+			}
+		}
+	}
+
+	c.logger.WithFields(logrus.Fields{
+		"retry_count": retryCount,
+		"max_retries": maxRetries,
+	}).Info("handling failed message")
+
+	if retryCount >= maxRetries {
+		c.logger.WithField("retry_count", retryCount).Warn("max retries exceeded, sending to DLQ")
+
+		if err := msg.Nack(false, false); err != nil {
+			c.logger.WithError(err).Error("failed to nack message to DLQ")
+		}
+
+		return
+	}
+
+	delay := float64(initialDelayMs) * math.Pow(float64(backoffMultiplier), float64(retryCount))
+
+	if delay > float64(maxDelayMs) {
+		delay = float64(maxDelayMs)
+	}
+
+	c.logger.WithFields(logrus.Fields{
+		"retry_count": retryCount + 1,
+		"delay_ms":    int(delay),
+	}).Info("scheduling retry")
+
+	headers := amqp.Table{
+		"x-retry-count": int32(retryCount + 1),
+		"x-delay":       int32(delay),
+	}
+
+	if err := c.channel.PublishWithContext(context.Background(),
+		retryExchange,
+		"retry", // routing key
+		false,   // mandatory
+		false,   // immediate
+		amqp.Publishing{
+			ContentType:  msg.ContentType,
+			DeliveryMode: msg.DeliveryMode,
+			Headers:      headers,
+			Body:         msg.Body,
+		}); err != nil {
+		c.logger.WithError(err).Error("failed to publish retry message")
+
+		if err := msg.Nack(false, false); err != nil {
+			c.logger.WithError(err).
+				Error("failed to nack message to DLQ after retry publish failure")
+		}
+
+		return
+	}
+
+	if err := msg.Ack(false); err != nil {
+		c.logger.WithError(err).Error("failed to ack original message after scheduling retry")
+	}
 }
 
 func (c *rabbitMQClient) connect() error {
@@ -294,6 +435,12 @@ func (c *rabbitMQClient) attemptReconnect() {
 		}
 
 		c.logger.Info("successfully reconnected to rabbitmq")
+
+		if err := c.setupQueuesAndExchanges(); err != nil {
+			c.logger.WithError(err).Error("failed to re-setup retry infrastructure after reconnect")
+			continue
+		}
+
 		go c.monitorConnection()
 
 		return
