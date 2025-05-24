@@ -26,14 +26,14 @@ func main() {
 	}
 	defer cfg.CleanUp()
 
-	routes.RegisterRoutes(r, cfg)
+	routes.RegisterRoutes(r, cfg, ctx)
 
 	srv := &http.Server{
-		Addr:    ":" + cfg.GetEnvVars().Port,
-		Handler: r,
-		// TODO: add this to config
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		Addr:         ":" + cfg.GetEnvVars().Port,
+		Handler:      r,
+		ReadTimeout:  0,
+		WriteTimeout: 0,
+		IdleTimeout:  0,
 	}
 
 	go func() {

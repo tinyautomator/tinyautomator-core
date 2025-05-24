@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"time"
 
 	"github.com/gin-contrib/timeout"
@@ -9,7 +10,7 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-func RegisterRoutes(r *gin.Engine, cfg models.AppConfig) {
+func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 	r.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "TinyAutomator backend is live 🚀",
@@ -32,7 +33,7 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig) {
 		))
 	}
 
-	workflowRunController := controllers.NewWorkflowRunController(cfg)
+	workflowRunController := controllers.NewWorkflowRunController(cfg, ctx)
 	workflowRunGroup := r.Group("/api/workflow-run")
 	{
 		// TODO: add timeout

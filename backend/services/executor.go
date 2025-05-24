@@ -144,12 +144,11 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	}
 
 	doTask := func() error {
+		time.Sleep(1 * time.Minute)
+
 		if task.NodeID == 111 {
-			time.Sleep(5 * time.Second)
 			return errors.New("test error")
 		}
-
-		time.Sleep(10 * time.Second)
 
 		return nil
 	}
