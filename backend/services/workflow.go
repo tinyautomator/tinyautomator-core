@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/internal"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/yourbasic/graph"
 )
@@ -275,7 +276,7 @@ const (
 	//TODO: Add more triggers
 )
 
-func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32, _ string) error {
+func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32) error {
 	workflow, err := s.workflowRepo.GetWorkflow(ctx, workflowID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch workflow %d: %w", workflowID, err)
@@ -292,33 +293,22 @@ func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32,
 		return fmt.Errorf("failed to archive workflow: %w", err)
 	}
 
-	graph, err := s.workflowRepo.RenderWorkflowGraph(ctx, workflowID)
+	graph, err := s.workflowRepo.GetWorkflowGraph(ctx, workflowID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch workflow graph: %w", err)
 	}
 
-	targets := make(map[string]struct{})
-	for _, edge := range graph.Edges {
-		targets[edge.TargetNodeID] = struct{}{}
-	}
-
-	for _, node := range graph.Nodes {
-		if _, hasIncoming := targets[node.ID]; !hasIncoming {
-			s.logger.Infof("Found trigger node: ID=%s, ActionType=%s", node.ID, node.ActionType)
-			switch node.ActionType {
-			case TriggerTypeScheduled:
-				_ = s.workflowRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
-				// TODO: Add more trigger type cleanups here
-			default:
-				s.logger.Infof("Trigger node ID=%s has unrecognized ActionType=%s, treating as 'manual' (no cleanup)", node.ID, node.ActionType)
-				// No cleanup for manual or unknown types
-			}
+	rootNodes := internal.GetRootTriggerNodes(graph)
+	for _, node := range rootNodes {
+		s.logger.Infof("Found trigger node: ID=%d, ActionType=%s", node.ID, node.ActionType)
+		switch node.ActionType {
+		case TriggerTypeScheduled:
+			_ = s.workflowRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
+			// TODO: Add more trigger types
+		default:
+			s.logger.Infof("Trigger node ID=%d has unrecognized ActionType=%s, treating as 'manual' (no cleanup)", node.ID, node.ActionType)
 		}
 	}
 
 	return nil
-}
-
-func (s *WorkflowService) ArchiveScheduledWorkflow(ctx context.Context, workflowID int32) error {
-	return s.ArchiveWorkflow(ctx, workflowID, TriggerTypeScheduled)
 }

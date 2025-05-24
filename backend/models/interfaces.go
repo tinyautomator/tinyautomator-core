@@ -164,5 +164,5 @@ type WorkflowService interface {
 		nodes []*WorkflowNodeDTO,
 		edges []*WorkflowEdgeDTO,
 	) error
-	ArchiveScheduledWorkflow(ctx context.Context, workflowID int32) error
+	ArchiveWorkflow(ctx context.Context, workflowID int32) error
 }
