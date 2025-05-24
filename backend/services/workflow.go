@@ -270,12 +270,12 @@ func (s *WorkflowService) UpdateWorkflow(
 
 const (
 	WorkflowStatusArchived = "archived"
-	TriggerTypeScheduled   = "scheduled"
+	TriggerTypeScheduled   = "schedule"
 	TriggerTypeManual      = "manual"
-	//TODO: Add more triggers 
+	//TODO: Add more triggers
 )
 
-func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32, triggerType string) error {
+func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32, _ string) error {
 	workflow, err := s.workflowRepo.GetWorkflow(ctx, workflowID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch workflow %d: %w", workflowID, err)
@@ -287,21 +287,33 @@ func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32,
 
 	updatedAt := time.Now().UnixMilli()
 
-	switch triggerType {
-	case TriggerTypeScheduled:
-		err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID, WorkflowStatusArchived, updatedAt)
-		if err != nil {
-			return fmt.Errorf("failed to archive scheduled workflow: %w", err)
+	err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID, WorkflowStatusArchived, updatedAt)
+	if err != nil {
+		return fmt.Errorf("failed to archive workflow: %w", err)
+	}
+
+	graph, err := s.workflowRepo.RenderWorkflowGraph(ctx, workflowID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch workflow graph: %w", err)
+	}
+
+	targets := make(map[string]struct{})
+	for _, edge := range graph.Edges {
+		targets[edge.TargetNodeID] = struct{}{}
+	}
+
+	for _, node := range graph.Nodes {
+		if _, hasIncoming := targets[node.ID]; !hasIncoming {
+			s.logger.Infof("Found trigger node: ID=%s, ActionType=%s", node.ID, node.ActionType)
+			switch node.ActionType {
+			case TriggerTypeScheduled:
+				_ = s.workflowRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
+				// TODO: Add more trigger type cleanups here
+			default:
+				s.logger.Infof("Trigger node ID=%s has unrecognized ActionType=%s, treating as 'manual' (no cleanup)", node.ID, node.ActionType)
+				// No cleanup for manual or unknown types
+			}
 		}
-		_ = s.workflowRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
-	case TriggerTypeManual:
-		err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID, WorkflowStatusArchived, updatedAt)
-		if err != nil {
-			return fmt.Errorf("failed to archive manual workflow: %w", err)
-		}
-	// TODO: Add more triggers
-	default:
-		return fmt.Errorf("unsupported trigger type: '%s'", triggerType)
 	}
 
 	return nil

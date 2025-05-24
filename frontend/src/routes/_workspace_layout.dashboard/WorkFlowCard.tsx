@@ -19,6 +19,8 @@ interface WorkflowCardProps {
   lastRun: string;
   status: string;
   runs: number;
+  archived: boolean;
+  archiving: boolean;
 }
 
 export function WorkflowCard({
@@ -28,7 +30,17 @@ export function WorkflowCard({
   lastRun,
   status,
   runs,
+  archived,
+  archiving,
 }: WorkflowCardProps) {
+  const handleArchive = async () => {
+    try {
+      await workflowApi.archiveWorkflow(id);
+    } catch (error) {
+      console.error("Error archiving workflow:", error);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -65,6 +77,14 @@ export function WorkflowCard({
             <Settings className="mr-1 h-3 w-3" />
             Configure
           </NavLink>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleArchive}
+            disabled={archiving || archived}
+          >
+            {archived ? "Archived" : archiving ? "Archiving..." : "Archive"}
+          </Button>
         </div>
       </CardFooter>
     </Card>
