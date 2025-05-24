@@ -29,7 +29,6 @@ export function WorkflowCard({
   status,
   runs,
 }: WorkflowCardProps) {
-
   return (
     <Card>
       <CardHeader className="pb-2">

@@ -486,7 +486,12 @@ func (r workflowRepo) RenderWorkflowGraph(
 	}, nil
 }
 
-func (r *workflowRepo) ArchiveWorkflow(ctx context.Context, workflowID int32, status string, updatedAt int64) error {
+func (r *workflowRepo) ArchiveWorkflow(
+	ctx context.Context,
+	workflowID int32,
+	status string,
+	updatedAt int64,
+) error {
 	if err := r.q.ArchiveWorkflow(ctx, &dao.ArchiveWorkflowParams{
 		ID:        workflowID,
 		Status:    status,
@@ -494,13 +499,18 @@ func (r *workflowRepo) ArchiveWorkflow(ctx context.Context, workflowID int32, st
 	}); err != nil {
 		return fmt.Errorf("db error archive workflow: %w", err)
 	}
+
 	return nil
 }
 
-func (r *workflowRepo) DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error {
+func (r *workflowRepo) DeleteWorkflowScheduleByWorkflowID(
+	ctx context.Context,
+	workflowID int32,
+) error {
 	if err := r.q.DeleteWorkflowScheduleByWorkflowID(ctx, workflowID); err != nil {
 		return fmt.Errorf("db error delete workflow schedule by workflow id: %w", err)
 	}
+
 	return nil
 }
 

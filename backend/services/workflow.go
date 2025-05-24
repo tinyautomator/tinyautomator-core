@@ -273,7 +273,7 @@ const (
 	WorkflowStatusArchived = "archived"
 	TriggerTypeScheduled   = "schedule"
 	TriggerTypeManual      = "manual"
-	//TODO: Add more triggers
+	// TODO: Add more triggers
 )
 
 func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32) error {
@@ -301,12 +301,17 @@ func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32)
 	rootNodes := internal.GetRootTriggerNodes(graph)
 	for _, node := range rootNodes {
 		s.logger.Infof("Found trigger node: ID=%d, ActionType=%s", node.ID, node.ActionType)
+
 		switch node.ActionType {
 		case TriggerTypeScheduled:
 			_ = s.workflowRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
 			// TODO: Add more trigger types
 		default:
-			s.logger.Infof("Trigger node ID=%d has unrecognized ActionType=%s, treating as 'manual' (no cleanup)", node.ID, node.ActionType)
+			s.logger.Infof(
+				"Trigger node ID=%d has unrecognized ActionType=%s, treating as 'manual' (no cleanup)",
+				node.ID,
+				node.ActionType,
+			)
 		}
 	}
 

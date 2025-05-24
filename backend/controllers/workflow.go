@@ -177,6 +177,7 @@ func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
 
 func (c *workflowController) ArchiveWorkflow(ctx *gin.Context) {
 	idStr := ctx.Param("id")
+
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -186,7 +187,11 @@ func (c *workflowController) ArchiveWorkflow(ctx *gin.Context) {
 	err = c.workflowService.ArchiveWorkflow(ctx.Request.Context(), int32(workflowID))
 	if err != nil {
 		c.logger.WithError(err).Error("failed to archive workflow")
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to archive workflow", "details": err.Error()})
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "failed to archive workflow", "details": err.Error()},
+		)
+
 		return
 	}
 

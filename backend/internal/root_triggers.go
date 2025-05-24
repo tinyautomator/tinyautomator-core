@@ -9,10 +9,12 @@ func GetRootTriggerNodes(graph *models.WorkflowGraph) []*models.WorkflowNode {
 	}
 
 	roots := []*models.WorkflowNode{}
+
 	for _, node := range graph.Nodes {
 		if _, hasIncoming := targets[node.ID]; !hasIncoming {
 			roots = append(roots, node)
 		}
 	}
+
 	return roots
 }
