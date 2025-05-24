@@ -9,6 +9,13 @@ import (
 )
 
 type Querier interface {
+	//ArchiveWorkflow
+	//
+	//  UPDATE workflow
+	//  SET status = $2,
+	//      updated_at = $3
+	//  WHERE id = $1
+	ArchiveWorkflow(ctx context.Context, arg *ArchiveWorkflowParams) error
 	//CompleteWorkflowRun
 	//
 	//  UPDATE workflow_run
@@ -119,6 +126,10 @@ type Querier interface {
 	//  DELETE FROM workflow_schedule
 	//  WHERE id = $1
 	DeleteWorkflowSchedule(ctx context.Context, id int32) error
+	//DeleteWorkflowScheduleByWorkflowID
+	//
+	//  DELETE FROM workflow_schedule WHERE workflow_id = $1
+	DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error
 	//GetChildNodeIDs
 	//
 	//  SELECT target_node_id

@@ -16,6 +16,7 @@ type WorkflowController interface {
 	CreateWorkflow(ctx *gin.Context)
 	GetWorkflowRender(ctx *gin.Context)
 	RunWorkFlow(ctx *gin.Context)
+	ArchiveWorkflow(ctx *gin.Context)
 }
 
 type workflowController struct {
@@ -172,4 +173,27 @@ func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, wg)
+}
+
+func (c *workflowController) ArchiveWorkflow(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+
+	workflowID, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	err = c.workflowService.ArchiveWorkflow(ctx.Request.Context(), int32(workflowID))
+	if err != nil {
+		c.logger.WithError(err).Error("failed to archive workflow")
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "failed to archive workflow", "details": err.Error()},
+		)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "workflow archived"})
 }
