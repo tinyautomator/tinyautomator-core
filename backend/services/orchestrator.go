@@ -31,10 +31,13 @@ func NewOrchestratorService(cfg models.AppConfig) models.OrchestratorService {
 	}
 }
 
-func (s *OrchestratorService) OrchestrateWorkflow(ctx context.Context, workflowID int32) error {
+func (s *OrchestratorService) OrchestrateWorkflow(
+	ctx context.Context,
+	workflowID int32,
+) (int32, error) {
 	wg, err := s.workflowRepo.GetWorkflowGraph(ctx, workflowID)
 	if err != nil {
-		return fmt.Errorf("orchestrate workflow failed to get workflow graph: %w", err)
+		return -1, fmt.Errorf("orchestrate workflow failed to get workflow graph: %w", err)
 	}
 
 	hasIncoming := make(map[int32]bool)
@@ -69,12 +72,12 @@ func (s *OrchestratorService) OrchestrateWorkflow(ctx context.Context, workflowI
 
 	err = s.workflowSvc.ValidateWorkflowGraph(n, e)
 	if err != nil {
-		return fmt.Errorf("orchestrate workflow failed to validate workflow graph: %w", err)
+		return -1, fmt.Errorf("orchestrate workflow failed to validate workflow graph: %w", err)
 	}
 
 	run, err := s.workflowRunRepo.CreateWorkflowRun(ctx, workflowID, nIDs)
 	if err != nil {
-		return fmt.Errorf("orchestrate workflow failed to create workflow run: %w", err)
+		return -1, fmt.Errorf("orchestrate workflow failed to create workflow run: %w", err)
 	}
 
 	s.logger.WithFields(logrus.Fields{
@@ -106,11 +109,11 @@ func (s *OrchestratorService) OrchestrateWorkflow(ctx context.Context, workflowI
 			run.ID,
 		)
 		if err != nil {
-			return fmt.Errorf("orchestrate workflow failed to enqueue child nodes: %w", err)
+			return -1, fmt.Errorf("orchestrate workflow failed to enqueue child nodes: %w", err)
 		}
 	}
 
-	return nil
+	return run.ID, nil
 }
 
 var _ models.OrchestratorService = (*OrchestratorService)(nil)

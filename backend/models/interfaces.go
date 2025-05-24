@@ -129,7 +129,7 @@ type WorkflowScheduleRepository interface {
 }
 
 type OrchestratorService interface {
-	OrchestrateWorkflow(ctx context.Context, workflowID int32) error
+	OrchestrateWorkflow(ctx context.Context, workflowID int32) (int32, error)
 }
 
 type ExecutorService interface {

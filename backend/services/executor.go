@@ -143,8 +143,13 @@ func (s *ExecutorService) runWorkflowNodeTask(
 		return fmt.Errorf("failed to mark node run as running: %w", err)
 	}
 
+	err := s.redisClient.PublishNodeStatusUpdate(ctx, task.RunID, task.NodeID, "running", nil)
+	if err != nil {
+		s.logger.WithError(err).WithFields(kv).Warn("failed to publish node status update")
+	}
+
 	doTask := func() error {
-		time.Sleep(1 * time.Minute)
+		time.Sleep(30 * time.Second)
 
 		if task.NodeID == 111 {
 			return errors.New("test error")

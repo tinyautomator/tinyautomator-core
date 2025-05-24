@@ -17,6 +17,14 @@ const (
 	workflowProgressChannelPrefix = "workflow-progress"
 )
 
+type NodeStatusUpdate struct {
+	RunID     int32          `json:"runId"`
+	NodeID    int32          `json:"nodeId"`
+	Status    string         `json:"status"`
+	Timestamp time.Time      `json:"timestamp"`
+	Details   map[string]any `json:"details,omitempty"`
+}
+
 type RedisClient interface {
 	AcquireRunWorkflowLock(
 		ctx context.Context,
@@ -38,18 +46,10 @@ type RedisClient interface {
 		runID int32,
 		nodeID int32,
 		status string,
-		details map[string]interface{},
+		details map[string]any,
 	) error
 	SubscribeWorkflowProgress(ctx context.Context) (<-chan *redis.Message, *redis.PubSub, error)
 	Close() error
-}
-
-type NodeStatusUpdate struct {
-	RunID     int32                  `json:"runId"`
-	NodeID    int32                  `json:"nodeId"`
-	Status    string                 `json:"status"`
-	Timestamp time.Time              `json:"timestamp"`
-	Details   map[string]interface{} `json:"details,omitempty"`
 }
 
 type redisClient struct {
@@ -257,7 +257,7 @@ func (c *redisClient) PublishNodeStatusUpdate(
 	runID int32,
 	nodeID int32,
 	status string,
-	details map[string]interface{},
+	details map[string]any,
 ) error {
 	channel := c.generateProgressChannel(runID)
 	payload := NodeStatusUpdate{
