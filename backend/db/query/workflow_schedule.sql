@@ -23,6 +23,9 @@ RETURNING *;
 DELETE FROM workflow_schedule
 WHERE id = $1;
 
+-- name: DeleteWorkflowScheduleByWorkflowID :exec
+DELETE FROM workflow_schedule WHERE workflow_id = $1;
+
 -- name: GetDueSchedulesLocked :many
 WITH locked AS (
   SELECT id

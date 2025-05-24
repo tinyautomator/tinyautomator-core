@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -265,4 +266,47 @@ func (s *WorkflowService) UpdateWorkflow(
 	}
 
 	return nil
+}
+
+const (
+	WorkflowStatusArchived = "archived"
+	TriggerTypeScheduled   = "scheduled"
+	TriggerTypeManual      = "manual"
+	//TODO: Add more triggers 
+)
+
+func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32, triggerType string) error {
+	workflow, err := s.workflowRepo.GetWorkflow(ctx, workflowID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch workflow %d: %w", workflowID, err)
+	}
+
+	if workflow.Status == WorkflowStatusArchived {
+		return nil
+	}
+
+	updatedAt := time.Now().UnixMilli()
+
+	switch triggerType {
+	case TriggerTypeScheduled:
+		err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID, WorkflowStatusArchived, updatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to archive scheduled workflow: %w", err)
+		}
+		_ = s.workflowRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
+	case TriggerTypeManual:
+		err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID, WorkflowStatusArchived, updatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to archive manual workflow: %w", err)
+		}
+	// TODO: Add more triggers
+	default:
+		return fmt.Errorf("unsupported trigger type: '%s'", triggerType)
+	}
+
+	return nil
+}
+
+func (s *WorkflowService) ArchiveScheduledWorkflow(ctx context.Context, workflowID int32) error {
+	return s.ArchiveWorkflow(ctx, workflowID, TriggerTypeScheduled)
 }

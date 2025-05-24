@@ -28,4 +28,8 @@ export class WorkflowApiClient extends BaseApiClient {
   async runWorkflow(id: string): Promise<void> {
     return await this.post(`/api/workflow-run/${id}`);
   }
+
+  async archiveWorkflow(id: string): Promise<void> {
+    return await this.patch(`/api/workflow/${id}/archive`);
+  }
 }

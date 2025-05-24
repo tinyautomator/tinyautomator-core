@@ -16,6 +16,7 @@ type WorkflowController interface {
 	CreateWorkflow(ctx *gin.Context)
 	GetWorkflowRender(ctx *gin.Context)
 	RunWorkFlow(ctx *gin.Context)
+	ArchiveWorkflow(ctx *gin.Context)
 }
 
 type workflowController struct {
@@ -172,4 +173,46 @@ func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, wg)
+}
+
+// Uncomment this version to allow specifying the trigger type dynamically
+// func (c *workflowController) ArchiveWorkflow(ctx *gin.Context) {
+// 	idStr := ctx.Param("id")
+// 	workflowID, err := strconv.Atoi(idStr)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+// 		return
+// 	}
+
+// 	// Example: get triggerType from query param or request body
+// 	triggerType := ctx.DefaultQuery("triggerType", "scheduled")
+// 	// Or: triggerType := ctx.PostForm("triggerType")
+
+// 	err = c.workflowService.ArchiveWorkflow(ctx.Request.Context(), int32(workflowID), triggerType)
+// 	if err != nil {
+// 		c.logger.WithError(err).Error("failed to archive workflow")
+// 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to archive workflow", "details": err.Error()})
+// 		return
+// 	}
+
+// 	ctx.JSON(http.StatusOK, gin.H{"message": "workflow archived"})
+// }
+
+func (c *workflowController) ArchiveWorkflow(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	workflowID, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	// For testing, always use the scheduled trigger type
+	err = c.workflowService.ArchiveScheduledWorkflow(ctx.Request.Context(), int32(workflowID))
+	if err != nil {
+		c.logger.WithError(err).Error("failed to archive workflow")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to archive workflow", "details": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "workflow archived"})
 }
