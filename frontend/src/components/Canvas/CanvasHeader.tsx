@@ -5,15 +5,15 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Menu } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
-import { useFlowStore } from "./flowStore";
+import { useFlowStore } from "@/components/Canvas/flowStore";
 import { toast } from "sonner";
 
 export default function CanvasHeader({
-  workflowToEdit,
+  workflow,
   onCollapseToggle,
   collapsed,
 }: {
-  workflowToEdit?: RenderedWorkflow;
+  workflow?: RenderedWorkflow;
   onCollapseToggle?: () => void;
   collapsed?: boolean;
 }) {
@@ -61,10 +61,10 @@ export default function CanvasHeader({
           variant="outline"
           size="sm"
           onClick={() => {
-            if (workflowToEdit) {
-              workflowApi.updateWorkflow(workflowToEdit.id, {
-                name: name || workflowToEdit.name,
-                description: workflowToEdit.description,
+            if (workflow) {
+              workflowApi.updateWorkflow(workflow.id, {
+                name: name || workflow.name,
+                description: workflow.description,
                 nodes: nodes.map((node) => ({
                   id: node.id,
                   type: node.type || "default",

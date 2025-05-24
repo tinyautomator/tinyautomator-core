@@ -13,6 +13,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	workflowProgressChannelPrefix = "workflow-progress"
+)
+
+type NodeStatusUpdate struct {
+	RunID     int32          `json:"runId"`
+	NodeID    int32          `json:"nodeId"`
+	Status    string         `json:"status"`
+	Timestamp time.Time      `json:"timestamp"`
+	Details   map[string]any `json:"details,omitempty"`
+}
+
 type RedisClient interface {
 	AcquireRunWorkflowLock(
 		ctx context.Context,
@@ -34,17 +46,10 @@ type RedisClient interface {
 		runID int32,
 		nodeID int32,
 		status string,
-		details map[string]interface{},
+		details map[string]any,
 	) error
+	SubscribeWorkflowProgress(ctx context.Context) (<-chan *redis.Message, *redis.PubSub, error)
 	Close() error
-}
-
-type NodeStatusUpdate struct {
-	RunID     int32                  `json:"runId"`
-	NodeID    int32                  `json:"nodeId"`
-	Status    string                 `json:"status"`
-	Timestamp time.Time              `json:"timestamp"`
-	Details   map[string]interface{} `json:"details,omitempty"`
 }
 
 type redisClient struct {
@@ -244,7 +249,7 @@ func (c *redisClient) MarkNodeCompleteAndCountRemaining(
 }
 
 func (c *redisClient) generateProgressChannel(runID int32) string {
-	return fmt.Sprintf("workflow-progress:%d", runID)
+	return fmt.Sprintf("%s:%d", workflowProgressChannelPrefix, runID)
 }
 
 func (c *redisClient) PublishNodeStatusUpdate(
@@ -252,7 +257,7 @@ func (c *redisClient) PublishNodeStatusUpdate(
 	runID int32,
 	nodeID int32,
 	status string,
-	details map[string]interface{},
+	details map[string]any,
 ) error {
 	channel := c.generateProgressChannel(runID)
 	payload := NodeStatusUpdate{
@@ -293,4 +298,38 @@ func (c *redisClient) PublishNodeStatusUpdate(
 	}).Info("successfully published node status update")
 
 	return nil
+}
+
+func (c *redisClient) SubscribeWorkflowProgress(
+	ctx context.Context,
+) (<-chan *redis.Message, *redis.PubSub, error) {
+	pattern := fmt.Sprintf("%s:*", workflowProgressChannelPrefix)
+
+	maxRetries := 5
+	initialDelay := 2 * time.Second
+	maxDelay := 60 * time.Second
+
+	var err error
+
+	currentDelay := initialDelay
+
+	for attempt := range maxRetries {
+		if err = c.client.Ping(ctx).Err(); err == nil {
+			pubsub := c.client.PSubscribe(ctx, pattern)
+			c.logger.Info("successfully subscribed to redis for workflow progress")
+
+			return pubsub.Channel(), pubsub, nil
+		}
+
+		if attempt < maxRetries-1 {
+			time.Sleep(currentDelay)
+
+			currentDelay *= 2
+			if currentDelay > maxDelay {
+				currentDelay = maxDelay
+			}
+		}
+	}
+
+	return nil, nil, fmt.Errorf("failed to subscribe to redis for workflow progress: %w", err)
 }

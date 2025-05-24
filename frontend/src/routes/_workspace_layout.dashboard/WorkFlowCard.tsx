@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Play, Settings } from "lucide-react";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 
 interface WorkflowCardProps {
   id: string;
@@ -29,6 +29,8 @@ export function WorkflowCard({
   status,
   runs,
 }: WorkflowCardProps) {
+  const navigate = useNavigate();
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -51,8 +53,9 @@ export function WorkflowCard({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              workflowApi.runWorkflow(id);
+            onClick={async () => {
+              const runId = await workflowApi.runWorkflow(id);
+              navigate(`/${id}/run/${runId}`);
             }}
           >
             <Play className="mr-1 h-3 w-3" />

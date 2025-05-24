@@ -12,10 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { blockCategories } from "./BlockCategories";
+import { blockCategories } from "@/components/shared/BlockCategories";
 import { SearchBar } from "./SearchBar";
 import { Block } from "./BlockTypes";
-import { useFlowStore } from "./flowStore";
+import { useFlowStore } from "../../components/Canvas/flowStore";
 
 interface BlockCategory {
   category: string;

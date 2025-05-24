@@ -18,7 +18,7 @@ import {
   useEffect,
 } from "react";
 import { cn } from "@/lib/utils";
-import { useFlowStore } from "@/routes/_workspace_layout.workflow-builder.($id)/flowStore";
+import { useFlowStore } from "@/components/Canvas/flowStore";
 
 const statusVariants = {
   success: {
@@ -48,7 +48,8 @@ export const NodeUI = memo(function NodeUI({
   width,
 }: NodeProps) {
   const handleAnimations = useFlowStore((state) => state.handleAnimations);
-
+  const nodeStatus = useFlowStore((state) => state.getNodeStatus(id));
+  console.log(id, nodeStatus);
   const getIcon = useMemo(
     () => () => {
       const Icon = data.icon as React.ForwardRefExoticComponent<
@@ -59,8 +60,8 @@ export const NodeUI = memo(function NodeUI({
     [data.icon],
   );
 
-  const StatusIcon = data.status
-    ? statusVariants[data.status as keyof typeof statusVariants].icon
+  const StatusIcon = nodeStatus
+    ? statusVariants[nodeStatus as keyof typeof statusVariants].icon
     : statusVariants.success.icon;
 
   const rx = 8;
@@ -73,7 +74,7 @@ export const NodeUI = memo(function NodeUI({
 
   return (
     <div className="relative">
-      {data.status === "running" && width && height && (
+      {nodeStatus === "running" && width && height && (
         <svg
           className="absolute z-20 pointer-events-none rounded-lg"
           width={width}
@@ -130,9 +131,8 @@ export const NodeUI = memo(function NodeUI({
             <StatusIcon
               className={cn(
                 "ml-auto h-4 w-4",
-                statusVariants[data.status as keyof typeof statusVariants]
-                  .color,
-                data.status === "running" && "animate-spin-slow",
+                statusVariants[nodeStatus as keyof typeof statusVariants].color,
+                nodeStatus === "running" && "animate-spin-slow",
               )}
             />
           </div>

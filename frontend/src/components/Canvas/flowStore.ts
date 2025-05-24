@@ -10,7 +10,7 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
 } from "@xyflow/react";
-import { Block } from "./BlockTypes";
+import { Block } from "../../routes/_workspace_layout._workflow_canvas.workflow-builder.($workflowID)/BlockTypes";
 
 type HandleAnimations = {
   [nodeId: string]: {
@@ -19,12 +19,17 @@ type HandleAnimations = {
   };
 };
 
+type NodeStatus = {
+  [nodeId: string]: string;
+};
+
 type FlowState = {
   nodes: Node[];
   edges: Edge[];
   selectedNode: Node | null;
   recentlyUsed: Block[];
   handleAnimations: HandleAnimations;
+  nodeStatus: NodeStatus;
 
   setHandleAnimation: (
     nodeId: string,
@@ -32,6 +37,9 @@ type FlowState = {
     value: boolean,
   ) => void;
   resetHandleAnimations: () => void;
+
+  getNodeStatus: (nodeId: string) => string;
+  setNodeStatus: (nodeId: string, status: string) => void;
 
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
@@ -51,6 +59,13 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   selectedNode: null,
   recentlyUsed: [],
   handleAnimations: {},
+  nodeStatus: {},
+
+  getNodeStatus: (nodeId: string) => get().nodeStatus[nodeId] || "pending",
+  setNodeStatus: (nodeId, status) =>
+    set((state) => ({
+      nodeStatus: { ...state.nodeStatus, [nodeId]: status },
+    })),
 
   setHandleAnimation: (nodeId, handleType, value) =>
     set((state) => ({

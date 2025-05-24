@@ -65,17 +65,18 @@ func (s *SchedulerService) RunScheduledWorkflow(
 	go func() {
 		defer s.wg.Done()
 
-		if err := s.orchestrator.OrchestrateWorkflow(ctx, ws.WorkflowID); err != nil {
+		if runID, err := s.orchestrator.OrchestrateWorkflow(ctx, ws.WorkflowID); err != nil {
 			s.logger.WithError(err).WithFields(logrus.Fields{
 				"schedule_id": ws.ID,
 				"workflow_id": ws.WorkflowID,
 			}).Warn("workflow execution failed")
+		} else {
+			s.logger.WithFields(logrus.Fields{
+				"schedule_id": ws.ID,
+				"workflow_id": ws.WorkflowID,
+				"run_id":      runID,
+			}).Info("workflow execution started")
 		}
-
-		s.logger.WithFields(logrus.Fields{
-			"schedule_id": ws.ID,
-			"workflow_id": ws.WorkflowID,
-		}).Info("workflow execution finished")
 
 		now := time.Now().UnixMilli()
 		nextRun := s.CalculateNextRun(ws.ScheduleType, now)

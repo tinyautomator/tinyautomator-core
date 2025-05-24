@@ -1,4 +1,4 @@
-import { useFlowStore } from "@/routes/_workspace_layout.workflow-builder.($id)/flowStore";
+import { useFlowStore } from "@/components/Canvas/flowStore";
 import { EmailSettings } from "./email";
 
 export function SettingsTab() {

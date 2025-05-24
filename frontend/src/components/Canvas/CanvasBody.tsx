@@ -6,7 +6,7 @@ import { ReactFlow, Node } from "@xyflow/react";
 import { NodeUI } from "@/components/shared/NodeUI";
 import { useFlowStore } from "./flowStore";
 import { useCallback, useMemo } from "react";
-import { actionTypeToBlockMap } from "./BlockCategories";
+import { actionTypeToBlockMap } from "../../components/shared/BlockCategories";
 import { v4 as uuidv4 } from "uuid";
 
 export const NodeBuilder = (
