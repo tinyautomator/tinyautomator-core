@@ -114,28 +114,40 @@ export function WorkflowList() {
     // TODO: Implement status change
   };
 
+  const handleRunWorkflow = (workflow: Workflow) => {
+    console.log(`Running workflow ${workflow.id}`);
+    // TODO: Implement run workflow
+  };
+
   if (workflows.length === 0 && !showLoading) {
     return <EmptyState />;
   }
 
   return (
-    <div className={cn("flex flex-col h-full")}>
-      <div className={cn("flex-1 overflow-hidden flex flex-col items-center")}>
+    <div className={cn("flex flex-col h-full ")}>
+      <div
+        className={cn("overflow-hidden flex flex-col items-center border-4")}
+      >
         <div
           className={cn(
-            "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr",
-            "p-4 gap-8 w-3/4 h-full"
+            "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 auto-rows-fr p-1 ",
+            "gap-8 h-full w-full"
           )}
         >
-          {workflows.map((workflow) => (
-            <WorkflowCard
-              key={workflow.id}
-              workflow={workflow}
-              onConfigure={() => handleConfigure(workflow.id)}
-              onDelete={() => handleDelete(workflow)}
-              onChangeStatus={handleChangeStatus}
-            />
-          ))}
+          {showLoading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <WorkflowCardSkeleton key={i} />
+              ))
+            : workflows.map((workflow) => (
+                <WorkflowCard
+                  key={workflow.id}
+                  workflow={workflow}
+                  onConfigure={() => handleConfigure(workflow.id)}
+                  onDelete={() => handleDelete(workflow)}
+                  onChangeStatus={handleChangeStatus}
+                  onRunWorkflow={handleRunWorkflow}
+                />
+              ))}
         </div>
       </div>
       <div className="flex-shrink-0 flex items-center justify-center border-1">

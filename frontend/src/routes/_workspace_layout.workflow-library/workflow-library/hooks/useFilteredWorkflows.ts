@@ -4,7 +4,7 @@ import { useValidatedSearchParams } from "./useSearchParams";
 import { getWorkflowData } from "../utils/filterWorkflows";
 import type { Workflow } from "../../route";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 8;
 
 export function useFilteredWorkflows() {
   const workflows = useLoaderData<Workflow[]>();

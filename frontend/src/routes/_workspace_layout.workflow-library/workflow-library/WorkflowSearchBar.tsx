@@ -45,7 +45,7 @@ const SearchInput = () => {
 
 export function WorkflowSearchBar() {
   return (
-    <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800">
+    <div className="flex w-full items-center gap-3 border-b border-slate-100 dark:border-slate-800">
       <SearchInput />
       <TagFilter />
     </div>

@@ -4,6 +4,7 @@ import { WorkflowList } from "./workflow-library/WorkflowList";
 import { WorkflowSearchBar } from "./workflow-library/WorkflowSearchBar";
 import { ActiveTagFilters } from "./workflow-library/ActiveTagFilters";
 import { sampleWorkflows } from "./workflow-library/utils/sampleWorkflows";
+import { cn } from "@/lib/utils";
 
 // TODO: update global workflow type to match the api response
 export interface Workflow {
@@ -33,33 +34,54 @@ export async function loader() {
   // TODO: remove this once we update workflow schema
   return [...sampleWorkflows];
 }
+function WorkflowLibraryHeader() {
+  return (
+    <div
+      className={cn(
+        "shrink-0 flex justify-between items-center",
+        "border-b border-slate-100 dark:border-slate-800",
+        "w-full "
+      )}
+    >
+      <div className="flex flex-col gap-1 leading-tight">
+        <h1
+          className={cn(
+            "text-xl font-bold items-center",
+            "text-slate-900 dark:text-white"
+          )}
+        >
+          Workflow Library
+        </h1>
+        <p className={cn("text-sm text-slate-500 dark:text-slate-400")}>
+          Manage and organize your automated workflows
+        </p>
+      </div>
+      <CreateWorkflowButton />
+    </div>
+  );
+}
 
 export default function WorkflowLibrary() {
   return (
-    <div className="h-full overflow-hidden border-4">
-      <div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-xl">
-        <div className="shrink-0 p-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              Workflow Library
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Manage and organize your automated workflows
-            </p>
-          </div>
-          <CreateWorkflowButton />
-        </div>
+    <div
+      className={cn(
+        "px-4 flex flex-col items-start h-full rounded-xl justify-between gap-4 ",
+        "bg-white dark:bg-slate-950"
+      )}
+    >
+      <WorkflowLibraryHeader />
 
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="shrink-0">
-            <WorkflowSearchBar />
-            <WorkflowTabs />
-            <ActiveTagFilters />
-          </div>
-          <div className="flex-1 min-h-0">
-            <WorkflowList />
-          </div>
-        </div>
+      <WorkflowSearchBar />
+
+      <WorkflowTabs />
+      <ActiveTagFilters />
+
+      <div
+        className={cn(
+          "flex-1 overflow-y-auto border-4 border-red-500 items-start w-full select-none"
+        )}
+      >
+        <WorkflowList />
       </div>
     </div>
   );

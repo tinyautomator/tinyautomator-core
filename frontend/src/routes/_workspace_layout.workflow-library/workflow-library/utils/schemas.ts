@@ -15,7 +15,7 @@ export const searchParamsSchema = z.object({
   tags: z
     .preprocess(
       (val) => (typeof val === "string" ? val.split(",").filter(Boolean) : val),
-      z.array(z.string().trim().min(1)),
+      z.array(z.string().trim().min(1))
     )
     .default([]),
 

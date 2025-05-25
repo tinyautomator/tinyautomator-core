@@ -2,14 +2,14 @@ import type { Workflow } from "../../route";
 
 const workflowTemplates = [
   {
-    title: "Email Marketing Campaign",
+    title: "Email Marketing",
     description:
       "Automated email sequence for new subscribers with personalized content and A/B testing",
     tags: ["marketing", "email", "automation", "paid"],
     status: "active",
   },
   {
-    title: "Social Media Post Scheduler",
+    title: "Social Media Posts",
     description:
       "Schedule and auto-post content across multiple social platforms with analytics tracking",
     tags: ["social", "scheduled", "automation", "free"],
@@ -23,7 +23,7 @@ const workflowTemplates = [
     status: "draft",
   },
   {
-    title: "Data Backup Automation",
+    title: "Data Backup ",
     description:
       "Secure daily backup of critical data with encryption and cloud storage",
     tags: ["backup", "scheduled", "security", "free"],

@@ -21,7 +21,7 @@ export function ActiveTagFilters() {
   };
 
   return (
-    <div className="h-[42px] px-4 border-b border-slate-100 dark:border-slate-800 flex items-center">
+    <div className="h-[42px]  border-b border-slate-100 dark:border-slate-800 flex items-center">
       <div className="flex items-center gap-2 w-full overflow-hidden">
         <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">
           Filtered by:
