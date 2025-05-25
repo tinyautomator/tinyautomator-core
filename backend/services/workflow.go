@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -14,16 +13,18 @@ import (
 )
 
 type WorkflowService struct {
-	logger       logrus.FieldLogger
-	workflowRepo models.WorkflowRepository
-	orchestrator models.OrchestratorService
+	logger               logrus.FieldLogger
+	workflowRepo         models.WorkflowRepository
+	workflowScheduleRepo models.WorkflowScheduleRepository
+	orchestrator         models.OrchestratorService
 }
 
 func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 	return &WorkflowService{
-		logger:       cfg.GetLogger(),
-		workflowRepo: cfg.GetWorkflowRepository(),
-		orchestrator: cfg.GetOrchestratorService(),
+		logger:               cfg.GetLogger(),
+		workflowRepo:         cfg.GetWorkflowRepository(),
+		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
+		orchestrator:         cfg.GetOrchestratorService(),
 	}
 }
 
@@ -286,9 +287,7 @@ func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32)
 		return nil
 	}
 
-	updatedAt := time.Now().UnixMilli()
-
-	err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID, WorkflowStatusArchived, updatedAt)
+	err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID, WorkflowStatusArchived)
 	if err != nil {
 		return fmt.Errorf("failed to archive workflow: %w", err)
 	}
@@ -298,20 +297,15 @@ func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32)
 		return fmt.Errorf("failed to fetch workflow graph: %w", err)
 	}
 
-	rootNodes := internal.GetRootTriggerNodes(graph)
+	rootNodes := internal.GetRootNodes(graph)
 	for _, node := range rootNodes {
-		s.logger.Infof("Found trigger node: ID=%d, ActionType=%s", node.ID, node.ActionType)
-
+		s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).Info("found root node")
 		switch node.ActionType {
 		case TriggerTypeScheduled:
-			_ = s.workflowRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
+			_ = s.workflowScheduleRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
 			// TODO: Add more trigger types
 		default:
-			s.logger.Infof(
-				"Trigger node ID=%d has unrecognized ActionType=%s, treating as 'manual' (no cleanup)",
-				node.ID,
-				node.ActionType,
-			)
+			s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).Info("no trigger type found, treating as manual")
 		}
 	}
 

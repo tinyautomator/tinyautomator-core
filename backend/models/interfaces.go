@@ -77,8 +77,7 @@ type WorkflowRepository interface {
 	) error
 	GetWorkflowGraph(ctx context.Context, workflowID int32) (*WorkflowGraph, error)
 	RenderWorkflowGraph(ctx context.Context, workflowID int32) (*WorkflowGraphDTO, error)
-	ArchiveWorkflow(ctx context.Context, workflowID int32, status string, updatedAt int64) error
-	DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error
+	ArchiveWorkflow(ctx context.Context, workflowID int32, status string) error
 }
 
 type WorkflowRunRepository interface {
@@ -128,6 +127,7 @@ type WorkflowScheduleRepository interface {
 		executionState string,
 	) (*WorkflowSchedule, error)
 	UpdateNextRun(ctx context.Context, id int32, nextRunAt *int64, lastRunAt int64) error
+	DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error
 }
 
 type OrchestratorService interface {

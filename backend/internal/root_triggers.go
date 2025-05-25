@@ -2,7 +2,7 @@ package internal
 
 import "github.com/tinyautomator/tinyautomator-core/backend/models"
 
-func GetRootTriggerNodes(graph *models.WorkflowGraph) []*models.WorkflowNode {
+func GetRootNodes(graph *models.WorkflowGraph) []*models.WorkflowNode {
 	targets := make(map[int32]struct{})
 	for _, edge := range graph.Edges {
 		targets[edge.TargetNodeID] = struct{}{}
