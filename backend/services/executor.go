@@ -250,7 +250,7 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 			return fmt.Errorf("failed to get workflow node runs: %w", err)
 		}
 
-		status := "completed"
+		status := "success"
 
 		for _, nodeRun := range workflowNodeRuns {
 			if nodeRun.Status == "failed" {

@@ -158,35 +158,6 @@ func (c *workflowRunController) StreamWorkflowRunProgress(ctx *gin.Context) {
 		return
 	}
 
-	run, err := c.workflowRunService.GetWorkflowRunStatus(ctx, int32(runID))
-	if err != nil {
-		c.logger.WithError(err).Error("failed to get workflow run status")
-		ctx.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": "failed to get workflow run status"},
-		)
-
-		return
-	}
-
-	c.logger.WithFields(logrus.Fields{
-		"runId":   idStr,
-		"status":  run.Status,
-		"details": run.Nodes,
-	}).Info("workflow run status")
-
-	ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-
-	if run.Status == "success" {
-		ctx.SSEvent("workflow_run_completed", gin.H{
-			"message": "Workflow run completed",
-			"runId":   idStr,
-		})
-		ctx.Writer.Flush()
-
-		return
-	}
-
 	c.logger.WithField("runId", idStr).Info("sse connection request received")
 	ctx.SSEvent("connection_established", gin.H{
 		"message": "Successfully connected to progress stream for run " + idStr,
@@ -216,6 +187,52 @@ func (c *workflowRunController) StreamWorkflowRunProgress(ctx *gin.Context) {
 		close(clientChan)
 		c.logger.WithField("runId", idStr).Info("sse client resources cleaned up")
 	}()
+
+	run, err := c.workflowRunService.GetWorkflowRunStatus(ctx, int32(runID))
+	if err != nil {
+		c.logger.WithError(err).Error("failed to get workflow run status")
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "failed to get workflow run status"},
+		)
+
+		return
+	}
+
+	c.logger.WithFields(logrus.Fields{
+		"runId":   runID,
+		"status":  run.Status,
+		"details": run.Nodes,
+	}).Info("workflow run status")
+
+	ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+
+	if run.Status == "success" {
+		ctx.SSEvent("workflow_run_completed", gin.H{
+			"message": "Workflow run completed",
+			"runId":   idStr,
+		})
+		ctx.Writer.Flush()
+
+		return
+	}
+
+	for _, node := range run.Nodes {
+		ctx.SSEvent("node_update", gin.H{
+			"runId":  idStr,
+			"nodeId": node.WorkflowNodeID,
+			"status": node.Status,
+		})
+		ctx.Writer.Flush()
+
+		if err := ctx.Request.Context().Err(); err != nil {
+			c.logger.WithError(err).
+				WithField("runId", idStr).
+				Error("client disconnected after sending node_update sse event")
+
+			return
+		}
+	}
 
 	ctx.Stream(func(w io.Writer) bool {
 		select {

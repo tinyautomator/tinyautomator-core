@@ -35,7 +35,6 @@ export async function loader({ params }: Route.LoaderArgs) {
 export default function WorkflowRun({
   loaderData: { workflowRun, runId },
 }: Route.ComponentProps) {
-  console.log(runId);
   const setNodes = useFlowStore((s) => s.setNodes);
   const setEdges = useFlowStore((s) => s.setEdges);
   const setNodeStatus = useFlowStore((s) => s.setNodeStatus);

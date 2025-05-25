@@ -55,7 +55,7 @@ export function WorkflowCard({
             size="sm"
             onClick={async () => {
               const runId = await workflowApi.runWorkflow(id);
-              navigate(`/${id}/run/${runId}`);
+              navigate(`/workflow/${id}/run/${runId}`);
             }}
           >
             <Play className="mr-1 h-3 w-3" />

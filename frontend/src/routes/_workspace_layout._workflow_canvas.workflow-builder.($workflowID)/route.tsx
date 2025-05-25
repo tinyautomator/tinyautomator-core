@@ -14,8 +14,8 @@ import { useLayoutContext } from "../_workspace_layout._workflow_canvas/useLayou
 import { Route } from "./+types/route";
 
 export async function loader({ params }: Route.LoaderArgs) {
-  if (params.id) {
-    return await workflowApi.renderWorkflow(params.id);
+  if (params.workflowID) {
+    return await workflowApi.renderWorkflow(params.workflowID);
   }
 }
 
