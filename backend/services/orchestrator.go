@@ -40,9 +40,7 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 		return -1, fmt.Errorf("orchestrate workflow failed to get workflow graph: %w", err)
 	}
 
-	hasIncoming := make(map[int32]bool)
-
-	var rootNodes []*models.WorkflowNode
+	rootNodes := internal.GetRootNodes(wg)
 
 	n := make([]models.ValidateNode, len(wg.Nodes))
 	e := make([]models.ValidateEdge, len(wg.Edges))
@@ -53,7 +51,6 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 			SourceNodeID: fmt.Sprintf("%d", edge.SourceNodeID),
 			TargetNodeID: fmt.Sprintf("%d", edge.TargetNodeID),
 		}
-		hasIncoming[edge.TargetNodeID] = true
 	}
 
 	for i, node := range wg.Nodes {
@@ -61,11 +58,14 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 			ID:         fmt.Sprintf("%d", node.ID),
 			ActionType: node.ActionType,
 		}
-
-		if !hasIncoming[node.ID] {
-			rootNodes = append(rootNodes, node)
-		} else {
-			// root nodes are not in the running node set
+		isRoot := false
+		for _, root := range rootNodes {
+			if root.ID == node.ID {
+				isRoot = true
+				break
+			}
+		}
+		if !isRoot {
 			nIDs = append(nIDs, node.ID)
 		}
 	}

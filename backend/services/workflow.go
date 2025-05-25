@@ -7,21 +7,24 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/internal"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/yourbasic/graph"
 )
 
 type WorkflowService struct {
-	logger       logrus.FieldLogger
-	workflowRepo models.WorkflowRepository
-	orchestrator models.OrchestratorService
+	logger               logrus.FieldLogger
+	workflowRepo         models.WorkflowRepository
+	workflowScheduleRepo models.WorkflowScheduleRepository
+	orchestrator         models.OrchestratorService
 }
 
 func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 	return &WorkflowService{
-		logger:       cfg.GetLogger(),
-		workflowRepo: cfg.GetWorkflowRepository(),
-		orchestrator: cfg.GetOrchestratorService(),
+		logger:               cfg.GetLogger(),
+		workflowRepo:         cfg.GetWorkflowRepository(),
+		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
+		orchestrator:         cfg.GetOrchestratorService(),
 	}
 }
 
@@ -262,6 +265,48 @@ func (s *WorkflowService) UpdateWorkflow(
 
 	if err := s.workflowRepo.UpdateWorkflow(ctx, workflowID, delta, existing.Nodes); err != nil {
 		return fmt.Errorf("failed to update workflow: %w", err)
+	}
+
+	return nil
+}
+
+const (
+	WorkflowStatusArchived = "archived"
+	TriggerTypeScheduled   = "schedule"
+	TriggerTypeManual      = "manual"
+	// TODO: Add more triggers
+)
+
+func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32) error {
+	workflow, err := s.workflowRepo.GetWorkflow(ctx, workflowID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch workflow %d: %w", workflowID, err)
+	}
+
+	if workflow.Status == WorkflowStatusArchived {
+		return nil
+	}
+
+	err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID)
+	if err != nil {
+		return fmt.Errorf("failed to archive workflow: %w", err)
+	}
+
+	graph, err := s.workflowRepo.GetWorkflowGraph(ctx, workflowID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch workflow graph: %w", err)
+	}
+
+	rootNodes := internal.GetRootNodes(graph)
+	for _, node := range rootNodes {
+		s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).Info("found root node")
+		switch node.ActionType {
+		case TriggerTypeScheduled:
+			_ = s.workflowScheduleRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
+			// TODO: Add more trigger types
+		default:
+			s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).Info("no trigger type found, treating as manual")
+		}
 	}
 
 	return nil

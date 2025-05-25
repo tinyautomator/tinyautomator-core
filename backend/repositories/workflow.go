@@ -486,4 +486,20 @@ func (r workflowRepo) RenderWorkflowGraph(
 	}, nil
 }
 
+func (r *workflowRepo) ArchiveWorkflow(
+	ctx context.Context,
+	workflowID int32,
+) error {
+	updatedAt := time.Now().UnixMilli()
+	if err := r.q.ArchiveWorkflow(ctx, &dao.ArchiveWorkflowParams{
+		ID:        workflowID,
+		Status:    "archived",
+		UpdatedAt: updatedAt,
+	}); err != nil {
+		return fmt.Errorf("db error archive workflow: %w", err)
+	}
+
+	return nil
+}
+
 var _ models.WorkflowRepository = (*workflowRepo)(nil)

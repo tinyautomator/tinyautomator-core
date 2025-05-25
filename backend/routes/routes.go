@@ -31,6 +31,7 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 			timeout.WithTimeout(3*time.Second),
 			timeout.WithHandler(workflowController.UpdateWorkflow),
 		))
+		workflowGroup.PATCH("/:id/archive", workflowController.ArchiveWorkflow)
 	}
 
 	workflowRunController := controllers.NewWorkflowRunController(cfg, ctx)

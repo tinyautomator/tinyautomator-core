@@ -127,3 +127,9 @@ DELETE FROM workflow_edge
 WHERE workflow_id = $1
   AND source_node_id = $2
   AND target_node_id = $3;
+
+-- name: ArchiveWorkflow :exec
+UPDATE workflow
+SET status = $2,
+    updated_at = $3
+WHERE id = $1;

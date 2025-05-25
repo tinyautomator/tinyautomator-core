@@ -86,6 +86,18 @@ func (q *Queries) DeleteWorkflowSchedule(ctx context.Context, id int32) error {
 	return err
 }
 
+const deleteWorkflowScheduleByWorkflowID = `-- name: DeleteWorkflowScheduleByWorkflowID :exec
+DELETE FROM workflow_schedule WHERE workflow_id = $1
+`
+
+// DeleteWorkflowScheduleByWorkflowID
+//
+//	DELETE FROM workflow_schedule WHERE workflow_id = $1
+func (q *Queries) DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error {
+	_, err := q.db.Exec(ctx, deleteWorkflowScheduleByWorkflowID, workflowID)
+	return err
+}
+
 const getDueSchedulesLocked = `-- name: GetDueSchedulesLocked :many
 WITH locked AS (
   SELECT id

@@ -11,6 +11,30 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const archiveWorkflow = `-- name: ArchiveWorkflow :exec
+UPDATE workflow
+SET status = $2,
+    updated_at = $3
+WHERE id = $1
+`
+
+type ArchiveWorkflowParams struct {
+	ID        int32  `json:"id"`
+	Status    string `json:"status"`
+	UpdatedAt int64  `json:"updated_at"`
+}
+
+// ArchiveWorkflow
+//
+//	UPDATE workflow
+//	SET status = $2,
+//	    updated_at = $3
+//	WHERE id = $1
+func (q *Queries) ArchiveWorkflow(ctx context.Context, arg *ArchiveWorkflowParams) error {
+	_, err := q.db.Exec(ctx, archiveWorkflow, arg.ID, arg.Status, arg.UpdatedAt)
+	return err
+}
+
 const createWorkflow = `-- name: CreateWorkflow :one
 INSERT INTO workflow (
   user_id,
