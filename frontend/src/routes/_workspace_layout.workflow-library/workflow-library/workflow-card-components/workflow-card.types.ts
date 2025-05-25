@@ -22,7 +22,6 @@ export interface WorkflowActionsProps {
 export interface WorkflowCardProps {
   workflow: any;
   onConfigure: (id: number) => void;
-  onDelete: (workflow: any) => void;
   onChangeStatus: (workflow: any, newStatus: "active" | "archived") => void;
   onRunWorkflow: (workflow: any) => void;
 }

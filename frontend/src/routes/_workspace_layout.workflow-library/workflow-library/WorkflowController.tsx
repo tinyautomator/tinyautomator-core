@@ -11,7 +11,7 @@ const SearchInput = () => {
 
   const debouncedSetSearch = useDebouncedCallback((value: string) => {
     updateParams({ q: value });
-  }, 300);
+  }, 500);
 
   const handleClear = () => {
     setLocalValue("");
@@ -43,9 +43,9 @@ const SearchInput = () => {
   );
 };
 
-export function WorkflowSearchBar() {
+export function WorkflowController() {
   return (
-    <div className="flex w-full items-center gap-3 border-b border-slate-100 dark:border-slate-800">
+    <div className="flex w-full items-center gap-3 border-b border-slate-100 dark:border-slate-800 select-none">
       <SearchInput />
       <TagFilter />
     </div>

@@ -1,29 +1,40 @@
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { ButtonsOnHover } from "./workflow-card-components/ButtonsOnHover";
-import { WorkflowActions } from "./workflow-card-components/WorkflowActions";
-import { WorkflowDescription } from "./workflow-card-components/WorkflowDescription";
-import { WorkflowFooter } from "./workflow-card-components/WorkflowFooter";
-import { WorkflowNodeCount } from "./workflow-card-components/WorkflowNodeCount";
-import { WorkflowStatusBadge } from "./workflow-card-components/WorkflowStatusDisplay";
-import { WorkflowTags } from "./workflow-card-components/WorkflowTags";
-import { WorkflowTitle } from "./workflow-card-components/WorkflowTitle";
-import { GROUP_HOVER_OPACITY_ZERO } from "./workflow-card-components/workflow-card.constants";
-import { WorkflowCardProps } from "./workflow-card-components/workflow-card.types";
+import { ButtonsOnHover } from "./ButtonsOnHover";
+import { WorkflowActions } from "./WorkflowActions";
+import { WorkflowDescription } from "./WorkflowDescription";
+import { WorkflowFooter } from "./WorkflowFooter";
+import { WorkflowNodeCount } from "./WorkflowNodeCount";
+import { WorkflowStatusBadge } from "./WorkflowStatusDisplay";
+import { WorkflowTags } from "./WorkflowTags";
+import { WorkflowTitle } from "./WorkflowTitle";
+import { GROUP_HOVER_OPACITY_ZERO } from "./workflow-card.constants";
+import { WorkflowCardProps } from "./workflow-card.types";
+import { DeleteWorkflowDialog } from "./DeleteWorkflowDialog";
+import { useState } from "react";
 
 export function WorkflowCard({
   workflow,
   onConfigure,
-  onDelete,
   onChangeStatus,
   onRunWorkflow,
-}: WorkflowCardProps) {
+}: Omit<WorkflowCardProps, "onDelete">) {
   const isArchived = workflow.status === "archived";
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      // TODO: Implement delete API call
+      // Remove the navigation refresh
+    } catch (error) {
+      console.error("Error deleting workflow:", error);
+    }
+  };
 
   return (
     <Card
       className={cn(
-        "relative grid rounded-xl p-2",
+        "relative grid rounded-xl p-2 h-full",
         "bg-white dark:bg-slate-900",
         "border-2 border-slate-300 dark:border-slate-800",
         "shadow-[0_2px_4px_rgba(0,0,0,0.05)]",
@@ -39,7 +50,7 @@ export function WorkflowCard({
           status={workflow.status}
           workflowId={workflow.id}
           onEdit={onConfigure}
-          onDelete={() => onDelete(workflow)}
+          onDelete={() => setShowDeleteDialog(true)}
           onArchive={() => onChangeStatus(workflow, "archived")}
           onRestore={() => onChangeStatus(workflow, "active")}
         />
@@ -48,7 +59,7 @@ export function WorkflowCard({
       <WorkflowTitle
         title={workflow.title}
         isArchived={isArchived}
-        onConfigure={() => onConfigure(workflow.id)}
+        isFavorite={workflow.isFavorite}
       />
 
       <div
@@ -82,6 +93,15 @@ export function WorkflowCard({
       <ButtonsOnHover
         onEdit={() => onConfigure(workflow.id)}
         onRun={() => onRunWorkflow(workflow)}
+      />
+      <DeleteWorkflowDialog
+        workflow={workflow}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={() => {
+          handleDelete();
+          setShowDeleteDialog(false);
+        }}
       />
     </Card>
   );

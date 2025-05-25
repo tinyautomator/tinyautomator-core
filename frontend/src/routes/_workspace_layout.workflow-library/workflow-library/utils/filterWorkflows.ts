@@ -9,9 +9,8 @@ interface WorkflowResult {
 
 export function getWorkflowData(
   workflows: Workflow[],
-  { q: searchQuery, tab: selectedTab, tags: selectedTags }: SearchParams,
+  { q: searchQuery, tab: selectedTab, tags: selectedTags }: SearchParams
 ): WorkflowResult {
-  // Early return for empty workflows
   if (!workflows.length) {
     return {
       workflows: [],
@@ -20,7 +19,6 @@ export function getWorkflowData(
     };
   }
 
-  // Pre-compute search query once
   const query = searchQuery?.toLowerCase();
   const hasTags = selectedTags.length > 0;
 

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { searchParamsSchema, type SearchParams } from "../utils/schemas";
 
 export function useValidatedSearchParams(
-  totalPages = 1,
+  totalPages = 1
 ): [SearchParams, (newParams: Partial<SearchParams>) => void] {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -11,7 +11,6 @@ export function useValidatedSearchParams(
     const params = Object.fromEntries(searchParams.entries());
     const parsed = searchParamsSchema.parse(params);
 
-    // Clamp page after parsing
     parsed.page = Math.max(1, Math.min(parsed.page, totalPages));
 
     return parsed;
@@ -29,21 +28,22 @@ export function useValidatedSearchParams(
             updatedParams.set(key, value);
           } else if (key === "tags" && Array.isArray(value)) {
             updatedParams.set(key, value.join(","));
-            updatedParams.set("page", "1");
             if (value.length === 0) {
               updatedParams.delete(key);
             }
           } else if (Array.isArray(value)) {
             updatedParams.delete(key);
-            value.forEach((v) => updatedParams.append(key, v));
           } else {
             updatedParams.set(key, String(value));
+            if (key !== "page") {
+              updatedParams.set("page", "1");
+            }
           }
         });
 
         return updatedParams;
       },
-      { preventScrollReset: true },
+      { preventScrollReset: true }
     );
   };
 

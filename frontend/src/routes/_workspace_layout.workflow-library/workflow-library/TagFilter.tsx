@@ -14,6 +14,7 @@ import { ListFilter } from "lucide-react";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import { Form } from "react-router";
 
+// TODO: Take away button and as user clicks on a tag, it should be applied immediately and do a union instead of intersection.
 export function TagFilter() {
   const [{ tags: selectedTags }, updateParams] = useValidatedSearchParams();
   const { tagCounts } = useFilteredWorkflows();
@@ -22,10 +23,10 @@ export function TagFilter() {
   // TODO: Derive this in useFilteredWorkflows...
   const uniqueTags = useMemo(() => {
     return Array.from(tagCounts.keys()).sort(
-      (a, b) => tagCounts.get(b)! - tagCounts.get(a)!,
+      (a, b) => tagCounts.get(b)! - tagCounts.get(a)!
     );
   }, [tagCounts]);
-  // TODO: Still stuttering when clearing tags, come back to this.
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -42,7 +43,6 @@ export function TagFilter() {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          size="icon"
           aria-label="Tag Filters"
           className={hasSelectedTags ? "bg-slate-100 dark:bg-slate-800" : ""}
         >
@@ -54,6 +54,7 @@ export function TagFilter() {
               hasSelectedTags ? "text-slate-900 dark:text-slate-100" : ""
             }
           />
+          <span>Filter</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-48 p-3 overflow-hidden">

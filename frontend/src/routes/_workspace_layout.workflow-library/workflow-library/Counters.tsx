@@ -1,5 +1,6 @@
 import { Box } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface CounterProps {
   count: number;
@@ -9,11 +10,14 @@ interface CounterProps {
 // TODO: Style the number
 // TODO: Can rename to a geeeral counter will be using in tag counts as well...
 
-export function Counter({ count }: CounterProps) {
+export function Counter({ count, className = "" }: CounterProps) {
   return (
     <Badge
       variant="secondary"
-      className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center text-xs font-normal bg-transparent border border-slate-200 dark:border-slate-700"
+      className={cn(
+        "h-5 min-w-[1.25rem] px-1 flex items-center justify-center text-xs font-normal bg-transparent border border-slate-200 dark:border-slate-700",
+        className
+      )}
     >
       {count}
     </Badge>

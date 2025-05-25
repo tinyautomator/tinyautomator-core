@@ -1,7 +1,6 @@
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
-import { WorkflowCard } from "./WorkflowCard";
+import { WorkflowCard } from "./workflow-card-components/WorkflowCard";
 import { WorkflowCardSkeleton } from "./WorkflowCardSkeleton";
-import { DeleteWorkflowDialog } from "./DeleteWorkflowDialog";
 import { useNavigation, useNavigate } from "react-router";
 import { useDebounce } from "use-debounce";
 import type { Workflow } from "../route";
@@ -85,22 +84,9 @@ export function WorkflowList() {
   const { workflows } = useFilteredWorkflows();
   const navigation = useNavigation();
   const navigate = useNavigate();
-  const [workflowToDelete, setWorkflowToDelete] =
-    useOptimisticParamValue<Workflow | null>(null);
 
   // Debounce the loading state by 150ms to prevent flash
   const [showLoading] = useDebounce(navigation.state !== "idle", 150);
-
-  const handleDelete = (workflow: Workflow) => {
-    setWorkflowToDelete(workflow);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!workflowToDelete) return;
-    // TODO: Implement delete API call
-    console.log("Deleting workflow:", workflowToDelete.id);
-    setWorkflowToDelete(null);
-  };
 
   const handleConfigure = (id: number) => {
     navigate(`/workflow-builder/${id}`);
@@ -110,12 +96,10 @@ export function WorkflowList() {
     workflow: Workflow,
     newStatus: "active" | "archived"
   ) => {
-    console.log(`Changing status of workflow ${workflow.id} to ${newStatus}`);
     // TODO: Implement status change
   };
 
   const handleRunWorkflow = (workflow: Workflow) => {
-    console.log(`Running workflow ${workflow.id}`);
     // TODO: Implement run workflow
   };
 
@@ -143,22 +127,15 @@ export function WorkflowList() {
                   key={workflow.id}
                   workflow={workflow}
                   onConfigure={() => handleConfigure(workflow.id)}
-                  onDelete={() => handleDelete(workflow)}
                   onChangeStatus={handleChangeStatus}
                   onRunWorkflow={handleRunWorkflow}
                 />
               ))}
         </div>
       </div>
-      <div className="flex-shrink-0 flex items-center justify-center border-1">
+      <div className="flex-shrink-0 flex items-center justify-center border-b-2 border-slate-200 dark:border-slate-800 bg-slate-100">
         <WorkflowPagination />
       </div>
-      <DeleteWorkflowDialog
-        workflow={workflowToDelete}
-        open={!!workflowToDelete}
-        onOpenChange={(open) => !open && setWorkflowToDelete(null)}
-        onConfirm={handleDeleteConfirm}
-      />
     </div>
   );
 }

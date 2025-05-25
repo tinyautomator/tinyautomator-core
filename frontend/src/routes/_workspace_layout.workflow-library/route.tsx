@@ -1,10 +1,11 @@
 import { CreateWorkflowButton } from "@/components/shared/CreatWorkflowButton";
 import { WorkflowTabs } from "./workflow-library/WorkflowTabs";
 import { WorkflowList } from "./workflow-library/WorkflowList";
-import { WorkflowSearchBar } from "./workflow-library/WorkflowSearchBar";
+import { WorkflowController } from "./workflow-library/WorkflowController";
 import { ActiveTagFilters } from "./workflow-library/ActiveTagFilters";
-import { sampleWorkflows } from "./workflow-library/utils/sampleWorkflows";
 import { cn } from "@/lib/utils";
+import { workflowApi } from "@/api";
+import { sampleWorkflows } from "./workflow-library/utils/sampleWorkflows";
 
 // TODO: update global workflow type to match the api response
 export interface Workflow {
@@ -13,26 +14,27 @@ export interface Workflow {
   description: string;
   lastEdited: string;
   status: "active" | "draft" | "archived" | "templates";
+  created_at: string;
+  updated_at: string;
   // I like these extra fields for presentation purposes
   nodeCount: number;
   tags: string[];
-  successRate?: number;
+  isFavorite: boolean;
 }
-// TODO: implement refetching of workflows periodically?
 export async function loader() {
-  // const data = await workflowApi.getUserWorkflows();
-  // const mappedData = data.map((workflow) => ({
-  //   id: workflow.id,
-  //   title: workflow.name,
-  //   description: workflow.description,
-  //   lastEdited: new Date().toISOString(),
-  //   status: "active" as const,
-  //   nodeCount: 20,
-  //   tags: ["type", "script", "paid"],
-  // }));
+  const data = await workflowApi.getUserWorkflows();
 
-  // TODO: remove this once we update workflow schema
-  return [...sampleWorkflows];
+  const mappedData = data.map((workflow) => ({
+    id: workflow.id,
+    title: workflow.name,
+    description: workflow.description,
+    lastEdited: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
+    status: "active" as const,
+    nodeCount: 5,
+    tags: ["type", "script", "paid"],
+  }));
+
+  return [...mappedData, ...sampleWorkflows];
 }
 function WorkflowLibraryHeader() {
   return (
@@ -71,15 +73,13 @@ export default function WorkflowLibrary() {
     >
       <WorkflowLibraryHeader />
 
-      <WorkflowSearchBar />
+      <WorkflowController />
 
       <WorkflowTabs />
       <ActiveTagFilters />
 
       <div
-        className={cn(
-          "flex-1 overflow-y-auto border-4 border-red-500 items-start w-full select-none"
-        )}
+        className={cn("flex-1 overflow-y-auto items-start w-full select-none")}
       >
         <WorkflowList />
       </div>

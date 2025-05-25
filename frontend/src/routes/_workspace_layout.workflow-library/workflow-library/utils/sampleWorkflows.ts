@@ -107,9 +107,12 @@ function generateMoreWorkflows(count: number): Workflow[] {
       status: status as Workflow["status"],
       nodeCount: Math.floor(Math.random() * 30) + 5,
       tags: [...template.tags, ...extraTags],
+      isFavorite: Math.random() > 0.5,
+      created_at: lastEdited.toISOString(),
+      updated_at: lastEdited.toISOString(),
     };
   });
 }
 
 // Generate 100 workflows for good testing
-export const sampleWorkflows: Workflow[] = generateMoreWorkflows(1000);
+export const sampleWorkflows: Workflow[] = generateMoreWorkflows(20);

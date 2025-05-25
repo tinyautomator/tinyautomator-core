@@ -8,22 +8,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { Workflow } from "../route";
+import type { Workflow } from "../../route";
 
 interface DeleteWorkflowDialogProps {
+  workflow: Workflow;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  workflow: Workflow | null;
 }
 
 export function DeleteWorkflowDialog({
+  workflow,
   open,
   onOpenChange,
   onConfirm,
-  workflow,
 }: DeleteWorkflowDialogProps) {
-  if (!workflow) return null;
+  if (!workflow) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,7 +43,7 @@ export function DeleteWorkflowDialog({
             ? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex flex-col-reverse `sm:flex-row sm:justify-center sm:space-x-2 mt-5">
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-center sm:space-x-2 mt-5">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
