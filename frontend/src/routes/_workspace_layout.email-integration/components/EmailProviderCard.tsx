@@ -8,6 +8,7 @@ export type ProviderCardProps = {
   description: string;
   onConnect?: () => Promise<void>;
   isLoading?: boolean;
+  isConnected?: boolean;
 };
 
 export default function EmailProviderCard({
@@ -16,6 +17,7 @@ export default function EmailProviderCard({
   description,
   onConnect,
   isLoading = false,
+  isConnected = false,
 }: ProviderCardProps) {
   return (
     <Card>
@@ -34,10 +36,14 @@ export default function EmailProviderCard({
 
         <Button
           onClick={onConnect}
-          disabled={isLoading}
-          className="w-full gap-2 transition-all duration-200 hover:scale-105 hover:brightness-105 active:scale-95"
+          disabled={isLoading || isConnected}
+          className={`w-full gap-2 transition-all duration-200 hover:scale-105 hover:brightness-105 active:scale-95
+            ${isConnected ? "bg-white-600 text-black hover:bg-green-700" : ""}
+          `}
         >
-          {isLoading ? (
+          {isConnected ? (
+            <>Connected</>
+          ) : isLoading ? (
             <>
               <RefreshCw className="h-4 w-4 animate-spin" />
               Connecting...

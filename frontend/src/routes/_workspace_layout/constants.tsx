@@ -43,28 +43,37 @@ export const INTEGRATION_ITEMS: {
   label: string;
   icon: JSX.Element;
   path: string;
+  path: string;
 }[] = [
-  { label: "Email", icon: <Mail className="h-4 w-4" />, path: "/email" },
+  {
+    label: "Email",
+    icon: <Mail className="h-4 w-4" />,
+    path: "/email-integration",
+  },
   {
     label: "Calendar",
     icon: <Calendar className="h-4 w-4" />,
-    path: "/calendar",
+    path: "/dashboard",
   },
   {
     label: "Slack",
     icon: <MessageSquare className="h-4 w-4" />,
-    path: "/slack",
+    path: "/dashboard",
   },
   {
     label: "Spreadsheets",
     icon: <Database className="h-4 w-4" />,
-    path: "/spreadsheets",
+    path: "/dashboard",
   },
-  { label: "Forms", icon: <FileText className="h-4 w-4" />, path: "/forms" },
+  {
+    label: "Forms",
+    icon: <FileText className="h-4 w-4" />,
+    path: "/dashboard",
+  },
   {
     label: "Custom Code",
     icon: <Code className="h-4 w-4" />,
-    path: "/custom-code",
+    path: "/dashboard",
   },
 ];
 

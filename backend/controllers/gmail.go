@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -28,8 +29,11 @@ func NewGmailController(cfg models.AppConfig) GmailController {
 
 func (c *gmailController) GetGmailAuthURL(ctx *gin.Context) {
 	// TODO : Introduce a random state for each request for security purposes
-	authURL := c.gmailOAuthConfig.AuthCodeURL("devtest", oauth2.AccessTypeOffline)
-
+	authURL := c.gmailOAuthConfig.AuthCodeURL(
+		"devtest",
+		oauth2.AccessTypeOffline,
+		oauth2.SetAuthURLParam("prompt", "consent"),
+	)
 	ctx.JSON(http.StatusOK, gin.H{
 		"url": authURL,
 	})
@@ -40,7 +44,6 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 
 	if code == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Missing code"})
-
 		return
 	}
 
@@ -67,48 +70,92 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 
 	// TODO: Save token (email ???, access_token, refresh_token, expiry) to DB for userID
 
-	// TEMP: Return token directly so you can plug it into test APIs
-	ctx.JSON(http.StatusOK, gin.H{
-		"access_token":  token.AccessToken,
-		"refresh_token": token.RefreshToken,
-		"expiry":        token.Expiry,
-		"token_type":    token.TokenType,
-		"scope":         token.Extra("scope"), // if present
-		"email":         email,
-	})
+	// TEMP: saving as a cookie
+	tokenData := struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		Expiry       string `json:"expiry"`
+		Email        string `json:"email"`
+	}{
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		Expiry:       token.Expiry.Format(time.RFC3339),
+		Email:        email,
+	}
+
+	tokenJSON, err := json.Marshal(tokenData)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode token"})
+		return
+	}
+
+	// Set cookie with token data
+	ctx.SetCookie(
+		"gmail_token",
+		string(tokenJSON),
+		3600*24*180, // 6 months
+		"/",
+		"localhost", // domain explicitly set to localhost
+		false,       // secure: false for local dev!
+		false,       // httpOnly : false for debugging, set to true for production
+	)
+	// Return HTML that will close the popup window
+	ctx.Header("Content-Type", "text/html")
+	ctx.String(http.StatusOK, `
+    	<html>
+    	    <body>
+    	        <script>
+    	            window.close();
+    	        </script>
+    	    </body>
+    	</html>
+	`)
 }
 
 func (c *gmailController) SendEmail(ctx *gin.Context) {
-	var req struct {
-		AccessToken  string `json:"access_token" binding:"required"`
-		RefreshToken string `json:"refresh_token" binding:"required"`
-		Expiry       string `json:"expiry" binding:"required"`
-		To           string `json:"to" binding:"required"`
-		From         string `json:"from" binding:"required"`
-		Subject      string `json:"subject" binding:"required"`
-		Body         string `json:"body" binding:"required"`
-	}
-
-	err := ctx.ShouldBindBodyWithJSON(&req)
+	// Get token from cookie
+	tokenJSON, err := ctx.Cookie("gmail_token")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Gmail account not connected"})
+		return
 	}
 
-	expiryTime, err := time.Parse(time.RFC3339Nano, req.Expiry)
+	var tokenData struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		Expiry       string `json:"expiry"`
+		Email        string `json:"email"`
+	}
+
+	if err := json.Unmarshal([]byte(tokenJSON), &tokenData); err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token data"})
+		return
+	}
+
+	expiryTime, err := time.Parse(time.RFC3339, tokenData.Expiry)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid expiry format"})
-
 		return
 	}
 
 	token := &oauth2.Token{
-		AccessToken:  req.AccessToken,
-		RefreshToken: req.RefreshToken,
+		AccessToken:  tokenData.AccessToken,
+		RefreshToken: tokenData.RefreshToken,
 		Expiry:       expiryTime,
 		TokenType:    "Bearer",
 	}
 
-	encoded, err := google.EncodeSimpleText(req.To, req.From, req.Subject, req.Body)
+	var req struct {
+		To      string `json:"to" binding:"required"`
+		Subject string `json:"subject" binding:"required"`
+		Body    string `json:"body" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+	}
+
+	encoded, err := google.EncodeSimpleText(req.To, tokenData.Email, req.Subject, req.Body)
 	if err != nil {
 		ctx.JSON(
 			http.StatusInternalServerError,
