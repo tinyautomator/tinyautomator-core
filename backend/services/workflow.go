@@ -287,7 +287,7 @@ func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32)
 		return nil
 	}
 
-	err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID, WorkflowStatusArchived)
+	err = s.workflowRepo.ArchiveWorkflow(ctx, workflow.ID)
 	if err != nil {
 		return fmt.Errorf("failed to archive workflow: %w", err)
 	}

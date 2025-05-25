@@ -77,7 +77,7 @@ type WorkflowRepository interface {
 	) error
 	GetWorkflowGraph(ctx context.Context, workflowID int32) (*WorkflowGraph, error)
 	RenderWorkflowGraph(ctx context.Context, workflowID int32) (*WorkflowGraphDTO, error)
-	ArchiveWorkflow(ctx context.Context, workflowID int32, status string) error
+	ArchiveWorkflow(ctx context.Context, workflowID int32) error
 }
 
 type WorkflowRunRepository interface {
