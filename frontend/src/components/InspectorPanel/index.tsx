@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Settings, ChevronsRight } from "lucide-react";
-import { useFlowStore } from "@/routes/_workspace_layout.workflow-builder.($id)/flowStore";
+import { useFlowStore } from "@/components/Canvas/flowStore";
 import { AdvancedSettings } from "./AdvancedSettings";
 import { LogsPanel } from "./LogsPanel";
 import { SettingsTab } from "./settings";

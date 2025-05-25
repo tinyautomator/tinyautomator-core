@@ -25,7 +25,8 @@ export class WorkflowApiClient extends BaseApiClient {
     return await this.put(`/api/workflow/${id}`, data);
   }
 
-  async runWorkflow(id: string): Promise<void> {
-    return await this.post(`/api/workflow-run/${id}`);
+  async runWorkflow(id: string): Promise<number> {
+    const res = await this.post<{ run_id: number }>(`/api/workflow-run/${id}`);
+    return res.run_id;
   }
 }

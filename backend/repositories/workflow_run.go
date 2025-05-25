@@ -251,9 +251,9 @@ func (r *workflowRunRepo) GetWorkflowNodeRuns(
 		return nil, fmt.Errorf("db error get workflow node runs: %w", err)
 	}
 
-	workflowRunNodeRuns := make([]*models.WorkflowNodeRunCore, len(rows))
+	workflowRunNodeRuns := []*models.WorkflowNodeRunCore{}
 
-	for i, row := range rows {
+	for _, row := range rows {
 		var matadata null.String
 
 		if len(row.Metadata) > 0 {
@@ -271,7 +271,7 @@ func (r *workflowRunRepo) GetWorkflowNodeRuns(
 			continue
 		}
 
-		workflowRunNodeRuns[i] = &models.WorkflowNodeRunCore{
+		workflowRunNodeRuns = append(workflowRunNodeRuns, &models.WorkflowNodeRunCore{
 			ID:             row.ID,
 			WorkflowRunID:  row.WorkflowRunID,
 			WorkflowNodeID: row.WorkflowNodeID,
@@ -280,7 +280,7 @@ func (r *workflowRunRepo) GetWorkflowNodeRuns(
 			StartedAt:      null.TimeFrom(time.UnixMilli(row.StartedAt.Int64)),
 			FinishedAt:     null.TimeFrom(time.UnixMilli(row.FinishedAt.Int64)),
 			Metadata:       matadata,
-		}
+		})
 	}
 
 	return workflowRunNodeRuns, nil

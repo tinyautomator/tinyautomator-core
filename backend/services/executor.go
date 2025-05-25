@@ -143,13 +143,17 @@ func (s *ExecutorService) runWorkflowNodeTask(
 		return fmt.Errorf("failed to mark node run as running: %w", err)
 	}
 
+	err := s.redisClient.PublishNodeStatusUpdate(ctx, task.RunID, task.NodeID, "running", nil)
+	if err != nil {
+		s.logger.WithError(err).WithFields(kv).Warn("failed to publish node status update")
+	}
+
 	doTask := func() error {
+		time.Sleep(30 * time.Second)
+
 		if task.NodeID == 111 {
-			time.Sleep(5 * time.Second)
 			return errors.New("test error")
 		}
-
-		time.Sleep(10 * time.Second)
 
 		return nil
 	}
@@ -246,7 +250,7 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 			return fmt.Errorf("failed to get workflow node runs: %w", err)
 		}
 
-		status := "completed"
+		status := "success"
 
 		for _, nodeRun := range workflowNodeRuns {
 			if nodeRun.Status == "failed" {
