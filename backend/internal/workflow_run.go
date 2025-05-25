@@ -26,6 +26,16 @@ func EnqueueChildNodes(
 		return fmt.Errorf("failed to get child workflow node runs: %w", err)
 	}
 
+	if len(c) == 0 {
+		logger.WithFields(logrus.Fields{
+			"workflow_id":     workflowID,
+			"workflow_run_id": workflowRunID,
+			"node_id":         parentNodeID,
+		}).Info("no child nodes to enqueue")
+
+		return nil
+	}
+
 	type NodeToEnqueue struct {
 		NodeID    int32
 		NodeRunID int32
@@ -45,6 +55,7 @@ func EnqueueChildNodes(
 				"workflow_run_id": workflowRunID,
 				"node_id":         nodeRun.WorkflowNodeID,
 				"node_run_id":     nodeRun.ID,
+				"node_status":     nodeRun.Status,
 			}).Info("node run already in progress, skipping enqueue")
 
 			continue

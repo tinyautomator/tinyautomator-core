@@ -299,13 +299,16 @@ func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32)
 
 	rootNodes := internal.GetRootNodes(graph)
 	for _, node := range rootNodes {
-		s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).Info("found root node")
+		s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).
+			Info("found root node")
+
 		switch node.ActionType {
 		case TriggerTypeScheduled:
 			_ = s.workflowScheduleRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
 			// TODO: Add more trigger types
 		default:
-			s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).Info("no trigger type found, treating as manual")
+			s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).
+				Info("no trigger type found, treating as manual")
 		}
 	}
 

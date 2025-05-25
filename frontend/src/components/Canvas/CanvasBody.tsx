@@ -106,8 +106,6 @@ export default function CanvasBody() {
   return (
     <div className="h-14/15">
       <ReactFlow
-        minZoom={0.75}
-        maxZoom={1.5}
         nodeTypes={nodeTypes}
         nodes={nodes}
         edges={edges}

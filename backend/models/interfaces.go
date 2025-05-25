@@ -109,7 +109,7 @@ type WorkflowRunRepository interface {
 	CreateWorkflowRun(
 		ctx context.Context,
 		workflowID int32,
-		nodeIDs []int32,
+		nodes []ValidateNode,
 	) (*WorkflowRunWithNodesDTO, error)
 	CompleteWorkflowRun(ctx context.Context, workflowRunID int32, status string) error
 	MarkWorkflowNodeAsRunning(

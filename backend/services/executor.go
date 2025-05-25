@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -138,8 +139,9 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	s.logger.WithFields(kv).Info("executing workflow node")
 
 	now := time.Now().UnixMilli()
+	task.RetryCount++
 
-	if err := s.workflowRunRepo.MarkWorkflowNodeAsRunning(ctx, task.NodeRunID, now, task.RetryCount+1); err != nil {
+	if err := s.workflowRunRepo.MarkWorkflowNodeAsRunning(ctx, task.NodeRunID, now, task.RetryCount); err != nil {
 		return fmt.Errorf("failed to mark node run as running: %w", err)
 	}
 
@@ -149,9 +151,12 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	}
 
 	doTask := func() error {
-		time.Sleep(5 * time.Second)
+		randomNum := rand.Float64()
 
-		if task.NodeID == 111 {
+		sleepDuration := time.Duration(1) * time.Second
+		time.Sleep(sleepDuration)
+
+		if randomNum < 0.25 {
 			return errors.New("test error")
 		}
 
@@ -189,6 +194,20 @@ func (s *ExecutorService) runWorkflowNodeTask(
 			"node_id": task.NodeID,
 			"status":  task.Status,
 		}).Warn("failed to publish status update after marking node complete; primary operation succeeded")
+	}
+
+	kv["task_err"] = taskErr
+	kv["retry_count"] = task.RetryCount
+
+	// TODO: change this
+	if taskErr != nil && task.RetryCount == 3 {
+		s.logger.WithFields(kv).
+			Info("node task failed after max retries - should fail workflow run")
+
+		err = s.workflowRunRepo.CompleteWorkflowRun(ctx, task.RunID, "failed")
+		if err != nil {
+			return fmt.Errorf("failed to complete workflow run: %w", err)
+		}
 	}
 
 	return taskErr

@@ -25,7 +25,6 @@ type WorkflowRunController interface {
 
 type workflowRunController struct {
 	workflowRunRepo    models.WorkflowRunRepository
-	redisClient        redis.RedisClient
 	orchestrator       models.OrchestratorService
 	logger             logrus.FieldLogger
 	workflowRunService *services.WorkflowRunService
@@ -34,7 +33,6 @@ type workflowRunController struct {
 func NewWorkflowRunController(cfg models.AppConfig, ctx context.Context) *workflowRunController {
 	c := &workflowRunController{
 		workflowRunRepo:    cfg.GetWorkflowRunRepository(),
-		redisClient:        cfg.GetRedisClient(),
 		orchestrator:       services.NewOrchestratorService(cfg),
 		logger:             cfg.GetLogger(),
 		workflowRunService: services.NewWorkflowRunService(cfg),
@@ -110,29 +108,7 @@ func (c *workflowRunController) RunWorkflow(ctx *gin.Context) {
 		return
 	}
 
-	lockID, acquired, err := c.redisClient.AcquireRunWorkflowLock(
-		ctx,
-		idStr,
-		"test_user",
-		500*time.Millisecond, // TODO: replace this later
-	)
-	if err != nil {
-		c.logger.Error("failed to acquire workflow lock: %v", err)
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
-
-		// TODO: check DB for run workflow state
-
-		return
-	}
-
-	if !acquired {
-		ctx.JSON(http.StatusConflict, gin.H{"error": "workflow already running"})
-		return
-	}
-
-	// TODO: release the lock after the workflow is done
-	c.logger.WithField("lock_id", lockID).Info("acquired run workflow lock")
-
+	// TODO: ratelimit
 	runID, err := c.orchestrator.OrchestrateWorkflow(ctx, int32(workflowID))
 	if err != nil {
 		// TODO: don't return the error to the client

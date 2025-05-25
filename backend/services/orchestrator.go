@@ -59,12 +59,14 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 			ActionType: node.ActionType,
 		}
 		isRoot := false
+
 		for _, root := range rootNodes {
 			if root.ID == node.ID {
 				isRoot = true
 				break
 			}
 		}
+
 		if !isRoot {
 			nIDs = append(nIDs, node.ID)
 		}
@@ -75,7 +77,7 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 		return -1, fmt.Errorf("orchestrate workflow failed to validate workflow graph: %w", err)
 	}
 
-	run, err := s.workflowRunRepo.CreateWorkflowRun(ctx, workflowID, nIDs)
+	run, err := s.workflowRunRepo.CreateWorkflowRun(ctx, workflowID, n)
 	if err != nil {
 		return -1, fmt.Errorf("orchestrate workflow failed to create workflow run: %w", err)
 	}
@@ -110,6 +112,10 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 		)
 		if err != nil {
 			return -1, fmt.Errorf("orchestrate workflow failed to enqueue child nodes: %w", err)
+		}
+
+		if err := s.redisClient.PublishNodeStatusUpdate(ctx, run.ID, parent.ID, "success", nil); err != nil {
+			s.logger.WithError(err).Warn("failed to publish root node status update to redis")
 		}
 	}
 

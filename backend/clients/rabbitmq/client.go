@@ -171,7 +171,7 @@ func (c *rabbitMQClient) Publish(ctx context.Context, msg []byte) error {
 
 func (c *rabbitMQClient) Subscribe(ctx context.Context, handler func([]byte) error) error {
 	if err := c.channel.Qos(
-		1,     // prefetch count
+		100,   // prefetch count
 		0,     // prefetch size
 		false, // global
 	); err != nil {
@@ -191,6 +191,10 @@ func (c *rabbitMQClient) Subscribe(ctx context.Context, handler func([]byte) err
 		return fmt.Errorf("failed to register a consumer: %w", err)
 	}
 
+	semaphore := make(chan struct{}, 100)
+
+	var wg sync.WaitGroup
+
 	go func() {
 		for {
 			select {
@@ -203,16 +207,27 @@ func (c *rabbitMQClient) Subscribe(ctx context.Context, handler func([]byte) err
 					return
 				}
 
-				if err := handler(msg.Body); err != nil {
-					c.logger.WithError(err).Error("Failed to process message")
-					c.handleFailedMessage(msg)
+				wg.Add(1)
 
-					continue
-				}
+				go func(delivery amqp.Delivery) {
+					defer wg.Done()
 
-				if err := msg.Ack(false); err != nil {
-					c.logger.WithError(err).Error("failed to ack message")
-				}
+					// Acquire semaphore
+					semaphore <- struct{}{}
+					defer func() { <-semaphore }()
+
+					// Process message
+					if err := handler(delivery.Body); err != nil {
+						c.logger.WithError(err).Error("Failed to process message")
+						c.handleFailedMessage(delivery)
+
+						return
+					}
+
+					if err := delivery.Ack(false); err != nil {
+						c.logger.WithError(err).Error("failed to ack message")
+					}
+				}(msg)
 			}
 		}
 	}()
