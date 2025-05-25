@@ -95,13 +95,13 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 	s.logger.WithFields(logrus.Fields{
 		"workflow_id": wg.ID,
 		"run_id":      run.ID,
+		"root_nodes":  rootNodes,
 	}).Info("executing workflow")
 
 	for _, parent := range rootNodes {
 		err = internal.EnqueueChildNodes(
 			ctx,
 			s.logger,
-			s.workflowRepo,
 			s.workflowRunRepo,
 			s.rabbitMQClient,
 			workflowID,

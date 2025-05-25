@@ -246,37 +246,6 @@ func (q *Queries) DeleteWorkflowNode(ctx context.Context, id int32) error {
 	return err
 }
 
-const getChildNodeIDs = `-- name: GetChildNodeIDs :many
-SELECT target_node_id
-FROM workflow_edge
-WHERE source_node_id = $1
-`
-
-// GetChildNodeIDs
-//
-//	SELECT target_node_id
-//	FROM workflow_edge
-//	WHERE source_node_id = $1
-func (q *Queries) GetChildNodeIDs(ctx context.Context, sourceNodeID int32) ([]int32, error) {
-	rows, err := q.db.Query(ctx, getChildNodeIDs, sourceNodeID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []int32
-	for rows.Next() {
-		var target_node_id int32
-		if err := rows.Scan(&target_node_id); err != nil {
-			return nil, err
-		}
-		items = append(items, target_node_id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getUserWorkflows = `-- name: GetUserWorkflows :many
 SELECT id, user_id, name, description, status, created_at, updated_at
 FROM workflow

@@ -59,7 +59,6 @@ type AppConfig interface {
 type WorkflowRepository interface {
 	GetWorkflow(ctx context.Context, id int32) (*Workflow, error)
 	GetUserWorkflows(ctx context.Context, userID string) ([]*Workflow, error)
-	GetChildNodeIDs(ctx context.Context, nodeID int32) ([]int32, error)
 	CreateWorkflow(
 		ctx context.Context,
 		userID string,
@@ -96,6 +95,16 @@ type WorkflowRunRepository interface {
 		ctx context.Context,
 		workflowRunID int32,
 		status *string,
+	) ([]*WorkflowNodeRunCore, error)
+	GetParentWorkflowNodeRuns(
+		ctx context.Context,
+		workflowRunID int32,
+		nodeID int32,
+	) ([]*WorkflowNodeRunCore, error)
+	GetChildWorkflowNodeRuns(
+		ctx context.Context,
+		workflowRunID int32,
+		nodeID int32,
 	) ([]*WorkflowNodeRunCore, error)
 	CreateWorkflowRun(
 		ctx context.Context,

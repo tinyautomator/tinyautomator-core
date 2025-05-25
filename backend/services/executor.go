@@ -149,7 +149,7 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	}
 
 	doTask := func() error {
-		time.Sleep(30 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		if task.NodeID == 111 {
 			return errors.New("test error")
@@ -200,6 +200,25 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 		return fmt.Errorf("failed to unmarshal task: %w", err)
 	}
 
+	parentNodeRuns, err := s.workflowRunRepo.GetParentWorkflowNodeRuns(ctx, task.RunID, task.NodeID)
+	if err != nil {
+		return fmt.Errorf("failed to get parent workflow node runs: %w", err)
+	}
+
+	// if any parent node run is failed, we defer the execution to when the parent succeeds and queues the child again
+	for _, parentNodeRun := range parentNodeRuns {
+		if parentNodeRun.Status == "failed" {
+			s.logger.WithFields(logrus.Fields{
+				"workflow_id":    task.WorkflowID,
+				"run_id":         task.RunID,
+				"node_id":        task.NodeID,
+				"parent_node_id": parentNodeRun.WorkflowNodeID,
+			}).Info("blocked by parent node run")
+
+			return nil
+		}
+	}
+
 	// first we check if we've:
 	// 1. already completed the node task
 	// 2. failed on the publish child nodes step
@@ -228,7 +247,6 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 	err = internal.EnqueueChildNodes(
 		ctx,
 		s.logger,
-		s.workflowRepo,
 		s.workflowRunRepo,
 		s.rabbitMQClient,
 		task.WorkflowID,

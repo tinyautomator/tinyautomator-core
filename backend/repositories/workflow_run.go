@@ -286,6 +286,70 @@ func (r *workflowRunRepo) GetWorkflowNodeRuns(
 	return workflowRunNodeRuns, nil
 }
 
+func (r *workflowRunRepo) GetParentWorkflowNodeRuns(
+	ctx context.Context,
+	workflowRunID int32,
+	nodeID int32,
+) ([]*models.WorkflowNodeRunCore, error) {
+	rows, err := r.q.GetParentWorkflowNodeRuns(ctx, &dao.GetParentWorkflowNodeRunsParams{
+		WorkflowRunID: workflowRunID,
+		TargetNodeID:  nodeID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("db error get parent workflow node runs: %w", err)
+	}
+
+	workflowRunNodeRuns := []*models.WorkflowNodeRunCore{}
+
+	for _, row := range rows {
+		workflowRunNodeRuns = append(workflowRunNodeRuns, &models.WorkflowNodeRunCore{
+			ID:             row.ID,
+			WorkflowRunID:  row.WorkflowRunID,
+			WorkflowNodeID: row.WorkflowNodeID,
+			Status:         row.Status,
+			RetryCount:     row.RetryCount,
+			StartedAt:      null.TimeFrom(time.UnixMilli(row.StartedAt.Int64)),
+			FinishedAt:     null.TimeFrom(time.UnixMilli(row.FinishedAt.Int64)),
+			Metadata:       null.StringFrom(string(row.Metadata)),
+			ErrorMessage:   null.StringFrom(row.ErrorMessage.String),
+		})
+	}
+
+	return workflowRunNodeRuns, nil
+}
+
+func (r *workflowRunRepo) GetChildWorkflowNodeRuns(
+	ctx context.Context,
+	workflowRunID int32,
+	nodeID int32,
+) ([]*models.WorkflowNodeRunCore, error) {
+	rows, err := r.q.GetChildWorkflowNodeRuns(ctx, &dao.GetChildWorkflowNodeRunsParams{
+		WorkflowRunID: workflowRunID,
+		SourceNodeID:  nodeID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("db error get child workflow node runs: %w", err)
+	}
+
+	workflowRunNodeRuns := []*models.WorkflowNodeRunCore{}
+
+	for _, row := range rows {
+		workflowRunNodeRuns = append(workflowRunNodeRuns, &models.WorkflowNodeRunCore{
+			ID:             row.ID,
+			WorkflowRunID:  row.WorkflowRunID,
+			WorkflowNodeID: row.WorkflowNodeID,
+			Status:         row.Status,
+			RetryCount:     row.RetryCount,
+			StartedAt:      null.TimeFrom(time.UnixMilli(row.StartedAt.Int64)),
+			FinishedAt:     null.TimeFrom(time.UnixMilli(row.FinishedAt.Int64)),
+			Metadata:       null.StringFrom(string(row.Metadata)),
+			ErrorMessage:   null.StringFrom(row.ErrorMessage.String),
+		})
+	}
+
+	return workflowRunNodeRuns, nil
+}
+
 func (r *workflowRunRepo) MarkWorkflowNodeAsRunning(
 	ctx context.Context,
 	workflowNodeRunID int32,
