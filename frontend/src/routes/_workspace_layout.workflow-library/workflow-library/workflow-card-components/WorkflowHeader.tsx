@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
-import { TEXT_SLATE_DARK_SLATE_200 } from "./workflow-card.constants";
+import { TEXT_SLATE_DARK_SLATE_200 } from "./workflow-card.styles";
 import { useState } from "react";
 
 interface WorkflowTitleProps {

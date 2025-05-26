@@ -1,13 +1,21 @@
-export type WorkflowStatus = "active" | "draft" | "archived" | "templates";
+import { WorkflowStatus } from "../utils/schemas";
 
-export interface WorkflowAction {
-  label: string;
-  icon: any;
-  onClick: () => void;
-  show: boolean;
-  className?: string;
-  iconClassName?: string;
-  variant?: "danger";
+export interface WorkflowCardProps {
+  workflow: Workflow;
+  onDelete?: (id: number) => void;
+}
+
+export interface Workflow {
+  id: number;
+  title: string;
+  description: string;
+  lastEdited: string;
+  status: WorkflowStatus;
+  created_at: string;
+  updated_at: string;
+  nodeCount: number;
+  tags: string[];
+  isFavorite: boolean;
 }
 
 export interface WorkflowActionsProps {
@@ -19,9 +27,12 @@ export interface WorkflowActionsProps {
   onRestore: () => void;
 }
 
-export interface WorkflowCardProps {
-  workflow: any;
-  onConfigure: (id: number) => void;
-  onChangeStatus: (workflow: any, newStatus: "active" | "archived") => void;
-  onRunWorkflow: (workflow: any) => void;
+export interface WorkflowAction {
+  label: string;
+  icon: any;
+  onClick: () => void;
+  show: boolean;
+  className?: string;
+  iconClassName?: string;
+  variant?: "danger";
 }

@@ -1,38 +1,26 @@
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { TagFilter } from "./TagFilter";
-import { useValidatedSearchParams } from "./hooks/useSearchParams";
-import { useOptimisticParamValue } from "./hooks/useOptimisticParamValue";
-import { useDebouncedCallback } from "use-debounce";
+import { useWorkflowListState } from "./hooks/useWorkflowListState";
 
 const SearchInput = () => {
-  const [{ q }, updateParams] = useValidatedSearchParams();
-  const [localValue, setLocalValue] = useOptimisticParamValue(q ?? "");
-
-  const debouncedSetSearch = useDebouncedCallback((value: string) => {
-    updateParams({ q: value });
-  }, 500);
-
-  const handleClear = () => {
-    setLocalValue("");
-    updateParams({ q: "" });
-  };
+  const {
+    state: { q },
+    updateState,
+  } = useWorkflowListState();
 
   return (
     <div className="relative w-1/2">
       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
       <Input
         placeholder="Search workflows..."
-        value={localValue}
-        onChange={(e) => {
-          setLocalValue(e.target.value);
-          debouncedSetSearch(e.target.value);
-        }}
+        value={q ?? ""}
+        onChange={(e) => updateState({ q: e.target.value })}
         className="pl-8 pr-8"
       />
-      {localValue && (
+      {q && (
         <button
-          onClick={handleClear}
+          onClick={() => updateState({ q: "" })}
           className="absolute right-2 top-2.5 h-4 w-4 rounded-sm text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           aria-label="Clear search"
         >

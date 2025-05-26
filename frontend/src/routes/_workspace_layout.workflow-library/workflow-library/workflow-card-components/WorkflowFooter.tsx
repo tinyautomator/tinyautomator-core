@@ -1,14 +1,13 @@
 import { cn } from "@/lib/utils";
-import { TEXT_SLATE_500_DARK_SLATE_400 } from "./workflow-card.constants";
+import { TEXT_SLATE_500_DARK_SLATE_400 } from "./workflow-card.styles";
 import { Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface WorkflowFooterProps {
   lastEdited: Date;
-  className?: string;
 }
 
-export function WorkflowFooter({ lastEdited, className }: WorkflowFooterProps) {
+export function WorkflowFooter({ lastEdited }: WorkflowFooterProps) {
   const timeAgo = formatDistanceToNow(lastEdited, { addSuffix: true }).replace(
     /^about /,
     ""

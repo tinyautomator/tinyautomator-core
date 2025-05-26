@@ -9,26 +9,24 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Workflow } from "../../route";
+import { useWorkflowActions } from "../hooks/useWorkflowActions";
 
 interface DeleteWorkflowDialogProps {
   workflow: Workflow;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
 }
 
-export function DeleteWorkflowDialog({
-  workflow,
-  open,
-  onOpenChange,
-  onConfirm,
-}: DeleteWorkflowDialogProps) {
+export function DeleteWorkflowDialog({ workflow }: DeleteWorkflowDialogProps) {
+  const { showDeleteDialog, setShowDeleteDialog } =
+    useWorkflowActions(workflow);
   if (!workflow) {
     return null;
   }
-
+  const handleConfirm = () => {
+    // TODO: Implement delete workflow
+    setShowDeleteDialog(false);
+  };
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
@@ -46,14 +44,14 @@ export function DeleteWorkflowDialog({
         <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-center sm:space-x-2 mt-5">
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => setShowDeleteDialog(false)}
             className="mt-3 sm:mt-0"
           >
             Cancel
           </Button>
           <Button
             variant="destructive"
-            onClick={onConfirm}
+            onClick={handleConfirm}
             className="bg-red-600 hover:bg-red-700 text-white active:translate-y-0.5 transition-all duration-200"
           >
             Delete Workflow

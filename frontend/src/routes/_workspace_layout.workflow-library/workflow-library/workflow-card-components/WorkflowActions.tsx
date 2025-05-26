@@ -1,100 +1,128 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  MoreHorizontal,
-  Settings,
-  Trash2,
-  PauseCircle,
-  Play,
-  Archive,
-} from "lucide-react";
+import { MoreHorizontal, Settings, Trash2, Play, Archive } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { WorkflowActionsProps, WorkflowAction } from "./workflow-card.types";
+import {
+  ACTION_BUTTON_BASE,
+  ACTION_BUTTON_ICON,
+  ACTION_MENU_ITEM_ICON,
+  ACTION_MENU_ITEM_DANGER,
+  ACTION_MENU_ITEM_DEFAULT,
+} from "./workflow-card.styles";
+import { useWorkflowActions } from "../hooks/useWorkflowActions";
+import type { Workflow } from "../../route";
 
-export function WorkflowActions({
+interface WorkflowActionsHoverProps {
+  workflow: Workflow;
+}
+
+export function WorkflowActionsHover({ workflow }: WorkflowActionsHoverProps) {
+  const { handleEdit, handleRun } = useWorkflowActions(workflow);
+
+  return (
+    <div className="absolute left-0 right-0 bottom-0 z-40 flex justify-center bg-gradient-to-t from-white/95 to-transparent px-5 pt-10 pb-5 gap-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300">
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex-1 text-blue-700 hover:bg-blue-50 pointer-events-auto"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleEdit();
+        }}
+      >
+        <Settings className="h-3.5 w-3.5 mr-1.5" /> Edit
+      </Button>
+      <Button
+        size="sm"
+        variant="default"
+        className="flex-1 bg-blue-600 hover:bg-blue-700 pointer-events-auto"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleRun();
+        }}
+      >
+        <Play className="h-3.5 w-3.5 mr-1.5" /> Run
+      </Button>
+    </div>
+  );
+}
+
+interface WorkflowActionsDropdownProps {
+  status: Workflow["status"];
+  workflowId: number;
+}
+
+export function WorkflowActionsDropdown({
   status,
   workflowId,
-  onEdit,
-  onDelete,
-  onArchive,
-  onRestore,
-}: WorkflowActionsProps) {
+}: WorkflowActionsDropdownProps) {
+  const { handleEdit, handleDelete, handleArchive, handleRestore } =
+    useWorkflowActions({ id: workflowId, status } as Workflow);
   const isArchived = status === "archived";
 
-  const actions: WorkflowAction[] = [
+  const actions = [
     {
       label: "Edit",
       icon: Settings,
-      onClick: () => onEdit(workflowId),
+      onClick: handleEdit,
       show: !isArchived,
-      className: "hover:bg-slate-100 dark:hover:bg-slate-800",
-      iconClassName: "text-slate-600 dark:text-slate-400",
+      className: ACTION_MENU_ITEM_DEFAULT,
+      iconClassName: ACTION_MENU_ITEM_ICON,
     },
     {
       label: "Delete",
       icon: Trash2,
-      onClick: onDelete,
+      onClick: handleDelete,
       show: !isArchived,
-      className: "hover:bg-red-50 dark:hover:bg-red-950/30",
-      iconClassName: "text-red-500 dark:text-red-400",
+      className: ACTION_MENU_ITEM_DANGER,
+      iconClassName: ACTION_MENU_ITEM_ICON,
       variant: "danger" as const,
     },
-    {
-      label: "Pause",
-      icon: PauseCircle,
-      onClick: () => {},
-      show: status === "active",
-    },
+
     {
       label: "Restore",
       icon: Play,
-      onClick: onRestore,
+      onClick: handleRestore,
       show: isArchived,
     },
     {
       label: "Archive",
       icon: Archive,
-      onClick: onArchive,
+      onClick: handleArchive,
       show: !isArchived && status !== "draft",
     },
   ].filter((action) => action.show);
 
-  const baseButtonStyles = cn(
-    "h-7 w-7",
-    "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm",
-    "hover:bg-white dark:hover:bg-slate-900",
-    "shadow-sm hover:shadow-md transition-all duration-200"
-  );
-
   return (
-    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className={baseButtonStyles}>
-            <MoreHorizontal className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
-            <span className="sr-only">More actions</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="bottom">
-          {actions.map(
-            ({ label, icon: Icon, onClick, className, iconClassName }) => (
-              <DropdownMenuItem
-                key={label}
-                onClick={onClick}
-                className={cn("flex items-center gap-2", className)}
-              >
-                <Icon className={cn("h-3.5 w-3.5", iconClassName)} />
-                {label}
-              </DropdownMenuItem>
-            )
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className={cn(
+            ACTION_BUTTON_BASE,
+            "opacity-0 group-hover:opacity-100"
           )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+        >
+          <MoreHorizontal className={ACTION_BUTTON_ICON} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        {actions.map((action) => (
+          <DropdownMenuItem
+            key={action.label}
+            onClick={action.onClick}
+            className={action.className}
+          >
+            <action.icon className={action.iconClassName} />
+            {action.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

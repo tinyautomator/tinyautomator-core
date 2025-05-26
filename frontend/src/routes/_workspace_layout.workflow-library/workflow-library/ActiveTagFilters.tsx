@@ -1,23 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
-import { useValidatedSearchParams } from "./hooks/useSearchParams";
-import { useOptimisticParamValue } from "./hooks/useOptimisticParamValue";
 import { Button } from "@/components/ui/button";
+import { useWorkflowListState } from "./hooks/useWorkflowListState";
 
 export function ActiveTagFilters() {
-  const [{ tags }, updateParams] = useValidatedSearchParams();
-  const [localTags, setLocalTags] = useOptimisticParamValue(tags);
+  const { currentTags, setTags } = useWorkflowListState();
 
   const removeTag = (tagToRemove: string) => {
-    setLocalTags(localTags.filter((tag) => tag !== tagToRemove));
-    updateParams({
-      tags: tags.filter((tag) => tag !== tagToRemove),
-    });
+    setTags(currentTags.filter((tag) => tag !== tagToRemove));
   };
 
   const clearAllTags = () => {
-    setLocalTags([]);
-    updateParams({ tags: [] });
+    setTags([]);
   };
 
   return (
@@ -28,9 +22,9 @@ export function ActiveTagFilters() {
         </span>
         <div className="flex-1 overflow-x-auto overflow-y-hidden">
           <div className="flex gap-1 py-2 min-w-min">
-            {localTags?.length ? (
+            {currentTags?.length ? (
               <>
-                {localTags.map((tag) => (
+                {currentTags.map((tag) => (
                   <Badge
                     key={tag}
                     variant="secondary"

@@ -1,6 +1,79 @@
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import {
+  WorkflowActionsDropdown,
+  WorkflowActionsHover,
+} from "./WorkflowActions";
+import {
+  WorkflowDescription,
+  WorkflowStatusBadge,
+  WorkflowTags,
+} from "./WorkflowBody";
+import { WorkflowFooter } from "./WorkflowFooter";
+import { WorkflowTitle } from "./WorkflowHeader";
+import { WorkflowCardProps } from "./workflow-card.types";
+import { DeleteWorkflowDialog } from "./DeleteWorkflowDialog";
+import {
+  CARD_BASE_STYLES,
+  CARD_ACTION_BUTTON_STYLES,
+  CARD_CONTENT_STYLES,
+  CARD_FOOTER_STYLES,
+  TRUNCATE_STYLES,
+  GROUP_HOVER_OPACITY_ZERO,
+} from "./workflow-card.styles";
 
-// Skeleton placeholder for WorkflowCard, shown during loading
+export function WorkflowCard({
+  workflow,
+}: Omit<WorkflowCardProps, "onDelete">) {
+  const isArchived = workflow.status === "archived";
+
+  return (
+    <Card className={CARD_BASE_STYLES}>
+      <div className={CARD_ACTION_BUTTON_STYLES}>
+        <WorkflowActionsDropdown
+          status={workflow.status}
+          workflowId={workflow.id}
+        />
+      </div>
+
+      <WorkflowTitle
+        title={workflow.title}
+        isArchived={isArchived}
+        isFavorite={workflow.isFavorite}
+      />
+
+      <div
+        className={cn(
+          CARD_CONTENT_STYLES,
+          GROUP_HOVER_OPACITY_ZERO,
+          "hover:opacity-100"
+        )}
+      >
+        <WorkflowStatusBadge status={workflow.status} />
+      </div>
+
+      <WorkflowTags
+        tags={workflow.tags}
+        className={cn(TRUNCATE_STYLES, GROUP_HOVER_OPACITY_ZERO)}
+      />
+      <div className="w-full">
+        <div
+          className={cn(
+            CARD_FOOTER_STYLES,
+            GROUP_HOVER_OPACITY_ZERO,
+            "justify-end"
+          )}
+        >
+          <WorkflowFooter lastEdited={new Date(workflow.lastEdited)} />
+        </div>
+      </div>
+      <WorkflowDescription description={workflow.description} />
+      <WorkflowActionsHover workflow={workflow} />
+      <DeleteWorkflowDialog workflow={workflow} />
+    </Card>
+  );
+}
+
 export function WorkflowCardSkeleton() {
   return (
     <div

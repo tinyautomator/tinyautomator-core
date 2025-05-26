@@ -1,7 +1,12 @@
 import { z } from "zod";
 
-export const TAB_VALUES = ["active", "draft", "templates", "archived"] as const;
-export type Tab = (typeof TAB_VALUES)[number];
+export const WORKFLOW_STATUSES = [
+  "active",
+  "draft",
+  "templates",
+  "archived",
+] as const;
+export type WorkflowStatus = (typeof WORKFLOW_STATUSES)[number];
 
 export const searchParamsSchema = z.object({
   q: z.string().optional().default(""),
@@ -9,7 +14,7 @@ export const searchParamsSchema = z.object({
   tab: z
     .string()
     .transform((val) => val.toLowerCase())
-    .pipe(z.enum(TAB_VALUES))
+    .pipe(z.enum(WORKFLOW_STATUSES))
     .catch("active"),
 
   tags: z

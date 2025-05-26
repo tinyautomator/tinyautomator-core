@@ -5,7 +5,6 @@ import { WorkflowController } from "./workflow-library/WorkflowController";
 import { ActiveTagFilters } from "./workflow-library/ActiveTagFilters";
 import { cn } from "@/lib/utils";
 import { workflowApi } from "@/api";
-import { sampleWorkflows } from "./workflow-library/utils/sampleWorkflows";
 
 // TODO: update global workflow type to match the api response
 export interface Workflow {
@@ -16,7 +15,6 @@ export interface Workflow {
   status: "active" | "draft" | "archived" | "templates";
   created_at: string;
   updated_at: string;
-  // I like these extra fields for presentation purposes
   nodeCount: number;
   tags: string[];
   isFavorite: boolean;
@@ -28,13 +26,14 @@ export async function loader() {
     id: workflow.id,
     title: workflow.name,
     description: workflow.description,
+    // TODO: Add these fields to the api response except nodeCount
     lastEdited: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
     status: "active" as const,
     nodeCount: 5,
     tags: ["type", "script", "paid"],
   }));
 
-  return [...mappedData, ...sampleWorkflows];
+  return mappedData;
 }
 function WorkflowLibraryHeader() {
   return (

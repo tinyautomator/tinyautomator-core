@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useValidatedSearchParams } from "./hooks/useSearchParams";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -13,10 +12,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListFilter } from "lucide-react";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import { Form } from "react-router";
+import { useWorkflowListState } from "./hooks/useWorkflowListState";
 
 // TODO: Take away button and as user clicks on a tag, it should be applied immediately and do a union instead of intersection.
 export function TagFilter() {
-  const [{ tags: selectedTags }, updateParams] = useValidatedSearchParams();
+  const {
+    state: { tags },
+    updateState,
+  } = useWorkflowListState();
   const { tagCounts } = useFilteredWorkflows();
   const [open, setOpen] = useState(false);
 
@@ -33,10 +36,10 @@ export function TagFilter() {
     const formData = new FormData(form);
     const newTags = Array.from(formData.getAll("tags") as string[]);
     setTimeout(() => setOpen(false), 100);
-    updateParams({ tags: newTags });
+    updateState({ tags: newTags });
   };
 
-  const hasSelectedTags = selectedTags && selectedTags.length > 0;
+  const hasSelectedTags = tags && tags.length > 0;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -71,7 +74,7 @@ export function TagFilter() {
                       id={tag}
                       name="tags"
                       value={tag}
-                      defaultChecked={selectedTags?.includes(tag)}
+                      defaultChecked={tags?.includes(tag)}
                       className="cursor-pointer h-3.5 w-3.5"
                     />
                     <Label
