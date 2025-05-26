@@ -66,11 +66,11 @@ export function CustomTimePicker({
   const hours = useMemo(
     () =>
       Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, "0")),
-    [],
+    []
   );
   const minutes = useMemo(
     () => Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")),
-    [],
+    []
   );
   const periods = useMemo(() => ["AM", "PM"], []);
 
