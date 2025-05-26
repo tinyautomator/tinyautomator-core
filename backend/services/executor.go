@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -138,8 +139,9 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	s.logger.WithFields(kv).Info("executing workflow node")
 
 	now := time.Now().UnixMilli()
+	task.RetryCount++
 
-	if err := s.workflowRunRepo.MarkWorkflowNodeAsRunning(ctx, task.NodeRunID, now, task.RetryCount+1); err != nil {
+	if err := s.workflowRunRepo.MarkWorkflowNodeAsRunning(ctx, task.NodeRunID, now, task.RetryCount); err != nil {
 		return fmt.Errorf("failed to mark node run as running: %w", err)
 	}
 
@@ -149,9 +151,12 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	}
 
 	doTask := func() error {
-		time.Sleep(30 * time.Second)
+		randomNum := rand.Float64()
 
-		if task.NodeID == 111 {
+		sleepDuration := time.Duration(1) * time.Second
+		time.Sleep(sleepDuration)
+
+		if randomNum < 0.25 {
 			return errors.New("test error")
 		}
 
@@ -191,6 +196,20 @@ func (s *ExecutorService) runWorkflowNodeTask(
 		}).Warn("failed to publish status update after marking node complete; primary operation succeeded")
 	}
 
+	kv["task_err"] = taskErr
+	kv["retry_count"] = task.RetryCount
+
+	// TODO: change this
+	if taskErr != nil && task.RetryCount == 3 {
+		s.logger.WithFields(kv).
+			Info("node task failed after max retries - should fail workflow run")
+
+		err = s.workflowRunRepo.CompleteWorkflowRun(ctx, task.RunID, "failed")
+		if err != nil {
+			return fmt.Errorf("failed to complete workflow run: %w", err)
+		}
+	}
+
 	return taskErr
 }
 
@@ -198,6 +217,25 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 	var task *models.WorkflowNodeTask
 	if err := json.Unmarshal(msg, &task); err != nil {
 		return fmt.Errorf("failed to unmarshal task: %w", err)
+	}
+
+	parentNodeRuns, err := s.workflowRunRepo.GetParentWorkflowNodeRuns(ctx, task.RunID, task.NodeID)
+	if err != nil {
+		return fmt.Errorf("failed to get parent workflow node runs: %w", err)
+	}
+
+	// if any parent node run is failed, we defer the execution to when the parent succeeds and queues the child again
+	for _, parentNodeRun := range parentNodeRuns {
+		if parentNodeRun.Status == "failed" {
+			s.logger.WithFields(logrus.Fields{
+				"workflow_id":    task.WorkflowID,
+				"run_id":         task.RunID,
+				"node_id":        task.NodeID,
+				"parent_node_id": parentNodeRun.WorkflowNodeID,
+			}).Info("blocked by parent node run")
+
+			return nil
+		}
 	}
 
 	// first we check if we've:
@@ -228,7 +266,6 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 	err = internal.EnqueueChildNodes(
 		ctx,
 		s.logger,
-		s.workflowRepo,
 		s.workflowRunRepo,
 		s.rabbitMQClient,
 		task.WorkflowID,

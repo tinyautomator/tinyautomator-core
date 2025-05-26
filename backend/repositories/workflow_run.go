@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/guregu/null/v6"
@@ -57,9 +58,9 @@ func (r *workflowRunRepo) WithTransaction(
 func (r *workflowRunRepo) CreateWorkflowRun(
 	ctx context.Context,
 	workflowID int32,
-	nodeIDs []int32,
+	nodes []models.ValidateNode,
 ) (*models.WorkflowRunWithNodesDTO, error) {
-	if len(nodeIDs) == 0 {
+	if len(nodes) == 0 {
 		return nil, fmt.Errorf("no node ids provided")
 	}
 
@@ -86,18 +87,35 @@ func (r *workflowRunRepo) CreateWorkflowRun(
 		return nil, fmt.Errorf("db error create workflow run: %w", err)
 	}
 
-	nodes := make([]*models.WorkflowNodeRunCore, len(nodeIDs))
+	n := make([]*models.WorkflowNodeRunCore, len(nodes))
 
-	for i, nodeID := range nodeIDs {
+	for i, node := range nodes {
+		nID, err := strconv.ParseInt(node.ID, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("db error parse node id: %w", err)
+		}
+
+		status := "pending"
+		// TODO: change this awful hack
+		switch node.ActionType {
+		case "schedule":
+			status = "success"
+		case "email_trigger":
+			status = "success"
+		case "webhook":
+			status = "success"
+		}
+
 		nr, err := qtx.CreateWorkflowNodeRun(ctx, &dao.CreateWorkflowNodeRunParams{
 			WorkflowRunID:  run.ID,
-			WorkflowNodeID: nodeID,
+			WorkflowNodeID: int32(nID),
+			Status:         status,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("db error create workflow node run: %w", err)
 		}
 
-		nodes[i] = &models.WorkflowNodeRunCore{
+		n[i] = &models.WorkflowNodeRunCore{
 			ID:             nr.ID,
 			WorkflowRunID:  nr.WorkflowRunID,
 			WorkflowNodeID: nr.WorkflowNodeID,
@@ -115,7 +133,7 @@ func (r *workflowRunRepo) CreateWorkflowRun(
 			WorkflowID: run.WorkflowID,
 			Status:     run.Status,
 		},
-		Nodes: nodes,
+		Nodes: n,
 	}, nil
 }
 
@@ -280,6 +298,70 @@ func (r *workflowRunRepo) GetWorkflowNodeRuns(
 			StartedAt:      null.TimeFrom(time.UnixMilli(row.StartedAt.Int64)),
 			FinishedAt:     null.TimeFrom(time.UnixMilli(row.FinishedAt.Int64)),
 			Metadata:       matadata,
+		})
+	}
+
+	return workflowRunNodeRuns, nil
+}
+
+func (r *workflowRunRepo) GetParentWorkflowNodeRuns(
+	ctx context.Context,
+	workflowRunID int32,
+	nodeID int32,
+) ([]*models.WorkflowNodeRunCore, error) {
+	rows, err := r.q.GetParentWorkflowNodeRuns(ctx, &dao.GetParentWorkflowNodeRunsParams{
+		WorkflowRunID: workflowRunID,
+		TargetNodeID:  nodeID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("db error get parent workflow node runs: %w", err)
+	}
+
+	workflowRunNodeRuns := []*models.WorkflowNodeRunCore{}
+
+	for _, row := range rows {
+		workflowRunNodeRuns = append(workflowRunNodeRuns, &models.WorkflowNodeRunCore{
+			ID:             row.ID,
+			WorkflowRunID:  row.WorkflowRunID,
+			WorkflowNodeID: row.WorkflowNodeID,
+			Status:         row.Status,
+			RetryCount:     row.RetryCount,
+			StartedAt:      null.TimeFrom(time.UnixMilli(row.StartedAt.Int64)),
+			FinishedAt:     null.TimeFrom(time.UnixMilli(row.FinishedAt.Int64)),
+			Metadata:       null.StringFrom(string(row.Metadata)),
+			ErrorMessage:   null.StringFrom(row.ErrorMessage.String),
+		})
+	}
+
+	return workflowRunNodeRuns, nil
+}
+
+func (r *workflowRunRepo) GetChildWorkflowNodeRuns(
+	ctx context.Context,
+	workflowRunID int32,
+	nodeID int32,
+) ([]*models.WorkflowNodeRunCore, error) {
+	rows, err := r.q.GetChildWorkflowNodeRuns(ctx, &dao.GetChildWorkflowNodeRunsParams{
+		WorkflowRunID: workflowRunID,
+		SourceNodeID:  nodeID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("db error get child workflow node runs: %w", err)
+	}
+
+	workflowRunNodeRuns := []*models.WorkflowNodeRunCore{}
+
+	for _, row := range rows {
+		workflowRunNodeRuns = append(workflowRunNodeRuns, &models.WorkflowNodeRunCore{
+			ID:             row.ID,
+			WorkflowRunID:  row.WorkflowRunID,
+			WorkflowNodeID: row.WorkflowNodeID,
+			Status:         row.Status,
+			RetryCount:     row.RetryCount,
+			StartedAt:      null.TimeFrom(time.UnixMilli(row.StartedAt.Int64)),
+			FinishedAt:     null.TimeFrom(time.UnixMilli(row.FinishedAt.Int64)),
+			Metadata:       null.StringFrom(string(row.Metadata)),
+			ErrorMessage:   null.StringFrom(row.ErrorMessage.String),
 		})
 	}
 

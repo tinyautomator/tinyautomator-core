@@ -15,16 +15,25 @@ var ErrNodeRunAlreadyExists = errors.New("node run already exists")
 func EnqueueChildNodes(
 	ctx context.Context,
 	logger logrus.FieldLogger,
-	workflowRepo models.WorkflowRepository,
 	workflowRunRepo models.WorkflowRunRepository,
 	rabbitMQClient rabbitmq.RabbitMQClient,
 	workflowID int32,
 	parentNodeID int32,
 	workflowRunID int32,
 ) error {
-	c, err := workflowRepo.GetChildNodeIDs(ctx, parentNodeID)
+	c, err := workflowRunRepo.GetChildWorkflowNodeRuns(ctx, workflowRunID, parentNodeID)
 	if err != nil {
-		return fmt.Errorf("failed to get child node ids: %w", err)
+		return fmt.Errorf("failed to get child workflow node runs: %w", err)
+	}
+
+	if len(c) == 0 {
+		logger.WithFields(logrus.Fields{
+			"workflow_id":     workflowID,
+			"workflow_run_id": workflowRunID,
+			"node_id":         parentNodeID,
+		}).Info("no child nodes to enqueue")
+
+		return nil
 	}
 
 	type NodeToEnqueue struct {
@@ -34,25 +43,26 @@ func EnqueueChildNodes(
 
 	nodesNotAlreadyQueued := []NodeToEnqueue{}
 
-	for _, childNodeID := range c {
-		nodeRun, err := workflowRunRepo.GetWorkflowNodeRun(ctx, workflowRunID, childNodeID)
-		if err != nil {
-			return fmt.Errorf("failed to get node run for child node %d: %w", childNodeID, err)
-		}
+	logger.WithFields(logrus.Fields{
+		"child_node_runs": c,
+		"n_nodes":         len(c),
+	}).Info("enqueuing child nodes")
 
+	for _, nodeRun := range c {
 		if nodeRun.Status != "pending" {
 			logger.WithFields(logrus.Fields{
 				"workflow_id":     workflowID,
 				"workflow_run_id": workflowRunID,
-				"node_id":         childNodeID,
+				"node_id":         nodeRun.WorkflowNodeID,
 				"node_run_id":     nodeRun.ID,
+				"node_status":     nodeRun.Status,
 			}).Info("node run already in progress, skipping enqueue")
 
 			continue
 		}
 
 		nodesNotAlreadyQueued = append(nodesNotAlreadyQueued, NodeToEnqueue{
-			NodeID:    childNodeID,
+			NodeID:    nodeRun.WorkflowNodeID,
 			NodeRunID: nodeRun.ID,
 		})
 	}

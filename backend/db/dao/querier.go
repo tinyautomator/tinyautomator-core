@@ -70,7 +70,7 @@ type Querier interface {
 	//    status,
 	//    metadata
 	//  )
-	//  VALUES ($1, $2, 'pending', $3)
+	//  VALUES ($1, $2, $3, $4)
 	//  ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
 	//  RETURNING id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
 	CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (*WorkflowNodeRun, error)
@@ -130,12 +130,14 @@ type Querier interface {
 	//
 	//  DELETE FROM workflow_schedule WHERE workflow_id = $1
 	DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error
-	//GetChildNodeIDs
+	//GetChildWorkflowNodeRuns
 	//
-	//  SELECT target_node_id
-	//  FROM workflow_edge
-	//  WHERE source_node_id = $1
-	GetChildNodeIDs(ctx context.Context, sourceNodeID int32) ([]int32, error)
+	//  SELECT wnr.id, wnr.workflow_run_id, wnr.workflow_node_id, wnr.status, wnr.retry_count, wnr.started_at, wnr.finished_at, wnr.metadata, wnr.error_message
+	//  FROM workflow_node_run wnr
+	//  INNER JOIN workflow_edge we ON wnr.workflow_node_id = we.target_node_id
+	//  WHERE workflow_run_id = $1
+	//  AND source_node_id = $2
+	GetChildWorkflowNodeRuns(ctx context.Context, arg *GetChildWorkflowNodeRunsParams) ([]*WorkflowNodeRun, error)
 	//GetDueSchedulesLocked
 	//
 	//  WITH locked AS (
@@ -153,6 +155,14 @@ type Querier interface {
 	//  WHERE workflow_schedule.id = locked.id
 	//  RETURNING locked.id, workflow_schedule.id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
 	GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*GetDueSchedulesLockedRow, error)
+	//GetParentWorkflowNodeRuns
+	//
+	//  SELECT wnr.id, wnr.workflow_run_id, wnr.workflow_node_id, wnr.status, wnr.retry_count, wnr.started_at, wnr.finished_at, wnr.metadata, wnr.error_message
+	//  FROM workflow_node_run wnr
+	//  INNER JOIN workflow_edge we ON wnr.workflow_node_id = we.source_node_id
+	//  WHERE workflow_run_id = $1
+	//  AND target_node_id = $2
+	GetParentWorkflowNodeRuns(ctx context.Context, arg *GetParentWorkflowNodeRunsParams) ([]*WorkflowNodeRun, error)
 	//GetUserWorkflows
 	//
 	//  SELECT id, user_id, name, description, status, created_at, updated_at

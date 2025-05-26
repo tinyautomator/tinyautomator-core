@@ -22,11 +22,6 @@ VALUES (
 )
 RETURNING *;
 
--- name: GetChildNodeIDs :many
-SELECT target_node_id
-FROM workflow_edge
-WHERE source_node_id = $1;
-
 -- name: CreateWorkflowNode :one
 INSERT INTO workflow_node (
   workflow_id,

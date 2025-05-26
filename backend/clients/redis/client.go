@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 )
@@ -26,12 +25,6 @@ type NodeStatusUpdate struct {
 }
 
 type RedisClient interface {
-	AcquireRunWorkflowLock(
-		ctx context.Context,
-		workflowID, userID string,
-		ttl time.Duration,
-	) (lockID string, acquired bool, err error)
-	ReleaseRunWorkflowLock(ctx context.Context, workflowID, userID, lockID string) error
 	InitializeRunningNodeSet(ctx context.Context, runID int32, nodeIDs []int32) error
 	GetRunningNodeIDs(ctx context.Context, runID int32) (map[int32]struct{}, error)
 	TryAcquireWorkflowRunFinalizationLock(ctx context.Context, runID int32) (bool, error)
@@ -76,48 +69,6 @@ func NewRedisClient(url string, logger logrus.FieldLogger) (RedisClient, error) 
 func (c *redisClient) Close() error {
 	if err := c.client.Close(); err != nil {
 		return fmt.Errorf("failed to close redis client: %w", err)
-	}
-
-	return nil
-}
-
-func generateLockKey(workflowID, userID string) string {
-	return fmt.Sprintf("lock:workflow:%s:user:%s", workflowID, userID)
-}
-
-func (c *redisClient) AcquireRunWorkflowLock(
-	ctx context.Context,
-	workflowID, userID string,
-	ttl time.Duration,
-) (lockID string, acquired bool, err error) {
-	key := generateLockKey(workflowID, userID)
-	lockID = uuid.NewString()
-
-	ok, err := c.client.SetNX(ctx, key, lockID, ttl).Result()
-	if err != nil {
-		return "", false, fmt.Errorf("failed to acquire run workflow lock: %w", err)
-	}
-
-	return lockID, ok, nil
-}
-
-func (c *redisClient) ReleaseRunWorkflowLock(
-	ctx context.Context,
-	workflowID, userID, lockID string,
-) error {
-	key := generateLockKey(workflowID, userID)
-
-	releaseScript := redis.NewScript(`
-		if redis.call("get", KEYS[1]) == ARGV[1] then
-			return redis.call("del", KEYS[1])
-		else
-			return 0
-		end
-	`)
-
-	_, err := releaseScript.Run(ctx, c.client, []string{key}, lockID).Result()
-	if err != nil {
-		return fmt.Errorf("failed to release run workflow lock: %w", err)
 	}
 
 	return nil

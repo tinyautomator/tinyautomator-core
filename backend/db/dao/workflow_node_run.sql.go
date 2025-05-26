@@ -18,7 +18,7 @@ INSERT INTO workflow_node_run (
   status,
   metadata
 )
-VALUES ($1, $2, 'pending', $3)
+VALUES ($1, $2, $3, $4)
 ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
 RETURNING id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
 `
@@ -26,6 +26,7 @@ RETURNING id, workflow_run_id, workflow_node_id, status, retry_count, started_at
 type CreateWorkflowNodeRunParams struct {
 	WorkflowRunID  int32  `json:"workflow_run_id"`
 	WorkflowNodeID int32  `json:"workflow_node_id"`
+	Status         string `json:"status"`
 	Metadata       []byte `json:"metadata"`
 }
 
@@ -37,11 +38,16 @@ type CreateWorkflowNodeRunParams struct {
 //	  status,
 //	  metadata
 //	)
-//	VALUES ($1, $2, 'pending', $3)
+//	VALUES ($1, $2, $3, $4)
 //	ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
 //	RETURNING id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
 func (q *Queries) CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflowNodeRunParams) (*WorkflowNodeRun, error) {
-	row := q.db.QueryRow(ctx, createWorkflowNodeRun, arg.WorkflowRunID, arg.WorkflowNodeID, arg.Metadata)
+	row := q.db.QueryRow(ctx, createWorkflowNodeRun,
+		arg.WorkflowRunID,
+		arg.WorkflowNodeID,
+		arg.Status,
+		arg.Metadata,
+	)
 	var i WorkflowNodeRun
 	err := row.Scan(
 		&i.ID,
@@ -55,6 +61,106 @@ func (q *Queries) CreateWorkflowNodeRun(ctx context.Context, arg *CreateWorkflow
 		&i.ErrorMessage,
 	)
 	return &i, err
+}
+
+const getChildWorkflowNodeRuns = `-- name: GetChildWorkflowNodeRuns :many
+SELECT wnr.id, wnr.workflow_run_id, wnr.workflow_node_id, wnr.status, wnr.retry_count, wnr.started_at, wnr.finished_at, wnr.metadata, wnr.error_message
+FROM workflow_node_run wnr
+INNER JOIN workflow_edge we ON wnr.workflow_node_id = we.target_node_id
+WHERE workflow_run_id = $1
+AND source_node_id = $2
+`
+
+type GetChildWorkflowNodeRunsParams struct {
+	WorkflowRunID int32 `json:"workflow_run_id"`
+	SourceNodeID  int32 `json:"source_node_id"`
+}
+
+// GetChildWorkflowNodeRuns
+//
+//	SELECT wnr.id, wnr.workflow_run_id, wnr.workflow_node_id, wnr.status, wnr.retry_count, wnr.started_at, wnr.finished_at, wnr.metadata, wnr.error_message
+//	FROM workflow_node_run wnr
+//	INNER JOIN workflow_edge we ON wnr.workflow_node_id = we.target_node_id
+//	WHERE workflow_run_id = $1
+//	AND source_node_id = $2
+func (q *Queries) GetChildWorkflowNodeRuns(ctx context.Context, arg *GetChildWorkflowNodeRunsParams) ([]*WorkflowNodeRun, error) {
+	rows, err := q.db.Query(ctx, getChildWorkflowNodeRuns, arg.WorkflowRunID, arg.SourceNodeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*WorkflowNodeRun
+	for rows.Next() {
+		var i WorkflowNodeRun
+		if err := rows.Scan(
+			&i.ID,
+			&i.WorkflowRunID,
+			&i.WorkflowNodeID,
+			&i.Status,
+			&i.RetryCount,
+			&i.StartedAt,
+			&i.FinishedAt,
+			&i.Metadata,
+			&i.ErrorMessage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getParentWorkflowNodeRuns = `-- name: GetParentWorkflowNodeRuns :many
+SELECT wnr.id, wnr.workflow_run_id, wnr.workflow_node_id, wnr.status, wnr.retry_count, wnr.started_at, wnr.finished_at, wnr.metadata, wnr.error_message
+FROM workflow_node_run wnr
+INNER JOIN workflow_edge we ON wnr.workflow_node_id = we.source_node_id
+WHERE workflow_run_id = $1
+AND target_node_id = $2
+`
+
+type GetParentWorkflowNodeRunsParams struct {
+	WorkflowRunID int32 `json:"workflow_run_id"`
+	TargetNodeID  int32 `json:"target_node_id"`
+}
+
+// GetParentWorkflowNodeRuns
+//
+//	SELECT wnr.id, wnr.workflow_run_id, wnr.workflow_node_id, wnr.status, wnr.retry_count, wnr.started_at, wnr.finished_at, wnr.metadata, wnr.error_message
+//	FROM workflow_node_run wnr
+//	INNER JOIN workflow_edge we ON wnr.workflow_node_id = we.source_node_id
+//	WHERE workflow_run_id = $1
+//	AND target_node_id = $2
+func (q *Queries) GetParentWorkflowNodeRuns(ctx context.Context, arg *GetParentWorkflowNodeRunsParams) ([]*WorkflowNodeRun, error) {
+	rows, err := q.db.Query(ctx, getParentWorkflowNodeRuns, arg.WorkflowRunID, arg.TargetNodeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*WorkflowNodeRun
+	for rows.Next() {
+		var i WorkflowNodeRun
+		if err := rows.Scan(
+			&i.ID,
+			&i.WorkflowRunID,
+			&i.WorkflowNodeID,
+			&i.Status,
+			&i.RetryCount,
+			&i.StartedAt,
+			&i.FinishedAt,
+			&i.Metadata,
+			&i.ErrorMessage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getWorkflowNodeRunByWorkflowRunIDAndNodeID = `-- name: GetWorkflowNodeRunByWorkflowRunIDAndNodeID :one

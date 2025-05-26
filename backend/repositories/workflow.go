@@ -66,15 +66,6 @@ func (r *workflowRepo) GetUserWorkflows(
 	return workflows, nil
 }
 
-func (r *workflowRepo) GetChildNodeIDs(ctx context.Context, nodeID int32) ([]int32, error) {
-	ids, err := r.q.GetChildNodeIDs(ctx, nodeID)
-	if err != nil {
-		return nil, fmt.Errorf("db error get child node ids: %w", err)
-	}
-
-	return ids, nil
-}
-
 func (r *workflowRepo) CreateWorkflow(
 	ctx context.Context,
 	userID string,

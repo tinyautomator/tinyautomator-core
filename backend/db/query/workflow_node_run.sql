@@ -5,7 +5,7 @@ INSERT INTO workflow_node_run (
   status,
   metadata
 )
-VALUES ($1, $2, 'pending', $3)
+VALUES ($1, $2, $3, $4)
 ON CONFLICT (workflow_run_id, workflow_node_id) DO NOTHING
 RETURNING *;
 
@@ -14,6 +14,20 @@ SELECT *
 FROM workflow_node_run
 WHERE workflow_run_id = $1
   AND workflow_node_id = $2;
+
+-- name: GetParentWorkflowNodeRuns :many
+SELECT wnr.*
+FROM workflow_node_run wnr
+INNER JOIN workflow_edge we ON wnr.workflow_node_id = we.source_node_id
+WHERE workflow_run_id = $1
+AND target_node_id = $2;
+
+-- name: GetChildWorkflowNodeRuns :many
+SELECT wnr.*
+FROM workflow_node_run wnr
+INNER JOIN workflow_edge we ON wnr.workflow_node_id = we.target_node_id
+WHERE workflow_run_id = $1
+AND source_node_id = $2;
 
 -- name: GetWorkflowNodeRunsByRunID :many
 SELECT *
