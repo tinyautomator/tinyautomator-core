@@ -1,7 +1,7 @@
 import React from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { DropdownField } from "../CustomTimePicker"; // Assuming DropdownField remains or is moved appropriately
+import type { DropdownField } from "./CustomTimePicker"; // Assuming DropdownField remains or is moved appropriately
 
 export interface TimeDropdownProps {
   field: DropdownField;
