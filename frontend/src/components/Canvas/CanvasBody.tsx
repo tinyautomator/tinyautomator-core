@@ -56,7 +56,7 @@ export default function CanvasBody() {
         minZoom: 0.5,
         maxZoom: 1.5,
       });
-    }, 300);
+    }, 500);
   }, [fitView, open, toggleBlockPanel, toggleInspectorPanel]);
 
   const nodeTypes = useMemo(
