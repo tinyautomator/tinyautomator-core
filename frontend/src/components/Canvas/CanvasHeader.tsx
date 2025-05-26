@@ -4,7 +4,6 @@ import { RenderedWorkflow, workflowApi } from "@/api";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Menu } from "lucide-react";
-import { useReactFlow } from "@xyflow/react";
 import { useFlowStore } from "@/components/Canvas/flowStore";
 import { toast } from "sonner";
 
@@ -17,8 +16,8 @@ export default function CanvasHeader({
   onCollapseToggle?: () => void;
   collapsed?: boolean;
 }) {
-  const { nodes, edges } = useFlowStore();
-  const { fitView } = useReactFlow();
+  const nodes = useFlowStore((s) => s.getNodes());
+  const edges = useFlowStore((s) => s.getEdges());
   const [name, setName] = useState("");
 
   return (
@@ -31,13 +30,6 @@ export default function CanvasHeader({
             className="mr-2"
             onClick={() => {
               onCollapseToggle();
-              setTimeout(() => {
-                fitView({
-                  duration: 500,
-                  minZoom: 0.5,
-                  maxZoom: 1.5,
-                });
-              }, 500);
             }}
             aria-label={
               collapsed ? "Expand block panel" : "Collapse block panel"

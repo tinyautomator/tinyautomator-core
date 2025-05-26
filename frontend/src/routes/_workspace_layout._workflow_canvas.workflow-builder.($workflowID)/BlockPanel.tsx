@@ -297,7 +297,7 @@ export default function BlockPanel({
   setSearchFocused: (focused: boolean) => void;
   blockPanelOpen: boolean;
 }) {
-  const { recentlyUsed, clearRecentlyUsed } = useFlowStore();
+  const { getRecentlyUsed, clearRecentlyUsed } = useFlowStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"default" | "compact">("default");
   const [categories, setCategories] =
@@ -387,7 +387,7 @@ export default function BlockPanel({
           <BlockSection
             title="Recently Used"
             icon={<Clock className="w-4 h-4 mr-2" />}
-            blocks={recentlyUsed}
+            blocks={getRecentlyUsed()}
             categoryName="recent"
             renderBlock={(block) =>
               renderBlock(block, getBlockCategoryName(block))

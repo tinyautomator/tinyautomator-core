@@ -5,9 +5,11 @@ import { Background, Controls } from "@xyflow/react";
 import { ReactFlow, Node } from "@xyflow/react";
 import { NodeUI } from "@/components/shared/NodeUI";
 import { useFlowStore } from "./flowStore";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { actionTypeToBlockMap } from "../../components/shared/BlockCategories";
 import { v4 as uuidv4 } from "uuid";
+import { useOutletContext } from "react-router";
+import { LayoutActions } from "@/routes/_workspace_layout._workflow_canvas/route";
 
 export const NodeBuilder = (
   id: string,
@@ -38,12 +40,24 @@ export const NodeBuilder = (
 };
 
 export default function CanvasBody() {
-  const nodes = useFlowStore((s) => s.nodes);
-  const edges = useFlowStore((s) => s.edges);
+  const nodes = useFlowStore((s) => s.getNodes());
+  const edges = useFlowStore((s) => s.getEdges());
   const onNodesChange = useFlowStore((s) => s.onNodesChange);
   const onEdgesChange = useFlowStore((s) => s.onEdgesChange);
   const onConnect = useFlowStore((s) => s.onConnect);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
+  const { open, toggleBlockPanel, toggleInspectorPanel } =
+    useOutletContext<LayoutActions>();
+
+  useEffect(() => {
+    setTimeout(() => {
+      fitView({
+        duration: 500,
+        minZoom: 0.5,
+        maxZoom: 1.5,
+      });
+    }, 300);
+  }, [fitView, open, toggleBlockPanel, toggleInspectorPanel]);
 
   const nodeTypes = useMemo(
     () => ({
