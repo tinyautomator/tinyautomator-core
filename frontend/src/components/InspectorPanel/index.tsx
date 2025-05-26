@@ -8,7 +8,6 @@ import { LogsPanel } from "./LogsPanel";
 import { SettingsTab } from "./settings";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useReactFlow } from "@xyflow/react";
 
 export default function InspectorPanel({
   toggleInspectorPanel,
@@ -17,8 +16,7 @@ export default function InspectorPanel({
   toggleInspectorPanel: boolean;
   setToggleInspectorPanel: (toggleInspectorPanel: boolean) => void;
 }) {
-  const { selectedNode } = useFlowStore();
-  const { fitView } = useReactFlow();
+  const { getSelectedNode } = useFlowStore();
 
   return (
     <div
@@ -38,14 +36,6 @@ export default function InspectorPanel({
           variant="ghost"
           onClick={() => {
             setToggleInspectorPanel(!toggleInspectorPanel);
-            setTimeout(() => {
-              fitView({
-                padding: 0.2,
-                duration: 500,
-                minZoom: 0.5,
-                maxZoom: 1.5,
-              });
-            }, 500);
           }}
           className={cn(
             "bg-white shadow-lg border border-slate-200 flex items-center justify-center",
@@ -90,10 +80,10 @@ export default function InspectorPanel({
           </div>
           <Separator />
           <ScrollArea className="h-[calc(100vh-8.5rem)]">
-            {selectedNode ? (
+            {getSelectedNode() ? (
               <div className="p-4">
                 <h3 className="mb-4 text-sm font-medium">
-                  {selectedNode.data.label as string} Configuration
+                  {getSelectedNode()?.data.label as string} Configuration
                 </h3>
 
                 <Tabs defaultValue="settings">
@@ -108,7 +98,9 @@ export default function InspectorPanel({
                   </TabsContent>
 
                   <TabsContent value="advanced" className="space-y-4 pt-4">
-                    <AdvancedSettings nodeId={selectedNode.id} />
+                    <AdvancedSettings
+                      nodeId={getSelectedNode()?.id as string}
+                    />
                   </TabsContent>
 
                   <TabsContent value="logs" className="pt-4">

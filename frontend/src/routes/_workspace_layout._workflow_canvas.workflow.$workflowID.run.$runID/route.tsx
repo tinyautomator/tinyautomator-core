@@ -4,16 +4,15 @@ import CanvasBody, { NodeBuilder } from "@/components/Canvas/CanvasBody";
 import InspectorPanel from "@/components/InspectorPanel";
 import { Separator } from "@/components/ui/separator";
 import CanvasHeader from "@/components/Canvas/CanvasHeader";
-import { useLayoutContext } from "../_workspace_layout._workflow_canvas/useLayoutContext";
 import { useEffect, useRef } from "react";
 import { useFlowStore } from "@/components/Canvas/flowStore";
 import { MarkerType } from "@xyflow/react";
+import { LayoutActions } from "../_workspace_layout._workflow_canvas/route";
+import { useOutletContext } from "react-router";
 
-// Define the expected structure of the NodeStatusUpdate data from the server
-// This should match the 'redisclient.NodeStatusUpdate' struct on your Go backend
 interface NodeStatusUpdate {
-  runId: string | number; // Match the type from your backend (string or int32)
-  nodeId: string | number; // Match the type
+  runId: string | number;
+  nodeId: string | number;
   status: string;
   timestamp: string;
   details?: Record<string, Record<string, string>>;
@@ -35,11 +34,15 @@ export async function loader({ params }: Route.LoaderArgs) {
 export default function WorkflowRun({
   loaderData: { workflowRun, runId },
 }: Route.ComponentProps) {
-  const setNodes = useFlowStore((s) => s.setNodes);
-  const setEdges = useFlowStore((s) => s.setEdges);
-  const setNodeStatus = useFlowStore((s) => s.setNodeStatus);
-  const { toggleInspectorPanel, setToggleInspectorPanel } = useLayoutContext();
+  const key = `run-${runId}`;
+  const { setNodes, setEdges, setNodeStatus, initializeFlow } = useFlowStore();
+  const { toggleInspectorPanel, setToggleInspectorPanel } =
+    useOutletContext<LayoutActions>();
   const eventSourceRef = useRef<EventSource | null>(null);
+
+  useEffect(() => {
+    initializeFlow(key);
+  }, [key, initializeFlow]);
 
   useEffect(() => {
     setToggleInspectorPanel(false);

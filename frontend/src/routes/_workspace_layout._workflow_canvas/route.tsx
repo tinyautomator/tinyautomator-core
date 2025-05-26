@@ -1,9 +1,9 @@
 import { useSidebar } from "@/components/ui/sidebar";
-import { useReactFlow } from "@xyflow/react";
-import { createContext, useCallback, useEffect, useState } from "react";
+import { ReactFlowProvider } from "@xyflow/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router";
 
-export const LayoutContext = createContext<{
+export interface LayoutActions {
   toggleBlockPanel: boolean;
   setToggleBlockPanel: (value: boolean | ((prev: boolean) => boolean)) => void;
   toggleInspectorPanel: boolean;
@@ -14,14 +14,22 @@ export const LayoutContext = createContext<{
   setSearchFocused: (value: boolean | ((prev: boolean) => boolean)) => void;
   open: boolean;
   setOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
-} | null>(null);
+}
 
 export default function Layout() {
   const [toggleBlockPanel, setToggleBlockPanel] = useState(true);
   const [toggleInspectorPanel, setToggleInspectorPanel] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
   const { open, setOpen } = useSidebar();
-  const { fitView } = useReactFlow();
+
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!initialized.current) {
+      setOpen(false);
+      initialized.current = true;
+    }
+  }, [setOpen]);
 
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
@@ -33,13 +41,6 @@ export default function Layout() {
         e.preventDefault();
         setToggleBlockPanel(true);
         setSearchFocused(true);
-        setTimeout(() => {
-          fitView({
-            duration: 500,
-            minZoom: 0.5,
-            maxZoom: 1.5,
-          });
-        }, 500);
       } else if (e.key === "f" && !isTextInput) {
         e.preventDefault();
         const isFullscreen = !(
@@ -51,48 +52,30 @@ export default function Layout() {
         setOpen(isFullscreen);
         setToggleInspectorPanel(isFullscreen);
         setToggleBlockPanel(isFullscreen);
-        setTimeout(() => {
-          fitView({
-            duration: 500,
-            minZoom: 0.5,
-            maxZoom: 1.5,
-          });
-        }, 500);
       }
     },
-    [open, toggleBlockPanel, toggleInspectorPanel, fitView, setOpen],
+    [open, toggleBlockPanel, toggleInspectorPanel, setOpen],
   );
-
-  useEffect(() => {
-    setOpen(false);
-    setTimeout(() => {
-      fitView({
-        duration: 500,
-        minZoom: 0.5,
-        maxZoom: 1.5,
-      });
-    }, 500);
-  }, [fitView, setOpen]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [handleKeyPress]);
 
+  const layoutContext: LayoutActions = {
+    toggleBlockPanel,
+    setToggleBlockPanel,
+    toggleInspectorPanel,
+    setToggleInspectorPanel,
+    searchFocused,
+    setSearchFocused,
+    open,
+    setOpen,
+  };
+
   return (
-    <LayoutContext.Provider
-      value={{
-        toggleBlockPanel,
-        setToggleBlockPanel,
-        toggleInspectorPanel,
-        setToggleInspectorPanel,
-        searchFocused,
-        setSearchFocused,
-        open,
-        setOpen,
-      }}
-    >
-      <Outlet />
-    </LayoutContext.Provider>
+    <ReactFlowProvider>
+      <Outlet context={layoutContext} />
+    </ReactFlowProvider>
   );
 }

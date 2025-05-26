@@ -6,7 +6,6 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Outlet, redirect } from "react-router";
 import { getAuth } from "@clerk/react-router/ssr.server";
 import { Route } from "./+types/route";
-import { ReactFlowProvider } from "@xyflow/react";
 import { Toaster } from "@/components/ui/sonner";
 
 export async function loader(args: Route.LoaderArgs) {
@@ -27,9 +26,7 @@ export default function Layout() {
           <div className="flex flex-1 min-h-0">
             <Sidebar />
             <main className="flex-1 min-h-0 h-full">
-              <ReactFlowProvider>
-                <Outlet />
-              </ReactFlowProvider>
+              <Outlet />
             </main>
           </div>
         </div>

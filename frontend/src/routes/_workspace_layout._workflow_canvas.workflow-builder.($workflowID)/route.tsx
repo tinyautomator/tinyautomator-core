@@ -10,8 +10,9 @@ import { workflowApi } from "@/api";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useFlowStore } from "@/components/Canvas/flowStore";
-import { useLayoutContext } from "../_workspace_layout._workflow_canvas/useLayoutContext";
 import { Route } from "./+types/route";
+import { useOutletContext } from "react-router";
+import { LayoutActions } from "../_workspace_layout._workflow_canvas/route";
 
 export async function loader({ params }: Route.LoaderArgs) {
   if (params.workflowID) {
@@ -22,8 +23,9 @@ export async function loader({ params }: Route.LoaderArgs) {
 export default function WorkflowBuilder({
   loaderData: workflowToEdit,
 }: Route.ComponentProps) {
-  const setNodes = useFlowStore((s) => s.setNodes);
-  const setEdges = useFlowStore((s) => s.setEdges);
+  const key = `builder-${workflowToEdit?.id ?? "new"}`;
+  const { setNodes, setEdges, initializeFlow } = useFlowStore();
+
   const {
     toggleBlockPanel,
     setToggleBlockPanel,
@@ -31,7 +33,11 @@ export default function WorkflowBuilder({
     setSearchFocused,
     toggleInspectorPanel,
     setToggleInspectorPanel,
-  } = useLayoutContext();
+  } = useOutletContext<LayoutActions>();
+
+  useEffect(() => {
+    initializeFlow(key);
+  }, [key, initializeFlow]);
 
   useEffect(() => {
     if (workflowToEdit) {
@@ -55,7 +61,7 @@ export default function WorkflowBuilder({
         })),
       );
     }
-  }, [workflowToEdit, setNodes, setEdges]);
+  }, [workflowToEdit, setNodes, setEdges, key]);
 
   return (
     <div className="flex h-full overflow-hidden">

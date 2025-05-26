@@ -23,13 +23,32 @@ type NodeStatus = {
   [nodeId: string]: string;
 };
 
-type FlowState = {
+type FlowData = {
   nodes: Node[];
   edges: Edge[];
   selectedNode: Node | null;
   recentlyUsed: Block[];
   handleAnimations: HandleAnimations;
   nodeStatus: NodeStatus;
+};
+
+type FlowState = {
+  // Internal keyed state
+  flows: Record<string, FlowData>;
+  currentKey: string | null;
+
+  // Initialize a flow and set it as current
+  initializeFlow: (key: string) => void;
+  getCurrentKey: () => string | null;
+  clearFlow: (key?: string) => void; // Optional key, defaults to current
+
+  // Original API - all methods now use currentKey internally
+  getNodes: () => Node[];
+  getEdges: () => Edge[];
+  getSelectedNode: () => Node | null;
+  getRecentlyUsed: () => Block[];
+  getHandleAnimations: () => HandleAnimations;
+  getCurrentNodeStatus: () => NodeStatus;
 
   setHandleAnimation: (
     nodeId: string,
@@ -53,37 +72,172 @@ type FlowState = {
   clearRecentlyUsed: () => void;
 };
 
-export const useFlowStore = create<FlowState>((set, get) => ({
+const defaultFlowData: FlowData = {
   nodes: [],
   edges: [],
   selectedNode: null,
   recentlyUsed: [],
   handleAnimations: {},
   nodeStatus: {},
+};
 
-  getNodeStatus: (nodeId: string) => get().nodeStatus[nodeId] || "pending",
-  setNodeStatus: (nodeId, status) =>
-    set((state) => ({
-      nodeStatus: { ...state.nodeStatus, [nodeId]: status },
-    })),
+export const useFlowStore = create<FlowState>((set, get) => ({
+  flows: {},
+  currentKey: null,
 
-  setHandleAnimation: (nodeId, handleType, value) =>
+  initializeFlow: (key: string) => {
     set((state) => ({
-      handleAnimations: {
-        ...state.handleAnimations,
-        [nodeId]: {
-          ...state.handleAnimations[nodeId],
-          [handleType]: value,
+      currentKey: key,
+      flows: {
+        ...state.flows,
+        [key]: state.flows[key] || { ...defaultFlowData },
+      },
+    }));
+  },
+
+  getCurrentKey: () => get().currentKey,
+
+  clearFlow: (key?: string) => {
+    const keyToUse = key || get().currentKey;
+    if (!keyToUse) return;
+
+    set((state) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [keyToUse]: _, ...rest } = state.flows;
+      return {
+        flows: rest,
+        currentKey: state.currentKey === keyToUse ? null : state.currentKey,
+      };
+    });
+  },
+
+  // Helper functions that return current flow data
+  getNodes: () => {
+    const state = get();
+    const currentKey = state.currentKey;
+    return currentKey ? state.flows[currentKey]?.nodes || [] : [];
+  },
+
+  getEdges: () => {
+    const state = get();
+    const currentKey = state.currentKey;
+    return currentKey ? state.flows[currentKey]?.edges || [] : [];
+  },
+
+  getSelectedNode: () => {
+    const state = get();
+    const currentKey = state.currentKey;
+    return currentKey ? state.flows[currentKey]?.selectedNode || null : null;
+  },
+
+  getRecentlyUsed: () => {
+    const state = get();
+    const currentKey = state.currentKey;
+    return currentKey ? state.flows[currentKey]?.recentlyUsed || [] : [];
+  },
+
+  getHandleAnimations: () => {
+    const state = get();
+    const currentKey = state.currentKey;
+    return currentKey ? state.flows[currentKey]?.handleAnimations || {} : {};
+  },
+
+  getCurrentNodeStatus: () => {
+    const state = get();
+    const currentKey = state.currentKey;
+    return currentKey ? state.flows[currentKey]?.nodeStatus || {} : {};
+  },
+
+  getNodeStatus: (nodeId: string) => {
+    const currentKey = get().currentKey;
+    return currentKey
+      ? get().flows[currentKey]?.nodeStatus[nodeId] || "pending"
+      : "pending";
+  },
+
+  setNodeStatus: (nodeId: string, status: string) => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
+    set((state) => ({
+      flows: {
+        ...state.flows,
+        [currentKey]: {
+          ...state.flows[currentKey],
+          nodeStatus: {
+            ...state.flows[currentKey]?.nodeStatus,
+            [nodeId]: status,
+          },
         },
       },
-    })),
-  resetHandleAnimations: () => set({ handleAnimations: {} }),
+    }));
+  },
 
-  setNodes: (nodes) => set({ nodes }),
-  setEdges: (edges) =>
-    set({
-      edges: edges?.map((e) => {
-        const sourceNode = get().nodes.find((n) => n.id === e.source);
+  setHandleAnimation: (
+    nodeId: string,
+    handleType: "source" | "target",
+    value: boolean,
+  ) => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
+    set((state) => ({
+      flows: {
+        ...state.flows,
+        [currentKey]: {
+          ...state.flows[currentKey],
+          handleAnimations: {
+            ...state.flows[currentKey]?.handleAnimations,
+            [nodeId]: {
+              ...state.flows[currentKey]?.handleAnimations?.[nodeId],
+              [handleType]: value,
+            },
+          },
+        },
+      },
+    }));
+  },
+
+  resetHandleAnimations: () => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
+    set((state) => ({
+      flows: {
+        ...state.flows,
+        [currentKey]: {
+          ...state.flows[currentKey],
+          handleAnimations: {},
+        },
+      },
+    }));
+  },
+
+  setNodes: (nodes: Node[]) => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
+    set((state) => ({
+      flows: {
+        ...state.flows,
+        [currentKey]: {
+          ...state.flows[currentKey],
+          nodes,
+        },
+      },
+    }));
+  },
+
+  setEdges: (edges: Edge[]) => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
+    set((state) => {
+      const flowData = state.flows[currentKey];
+      const nodes = flowData?.nodes || [];
+
+      const processedEdges = edges?.map((e) => {
+        const sourceNode = nodes.find((n) => n.id === e.source);
         let edgeColor = "#60a5fa"; // default (blue)
         if (sourceNode) {
           if (sourceNode.type === "trigger") {
@@ -101,29 +255,75 @@ export const useFlowStore = create<FlowState>((set, get) => ({
             color: edgeColor,
           },
         };
-      }),
-      handleAnimations: computeHandleAnimations(edges),
-    }),
-  setSelectedNode: (node) => set({ selectedNode: node }),
+      });
 
-  onNodesChange: (changes) =>
+      return {
+        flows: {
+          ...state.flows,
+          [currentKey]: {
+            ...state.flows[currentKey],
+            edges: processedEdges,
+            handleAnimations: computeHandleAnimations(processedEdges),
+          },
+        },
+      };
+    });
+  },
+
+  setSelectedNode: (node: Node | null) => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
     set((state) => ({
-      nodes: applyNodeChanges(changes, state.nodes),
-    })),
+      flows: {
+        ...state.flows,
+        [currentKey]: {
+          ...state.flows[currentKey],
+          selectedNode: node,
+        },
+      },
+    }));
+  },
 
-  onEdgesChange: (changes) =>
+  onNodesChange: (changes: NodeChange[]) => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
     set((state) => {
-      const newEdges = applyEdgeChanges(changes, state.edges);
+      const flowData = state.flows[currentKey];
+      if (!flowData) return state;
+
+      return {
+        flows: {
+          ...state.flows,
+          [currentKey]: {
+            ...flowData,
+            nodes: applyNodeChanges(changes, flowData.nodes),
+          },
+        },
+      };
+    });
+  },
+
+  onEdgesChange: (changes: EdgeChange[]) => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
+    set((state) => {
+      const flowData = state.flows[currentKey];
+      if (!flowData) return state;
+
+      const newEdges = applyEdgeChanges(changes, flowData.edges);
 
       const removedEdgeIds = changes
         .filter((c) => c.type === "remove")
         .map((c) => c.id);
 
-      const removedEdges = state.edges.filter((e) =>
+      const removedEdges = flowData.edges.filter((e) =>
         removedEdgeIds.includes(e.id),
       );
 
-      const newHandleAnimations = { ...state.handleAnimations };
+      const newHandleAnimations = { ...flowData.handleAnimations };
 
       removedEdges.forEach((edge) => {
         const stillHasSource = newEdges.some((e) => e.source === edge.source);
@@ -152,24 +352,38 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       });
 
       return {
-        edges: newEdges,
-        handleAnimations: newHandleAnimations,
+        flows: {
+          ...state.flows,
+          [currentKey]: {
+            ...flowData,
+            edges: newEdges,
+            handleAnimations: newHandleAnimations,
+          },
+        },
       };
-    }),
+    });
+  },
 
-  onConnect: (params) => {
+  onConnect: (params: Connection) => {
     console.log("onConnect", params);
     if (!params.source || !params.target) {
       console.error("Invalid connection params:", params);
       return;
     }
 
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
+    // Set handle animations
     get().setHandleAnimation(params.source, "source", true);
     get().setHandleAnimation(params.target, "target", true);
 
     set((state) => {
+      const flowData = state.flows[currentKey];
+      if (!flowData) return state;
+
       // Find the source node to determine its type
-      const sourceNode = state.nodes.find((n) => n.id === params.source);
+      const sourceNode = flowData.nodes.find((n) => n.id === params.source);
       let edgeColor = "#60a5fa"; // default (blue)
       if (sourceNode) {
         if (sourceNode.type === "trigger") {
@@ -178,6 +392,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           edgeColor = "#9333ea"; // purple-600 (same as action node)
         }
       }
+
       const newEdge: Edge = {
         ...params,
         id: `e${params.source}-${params.target}`,
@@ -190,23 +405,60 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           color: edgeColor,
         },
       };
+
       return {
-        edges: addEdge(newEdge, Array.isArray(state.edges) ? state.edges : []),
+        flows: {
+          ...state.flows,
+          [currentKey]: {
+            ...flowData,
+            edges: addEdge(
+              newEdge,
+              Array.isArray(flowData.edges) ? flowData.edges : [],
+            ),
+          },
+        },
       };
     });
   },
 
-  addRecentlyUsedBlock: (block) =>
+  addRecentlyUsedBlock: (block: Block) => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
     set((state) => {
-      const filtered = state.recentlyUsed.filter(
+      const flowData = state.flows[currentKey];
+      if (!flowData) return state;
+
+      const filtered = flowData.recentlyUsed.filter(
         (b) => b.action_type !== block.action_type,
       );
-      return {
-        recentlyUsed: [block, ...filtered].slice(0, 5),
-      };
-    }),
 
-  clearRecentlyUsed: () => set({ recentlyUsed: [] }),
+      return {
+        flows: {
+          ...state.flows,
+          [currentKey]: {
+            ...flowData,
+            recentlyUsed: [block, ...filtered].slice(0, 5),
+          },
+        },
+      };
+    });
+  },
+
+  clearRecentlyUsed: () => {
+    const currentKey = get().currentKey;
+    if (!currentKey) return;
+
+    set((state) => ({
+      flows: {
+        ...state.flows,
+        [currentKey]: {
+          ...state.flows[currentKey],
+          recentlyUsed: [],
+        },
+      },
+    }));
+  },
 }));
 
 function computeHandleAnimations(edges: Edge[]): HandleAnimations {

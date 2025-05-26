@@ -47,7 +47,7 @@ export const NodeUI = memo(function NodeUI({
   height,
   width,
 }: NodeProps) {
-  const handleAnimations = useFlowStore((state) => state.handleAnimations);
+  const handleAnimations = useFlowStore((state) => state.getHandleAnimations());
   const nodeStatus = useFlowStore((state) => state.getNodeStatus(id));
   console.log(id, nodeStatus);
   const getIcon = useMemo(
