@@ -10,14 +10,14 @@ interface WorkflowFooterProps {
 export function WorkflowFooter({ lastEdited }: WorkflowFooterProps) {
   const timeAgo = formatDistanceToNow(lastEdited, { addSuffix: true }).replace(
     /^about /,
-    ""
+    "",
   );
 
   return (
     <div
       className={cn(
         "flex items-center text-xs truncate",
-        TEXT_SLATE_500_DARK_SLATE_400
+        TEXT_SLATE_500_DARK_SLATE_400,
       )}
     >
       <Clock className="h-3.5 w-3.5 mr-1.5" />

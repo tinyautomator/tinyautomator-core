@@ -9,7 +9,7 @@ interface WorkflowResult {
 
 export function getWorkflowData(
   workflows: Workflow[],
-  { q: searchQuery, tab: selectedTab, tags: selectedTags }: SearchParams
+  { q: searchQuery, tab: selectedTab, tags: selectedTags }: SearchParams,
 ): WorkflowResult {
   if (!workflows.length) {
     return {

@@ -32,7 +32,7 @@ function WorkflowFavorite({ isFavorite }: WorkflowFavoriteProps) {
           "text-xl cursor-pointer transition-colors duration-300 ease-in-out",
           localIsFavorite
             ? "text-yellow-300 fill-yellow-200"
-            : "text-slate-400 hover:text-yellow-300 hover:fill-white"
+            : "text-slate-400 hover:text-yellow-300 hover:fill-white",
         )}
       />
     </button>
@@ -47,7 +47,7 @@ export function WorkflowTitle({
   return (
     <div
       className={cn(
-        "flex items-center rounded-lg w-full justify-center relative"
+        "flex items-center rounded-lg w-full justify-center relative",
       )}
     >
       {!isArchived && <WorkflowFavorite isFavorite={isFavorite} />}
@@ -58,7 +58,7 @@ export function WorkflowTitle({
           "border-slate-200 dark:border-slate-800",
           isArchived
             ? "text-slate-500 dark:text-slate-400"
-            : TEXT_SLATE_DARK_SLATE_200
+            : TEXT_SLATE_DARK_SLATE_200,
         )}
         title={title}
       >

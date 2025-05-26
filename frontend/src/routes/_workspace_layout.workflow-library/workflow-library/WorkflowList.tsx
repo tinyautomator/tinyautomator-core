@@ -34,7 +34,7 @@ function WorkflowPagination() {
 
   const pageNumbers = Array.from(
     { length: endPage - startPage + 1 },
-    (_, i) => startPage + i
+    (_, i) => startPage + i,
   );
 
   const isFirstPage = currentPage <= 1;
@@ -103,7 +103,7 @@ export function WorkflowList() {
         className={cn(
           "flex-shrink-0 flex items-center justify-center",
           BORDER_STYLES,
-          "bg-slate-100"
+          "bg-slate-100",
         )}
       >
         <WorkflowPagination />

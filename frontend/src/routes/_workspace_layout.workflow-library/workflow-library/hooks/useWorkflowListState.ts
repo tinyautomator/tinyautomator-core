@@ -22,7 +22,7 @@ export function useWorkflowListState() {
     (newState: Partial<WorkflowListState>) => {
       setSearchParams(newState);
     },
-    [setSearchParams]
+    [setSearchParams],
   );
 
   // Clear search state
@@ -35,7 +35,7 @@ export function useWorkflowListState() {
     (page: number) => {
       setSearchParams({ page });
     },
-    [setSearchParams]
+    [setSearchParams],
   );
 
   // Update tags
@@ -43,7 +43,7 @@ export function useWorkflowListState() {
     (tags: string[]) => {
       setSearchParams({ tags });
     },
-    [setSearchParams]
+    [setSearchParams],
   );
 
   return {

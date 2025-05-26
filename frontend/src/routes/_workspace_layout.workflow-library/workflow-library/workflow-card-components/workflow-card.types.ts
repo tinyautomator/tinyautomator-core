@@ -1,4 +1,5 @@
 import { WorkflowStatus } from "../utils/schemas";
+import { LucideIcon } from "lucide-react";
 
 export interface WorkflowCardProps {
   workflow: Workflow;
@@ -29,7 +30,7 @@ export interface WorkflowActionsProps {
 
 export interface WorkflowAction {
   label: string;
-  icon: any;
+  icon: LucideIcon;
   onClick: () => void;
   show: boolean;
   className?: string;

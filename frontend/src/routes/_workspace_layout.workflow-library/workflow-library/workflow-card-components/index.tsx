@@ -46,7 +46,7 @@ export function WorkflowCard({
         className={cn(
           CARD_CONTENT_STYLES,
           GROUP_HOVER_OPACITY_ZERO,
-          "hover:opacity-100"
+          "hover:opacity-100",
         )}
       >
         <WorkflowStatusBadge status={workflow.status} />
@@ -61,7 +61,7 @@ export function WorkflowCard({
           className={cn(
             CARD_FOOTER_STYLES,
             GROUP_HOVER_OPACITY_ZERO,
-            "justify-end"
+            "justify-end",
           )}
         >
           <WorkflowFooter lastEdited={new Date(workflow.lastEdited)} />
@@ -84,7 +84,7 @@ export function WorkflowCardSkeleton() {
         "border-2 border-slate-300 dark:border-slate-800",
         "shadow-[0_2px_4px_rgba(0,0,0,0.05)]",
         "transition-all duration-300",
-        "group overflow-hidden w-full min-w-0"
+        "group overflow-hidden w-full min-w-0",
       )}
       style={{ minHeight: 180 }} // Ensures consistent card height
     >

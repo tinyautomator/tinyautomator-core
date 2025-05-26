@@ -13,19 +13,19 @@ export function useFilteredWorkflows() {
 
   const { workflows: filteredWorkflows, ...rest } = useMemo(
     () => getWorkflowData(workflows, params),
-    [workflows, params]
+    [workflows, params],
   );
 
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredWorkflows.length / ITEMS_PER_PAGE)
+    Math.ceil(filteredWorkflows.length / ITEMS_PER_PAGE),
   );
 
   const page = params.page;
 
   const paginatedWorkflows = filteredWorkflows.slice(
     (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
+    page * ITEMS_PER_PAGE,
   );
 
   return {

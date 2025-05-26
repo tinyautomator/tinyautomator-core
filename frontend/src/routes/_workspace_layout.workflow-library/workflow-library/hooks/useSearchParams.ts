@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { searchParamsSchema, type SearchParams } from "../utils/schemas";
 
 export function useValidatedSearchParams(
-  totalPages = 1
+  totalPages = 1,
 ): [SearchParams, (newParams: Partial<SearchParams>) => void] {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -43,7 +43,7 @@ export function useValidatedSearchParams(
 
         return updatedParams;
       },
-      { preventScrollReset: true }
+      { preventScrollReset: true },
     );
   };
 

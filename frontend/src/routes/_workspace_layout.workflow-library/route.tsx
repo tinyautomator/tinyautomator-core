@@ -41,14 +41,14 @@ function WorkflowLibraryHeader() {
       className={cn(
         "shrink-0 flex justify-between items-center",
         "border-b border-slate-100 dark:border-slate-800",
-        "w-full "
+        "w-full ",
       )}
     >
       <div className="flex flex-col gap-1 leading-tight">
         <h1
           className={cn(
             "text-xl font-bold items-center",
-            "text-slate-900 dark:text-white"
+            "text-slate-900 dark:text-white",
           )}
         >
           Workflow Library
@@ -67,7 +67,7 @@ export default function WorkflowLibrary() {
     <div
       className={cn(
         "px-4 flex flex-col items-start h-full rounded-xl justify-between gap-4 ",
-        "bg-white dark:bg-slate-950"
+        "bg-white dark:bg-slate-950",
       )}
     >
       <WorkflowLibraryHeader />

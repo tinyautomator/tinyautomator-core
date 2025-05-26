@@ -81,7 +81,7 @@ func (r *workflowScheduleRepo) Create(
 	executionState string,
 	next_run int64,
 	schedule_type string,
-) (*dao.WorkflowSchedule, error) {
+) (*models.WorkflowSchedule, error) {
 	now := time.Now().UTC().UnixMilli()
 
 	s, err := r.q.CreateWorkflowSchedule(ctx, &dao.CreateWorkflowScheduleParams{
@@ -116,14 +116,10 @@ func (r *workflowScheduleRepo) Delete(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (r *workflowScheduleRepo) DeleteWorkflowScheduleByWorkflowID(
-	ctx context.Context,
-	workflowID int32,
-) error {
+func (r *workflowScheduleRepo) DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error {
 	if err := r.q.DeleteWorkflowScheduleByWorkflowID(ctx, workflowID); err != nil {
 		return fmt.Errorf("db error delete workflow schedule by workflow id: %w", err)
 	}
-
 	return nil
 }
 

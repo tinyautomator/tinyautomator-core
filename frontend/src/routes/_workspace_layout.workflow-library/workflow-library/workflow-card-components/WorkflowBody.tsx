@@ -24,13 +24,13 @@ export function WorkflowStatusBadge({ status }: StatusBadgeProps) {
         GROUP_HOVER_OPACITY_ZERO,
         STATUS_BADGE_BASE,
         config.bgColor,
-        config.textColor
+        config.textColor,
       )}
     >
       <div
         className={cn(
           STATUS_BADGE_ICON,
-          `bg-gradient-to-r ${config.gradientFrom} ${config.gradientTo}`
+          `bg-gradient-to-r ${config.gradientFrom} ${config.gradientTo}`,
         )}
       >
         <config.icon className={STATUS_BADGE_ICON_INNER} />
@@ -50,14 +50,14 @@ export function WorkflowDescription({ description }: WorkflowDescriptionProps) {
       className={cn(
         "absolute inset-0 flex items-center justify-center z-20 min-h-0",
         GROUP_HOVER_OPACITY_FULL,
-        "pointer-events-none"
+        "pointer-events-none",
       )}
     >
       <p
         className={cn(
           "w-3/4 mx-auto",
           "text-xs line-clamp-3 text-center font-normal drop-shadow-sm",
-          "text-slate-700 dark:text-slate-200"
+          "text-slate-700 dark:text-slate-200",
         )}
       >
         {description || "No description provided"}
@@ -75,7 +75,7 @@ export function WorkflowTags({ tags, className }: WorkflowTagsProps) {
     <div
       className={cn(
         "min-h-min max-h-9 flex flex-wrap gap-2 rounded-lg overflow-hidden line-clamp-1",
-        className
+        className,
       )}
     >
       {tags.slice(0, 3).map((tag) => (
@@ -83,7 +83,7 @@ export function WorkflowTags({ tags, className }: WorkflowTagsProps) {
           key={tag}
           variant="secondary"
           className={cn(
-            "text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-2xl"
+            "text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-2xl",
           )}
         >
           {tag}
