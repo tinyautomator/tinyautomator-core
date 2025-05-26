@@ -25,11 +25,12 @@ RETURNING *;
 -- name: CreateWorkflowNode :one
 INSERT INTO workflow_node (
   workflow_id,
-  action_type,
+  category,
+  node_type,
   config
 )
 VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 )
 RETURNING *;
 
@@ -63,7 +64,8 @@ SELECT
   w.status AS workflow_status,
   w.created_at,
   wn.id AS node_id,
-  action_type,
+  category,
+  node_type,
   config,
   source_node_id,
   target_node_id
@@ -83,7 +85,8 @@ SELECT
   wn.id AS node_id,
   wnu.x_position,
   wnu.y_position,
-  action_type,
+  category,
+  node_type,
   config,
   source_node_id,
   target_node_id
@@ -103,8 +106,7 @@ WHERE id = $1;
 
 -- name: UpdateWorkflowNode :exec
 UPDATE workflow_node
-SET action_type = $2,
-    config = $3
+SET config = $2
 WHERE id = $1;
 
 -- name: UpdateWorkflowNodeUI :exec

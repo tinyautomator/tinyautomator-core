@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
+	formatter "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -60,6 +62,7 @@ func (cfg *appConfig) loadEnvironmentVariables() error {
 func (cfg *appConfig) initLogger() error {
 	logger := logrus.New()
 	logger.SetOutput(os.Stdout)
+	logger.SetReportCaller(true)
 
 	if logLevel, err := logrus.ParseLevel(cfg.envVars.LogLevel); err != nil {
 		return fmt.Errorf("unable to parse log level: %w", err)
@@ -71,8 +74,26 @@ func (cfg *appConfig) initLogger() error {
 		logger.SetFormatter(&logrus.JSONFormatter{})
 		logger.SetReportCaller(true)
 	} else {
-		logger.SetFormatter(&logrus.TextFormatter{
-			FullTimestamp: true,
+		logger.SetFormatter(&formatter.Formatter{
+			ShowFullLevel: true,
+			TrimMessages:  true,
+			CallerFirst:   false,
+			CustomCallerFormatter: func(frame *runtime.Frame) string {
+				gray := "\033[90m"
+				reset := "\033[0m"
+				path := frame.File
+				function := frame.Function
+
+				if idx := strings.Index(frame.File, "backend/"); idx != -1 {
+					path = path[idx+8:]
+				}
+
+				if idx := strings.Index(frame.Function, "github.com/tinyautomator/tinyautomator-core/backend/"); idx != -1 {
+					function = function[idx+len("github.com/tinyautomator/tinyautomator-core/backend/"):]
+				}
+
+				return fmt.Sprintf(" %s(%s:%d %s)%s", gray, path, frame.Line, function, reset)
+			},
 		})
 	}
 

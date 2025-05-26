@@ -113,8 +113,12 @@ func (r *workflowRepo) CreateWorkflow(
 	createdNodeIDMap := make(map[string]int32)
 
 	for _, node := range nodes {
-		if node.ActionType == "" {
-			return nil, fmt.Errorf("node action type is missing for node %s", node.ID)
+		if node.Category == "" {
+			return nil, fmt.Errorf("node category is missing for node %s", node.ID)
+		}
+
+		if node.NodeType == "" {
+			return nil, fmt.Errorf("node type is missing for node %s", node.ID)
 		}
 
 		if node.Config == nil {
@@ -128,7 +132,8 @@ func (r *workflowRepo) CreateWorkflow(
 
 		n, err := qtx.CreateWorkflowNode(ctx, &dao.CreateWorkflowNodeParams{
 			WorkflowID: w.ID,
-			ActionType: node.ActionType,
+			Category:   node.Category,
+			NodeType:   node.NodeType,
 			Config:     config,
 		})
 		if err != nil {
@@ -248,7 +253,8 @@ func (r workflowRepo) UpdateWorkflow(
 
 		newNode, err := qtx.CreateWorkflowNode(ctx, &dao.CreateWorkflowNodeParams{
 			WorkflowID: workflowID,
-			ActionType: n.ActionType,
+			Category:   n.Category,
+			NodeType:   n.NodeType,
 			Config:     config,
 		})
 		if err != nil {
@@ -279,9 +285,8 @@ func (r workflowRepo) UpdateWorkflow(
 		}
 
 		err = qtx.UpdateWorkflowNode(ctx, &dao.UpdateWorkflowNodeParams{
-			ID:         int32(nID),
-			ActionType: n.ActionType,
-			Config:     config,
+			ID:     int32(nID),
+			Config: config,
 		})
 		if err != nil {
 			return fmt.Errorf("db error update workflow node: %w", err)
@@ -378,7 +383,8 @@ func (r workflowRepo) GetWorkflowGraph(
 
 			wn := &models.WorkflowNode{}
 			wn.ID = row.NodeID
-			wn.ActionType = row.ActionType
+			wn.Category = row.Category
+			wn.NodeType = row.NodeType
 			wn.WorkflowID = row.WorkflowID
 			wn.Config = &config
 
@@ -444,7 +450,8 @@ func (r workflowRepo) RenderWorkflowGraph(
 
 			wn := &models.WorkflowNodeDTO{}
 			wn.ID = fmt.Sprintf("%d", row.NodeID)
-			wn.ActionType = row.ActionType
+			wn.Category = row.Category
+			wn.NodeType = row.NodeType
 			wn.Config = &config
 			wn.Position = &models.WorkflowNodePosition{
 				X: row.XPosition,

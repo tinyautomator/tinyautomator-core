@@ -25,8 +25,8 @@ export interface UpdateWorkflowDto {
 
 export interface WorkflowNode extends Record<string, unknown> {
   id: string;
-  type: string;
-  action_type: string;
+  category: string;
+  node_type: string;
   config: Record<string, unknown>;
   position: {
     x: number;

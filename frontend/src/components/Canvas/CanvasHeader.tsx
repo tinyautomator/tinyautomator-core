@@ -59,9 +59,9 @@ export default function CanvasHeader({
                 description: workflow.description,
                 nodes: nodes.map((node) => ({
                   id: node.id,
-                  type: node.type || "default",
-                  action_type: node.data.actionType as string,
-                  config: { provider: "gmail" },
+                  category: node.data.category as string,
+                  node_type: node.data.nodeType as string,
+                  config: node.data.config as Record<string, unknown>,
                   position: node.position,
                 })),
                 edges: edges.map((edge) => ({
@@ -78,9 +78,9 @@ export default function CanvasHeader({
                 status: "draft",
                 nodes: nodes.map((node) => ({
                   id: node.id,
-                  type: node.type || "default",
-                  action_type: node.data.actionType as string,
-                  config: { provider: "gmail" },
+                  category: node.data.category as string,
+                  node_type: node.data.nodeType as string,
+                  config: node.data.config as Record<string, unknown>,
                   position: node.position,
                 })),
                 edges: edges.map((edge) => ({

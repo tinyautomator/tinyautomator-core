@@ -134,18 +134,20 @@ func (q *Queries) CreateWorkflowEdge(ctx context.Context, arg *CreateWorkflowEdg
 const createWorkflowNode = `-- name: CreateWorkflowNode :one
 INSERT INTO workflow_node (
   workflow_id,
-  action_type,
+  category,
+  node_type,
   config
 )
 VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 )
-RETURNING id, workflow_id, action_type, config
+RETURNING id, workflow_id, category, node_type, config
 `
 
 type CreateWorkflowNodeParams struct {
 	WorkflowID int32  `json:"workflow_id"`
-	ActionType string `json:"action_type"`
+	Category   string `json:"category"`
+	NodeType   string `json:"node_type"`
 	Config     []byte `json:"config"`
 }
 
@@ -153,20 +155,27 @@ type CreateWorkflowNodeParams struct {
 //
 //	INSERT INTO workflow_node (
 //	  workflow_id,
-//	  action_type,
+//	  category,
+//	  node_type,
 //	  config
 //	)
 //	VALUES (
-//	  $1, $2, $3
+//	  $1, $2, $3, $4
 //	)
-//	RETURNING id, workflow_id, action_type, config
+//	RETURNING id, workflow_id, category, node_type, config
 func (q *Queries) CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNodeParams) (*WorkflowNode, error) {
-	row := q.db.QueryRow(ctx, createWorkflowNode, arg.WorkflowID, arg.ActionType, arg.Config)
+	row := q.db.QueryRow(ctx, createWorkflowNode,
+		arg.WorkflowID,
+		arg.Category,
+		arg.NodeType,
+		arg.Config,
+	)
 	var i WorkflowNode
 	err := row.Scan(
 		&i.ID,
 		&i.WorkflowID,
-		&i.ActionType,
+		&i.Category,
+		&i.NodeType,
 		&i.Config,
 	)
 	return &i, err
@@ -319,7 +328,8 @@ SELECT
   w.status AS workflow_status,
   w.created_at,
   wn.id AS node_id,
-  action_type,
+  category,
+  node_type,
   config,
   source_node_id,
   target_node_id
@@ -337,7 +347,8 @@ type GetWorkflowGraphRow struct {
 	WorkflowStatus      string      `json:"workflow_status"`
 	CreatedAt           int64       `json:"created_at"`
 	NodeID              int32       `json:"node_id"`
-	ActionType          string      `json:"action_type"`
+	Category            string      `json:"category"`
+	NodeType            string      `json:"node_type"`
 	Config              []byte      `json:"config"`
 	SourceNodeID        pgtype.Int4 `json:"source_node_id"`
 	TargetNodeID        pgtype.Int4 `json:"target_node_id"`
@@ -352,7 +363,8 @@ type GetWorkflowGraphRow struct {
 //	  w.status AS workflow_status,
 //	  w.created_at,
 //	  wn.id AS node_id,
-//	  action_type,
+//	  category,
+//	  node_type,
 //	  config,
 //	  source_node_id,
 //	  target_node_id
@@ -377,7 +389,8 @@ func (q *Queries) GetWorkflowGraph(ctx context.Context, id int32) ([]*GetWorkflo
 			&i.WorkflowStatus,
 			&i.CreatedAt,
 			&i.NodeID,
-			&i.ActionType,
+			&i.Category,
+			&i.NodeType,
 			&i.Config,
 			&i.SourceNodeID,
 			&i.TargetNodeID,
@@ -402,7 +415,8 @@ SELECT
   wn.id AS node_id,
   wnu.x_position,
   wnu.y_position,
-  action_type,
+  category,
+  node_type,
   config,
   source_node_id,
   target_node_id
@@ -423,7 +437,8 @@ type RenderWorkflowGraphRow struct {
 	NodeID              int32       `json:"node_id"`
 	XPosition           float64     `json:"x_position"`
 	YPosition           float64     `json:"y_position"`
-	ActionType          string      `json:"action_type"`
+	Category            string      `json:"category"`
+	NodeType            string      `json:"node_type"`
 	Config              []byte      `json:"config"`
 	SourceNodeID        pgtype.Int4 `json:"source_node_id"`
 	TargetNodeID        pgtype.Int4 `json:"target_node_id"`
@@ -440,7 +455,8 @@ type RenderWorkflowGraphRow struct {
 //	  wn.id AS node_id,
 //	  wnu.x_position,
 //	  wnu.y_position,
-//	  action_type,
+//	  category,
+//	  node_type,
 //	  config,
 //	  source_node_id,
 //	  target_node_id
@@ -468,7 +484,8 @@ func (q *Queries) RenderWorkflowGraph(ctx context.Context, id int32) ([]*RenderW
 			&i.NodeID,
 			&i.XPosition,
 			&i.YPosition,
-			&i.ActionType,
+			&i.Category,
+			&i.NodeType,
 			&i.Config,
 			&i.SourceNodeID,
 			&i.TargetNodeID,
@@ -517,25 +534,22 @@ func (q *Queries) UpdateWorkflow(ctx context.Context, arg *UpdateWorkflowParams)
 
 const updateWorkflowNode = `-- name: UpdateWorkflowNode :exec
 UPDATE workflow_node
-SET action_type = $2,
-    config = $3
+SET config = $2
 WHERE id = $1
 `
 
 type UpdateWorkflowNodeParams struct {
-	ID         int32  `json:"id"`
-	ActionType string `json:"action_type"`
-	Config     []byte `json:"config"`
+	ID     int32  `json:"id"`
+	Config []byte `json:"config"`
 }
 
 // UpdateWorkflowNode
 //
 //	UPDATE workflow_node
-//	SET action_type = $2,
-//	    config = $3
+//	SET config = $2
 //	WHERE id = $1
 func (q *Queries) UpdateWorkflowNode(ctx context.Context, arg *UpdateWorkflowNodeParams) error {
-	_, err := q.db.Exec(ctx, updateWorkflowNode, arg.ID, arg.ActionType, arg.Config)
+	_, err := q.db.Exec(ctx, updateWorkflowNode, arg.ID, arg.Config)
 	return err
 }
 

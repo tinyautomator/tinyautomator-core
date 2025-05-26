@@ -27,7 +27,8 @@ type WorkflowEdge struct {
 type WorkflowNode struct {
 	ID         int32  `json:"id"`
 	WorkflowID int32  `json:"workflow_id"`
-	ActionType string `json:"action_type"`
+	Category   string `json:"category"`
+	NodeType   string `json:"node_type"`
 	Config     []byte `json:"config"`
 }
 

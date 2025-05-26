@@ -226,7 +226,7 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 
 	// if any parent node run is failed, we defer the execution to when the parent succeeds and queues the child again
 	for _, parentNodeRun := range parentNodeRuns {
-		if parentNodeRun.Status == "failed" {
+		if parentNodeRun.Status != "success" {
 			s.logger.WithFields(logrus.Fields{
 				"workflow_id":    task.WorkflowID,
 				"run_id":         task.RunID,
