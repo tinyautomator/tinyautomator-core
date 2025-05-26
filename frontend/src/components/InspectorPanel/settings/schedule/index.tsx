@@ -66,7 +66,7 @@ export function ScheduleSettings() {
           duration: 3000,
         });
       });
-    },
+    }
   );
 
   return (
