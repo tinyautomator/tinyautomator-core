@@ -27,7 +27,7 @@ export function ScheduleSettings() {
 
   return (
     <FormProvider {...form}>
-      <div className="space-y-6">
+      <div className="space-y-6 select-none">
         <ScheduleForm />
         <div className="flex justify-start">
           <SchedulePreviewModal />

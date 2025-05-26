@@ -54,8 +54,9 @@ export function CustomDatePicker({
   };
 
   const handleDateSelect = (day: number) => {
-    const date = new Date(selectedYear, selectedMonth, day);
-    const formattedDate = date.toISOString().split("T")[0];
+    const formattedDate = `${selectedYear}-${(selectedMonth + 1)
+      .toString()
+      .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
     onChange(formattedDate);
     setIsOpen(false);
   };
@@ -94,12 +95,21 @@ export function CustomDatePicker({
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(selectedYear, selectedMonth, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      date.setHours(0, 0, 0, 0);
+      const isPast = date < today;
+
       const isSelected =
         value &&
         (() => {
-          const selected = new Date(selectedYear, selectedMonth, day);
-          const selectedStr = selected.toISOString().split("T")[0];
-          return value === selectedStr;
+          const [valYear, valMonth, valDay] = value.split("-").map(Number);
+          return (
+            valYear === selectedYear &&
+            valMonth - 1 === selectedMonth &&
+            valDay === day
+          );
         })();
 
       days.push(
@@ -107,7 +117,8 @@ export function CustomDatePicker({
           key={day}
           variant={isSelected ? "default" : "ghost"}
           size="sm"
-          className="p-2 h-8 w-8"
+          disabled={isPast}
+          className={`p-2 h-8 w-8 ${isPast ? "opacity-40 pointer-events-none" : ""}`}
           onClick={() => handleDateSelect(day)}
         >
           {day}
@@ -130,13 +141,13 @@ export function CustomDatePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-auto p-0"
+        className="w-auto p-0 max-h-[50vh] overflow-y-auto select-none"
         align="start"
         side="bottom"
         avoidCollisions={false}
         alignOffset={-40}
       >
-        <div className="p-3 space-y-3">
+        <div className="p-3 space-y-0">
           <div className="flex items-center justify-between">
             <Button
               variant="outline"
@@ -170,7 +181,6 @@ export function CustomDatePicker({
                 </div>
               )}
             </div>
-
             <Button
               variant="outline"
               size="sm"
@@ -180,7 +190,7 @@ export function CustomDatePicker({
             </Button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1 mt-2">
             {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
               <div
                 key={day}
