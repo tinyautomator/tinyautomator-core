@@ -4,11 +4,18 @@ import CanvasBody, { NodeBuilder } from "@/components/Canvas/CanvasBody";
 import InspectorPanel from "@/components/InspectorPanel";
 import { Separator } from "@/components/ui/separator";
 import CanvasHeader from "@/components/Canvas/CanvasHeader";
+<<<<<<< HEAD
 import { useEffect, useRef } from "react";
 import { useFlowStore } from "@/components/Canvas/flowStore";
 import { MarkerType } from "@xyflow/react";
 import { LayoutActions } from "../_workspace_layout._workflow_canvas/route";
 import { useOutletContext } from "react-router";
+=======
+import { useLayoutContext } from "../_workspace_layout._workflow_canvas/useLayoutContext";
+import { useEffect, useRef } from "react";
+import { useFlowStore } from "@/components/Canvas/flowStore";
+import { MarkerType } from "@xyflow/react";
+>>>>>>> d1bc41b (took out suspense)
 
 interface NodeStatusUpdate {
   runId: string | number;
@@ -138,18 +145,16 @@ export default function WorkflowRun({
   }, []);
 
   return (
-    <Suspense fallback={<GlobalSpinner size="large" />}>
-      <div className="flex h-full overflow-hidden">
-        <div className="flex-1 bg-slate-50 flex flex-col">
-          <CanvasHeader workflow={workflowRun} />
-          <Separator />
-          <CanvasBody />
-        </div>
-        <InspectorPanel
-          toggleInspectorPanel={toggleInspectorPanel}
-          setToggleInspectorPanel={setToggleInspectorPanel}
-        />
+    <div className="flex h-full overflow-hidden">
+      <div className="flex-1 bg-slate-50 flex flex-col">
+        <CanvasHeader workflow={workflowRun} />
+        <Separator />
+        <CanvasBody />
       </div>
-    </Suspense>
+      <InspectorPanel
+        toggleInspectorPanel={toggleInspectorPanel}
+        setToggleInspectorPanel={setToggleInspectorPanel}
+      />
+    </div>
   );
 }
