@@ -74,9 +74,6 @@ export default function InspectorPanel({
         >
           <div className="h-1/15 pl-5 flex flex-col justify-between">
             <h2 className="pt-2 font-semibold">Inspector</h2>
-            <p className="pb-2 text-xs text-muted-foreground">
-              Configure the selected block
-            </p>
           </div>
           <Separator />
           <ScrollArea className="h-[calc(100vh-8.5rem)]">
