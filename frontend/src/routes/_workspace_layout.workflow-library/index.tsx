@@ -41,7 +41,7 @@ export default function WorkflowLibrary() {
         .toLowerCase()
         .includes(savedSearchQuery.toLowerCase()) ||
       workflow.tags.some((tag) =>
-        tag.toLowerCase().includes(savedSearchQuery.toLowerCase()),
+        tag.toLowerCase().includes(savedSearchQuery.toLowerCase())
       )
     );
   });

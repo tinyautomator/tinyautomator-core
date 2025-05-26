@@ -64,7 +64,7 @@ export default function WorkflowRun({
             type: MarkerType.ArrowClosed,
             color: "#60a5fa",
           },
-        })),
+        }))
       );
 
       const sseUrl = `http://localhost:9000/api/workflow-run/${runId}/progress`;
@@ -90,7 +90,7 @@ export default function WorkflowRun({
           console.error(
             "Failed to parse connection_established event data:",
             event.data,
-            e,
+            e
           );
         }
       });
@@ -104,7 +104,7 @@ export default function WorkflowRun({
           console.error(
             "Failed to parse node_update event data:",
             event.data,
-            e,
+            e
           );
         }
       });
@@ -130,7 +130,7 @@ export default function WorkflowRun({
           eventSourceRef.current.close();
           eventSourceRef.current = null;
           console.log(
-            "SSE Connection closed due to component unmount or runId change.",
+            "SSE Connection closed due to component unmount or runId change."
           );
         }
       };
@@ -138,16 +138,18 @@ export default function WorkflowRun({
   }, []);
 
   return (
-    <div className="flex h-full overflow-hidden">
-      <div className="flex-1 bg-slate-50 flex flex-col">
-        <CanvasHeader workflow={workflowRun} />
-        <Separator />
-        <CanvasBody />
+    <Suspense fallback={<GlobalSpinner size="large" />}>
+      <div className="flex h-full overflow-hidden">
+        <div className="flex-1 bg-slate-50 flex flex-col">
+          <CanvasHeader workflow={workflowRun} />
+          <Separator />
+          <CanvasBody />
+        </div>
+        <InspectorPanel
+          toggleInspectorPanel={toggleInspectorPanel}
+          setToggleInspectorPanel={setToggleInspectorPanel}
+        />
       </div>
-      <InspectorPanel
-        toggleInspectorPanel={toggleInspectorPanel}
-        setToggleInspectorPanel={setToggleInspectorPanel}
-      />
-    </div>
+    </Suspense>
   );
 }
