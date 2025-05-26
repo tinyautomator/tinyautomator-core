@@ -41,6 +41,7 @@ func (s *WorkflowService) prepForValidate(
 		n[i] = models.ValidateNode{
 			ID:       node.ID,
 			NodeType: node.NodeType,
+			Category: node.Category,
 		}
 	}
 
