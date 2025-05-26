@@ -23,9 +23,10 @@ type Workflow struct {
 }
 
 type WorkflowNodeCore struct {
-	ID         int32           `json:"id"`
-	ActionType string          `json:"action_type"`
-	Config     *map[string]any `json:"config"`
+	ID       int32           `json:"id"`
+	Category string          `json:"category"`
+	NodeType string          `json:"node_type"`
+	Config   *map[string]any `json:"config"`
 }
 
 type WorkflowNode struct {
@@ -107,8 +108,9 @@ type WorkflowNodeRunCore struct {
 }
 
 type ValidateNode struct {
-	ID         string `json:"id"`
-	ActionType string `json:"action_type"`
+	ID       string `json:"id"`
+	NodeType string `json:"node_type"`
+	Category string `json:"category"`
 }
 
 type ValidateEdge struct {

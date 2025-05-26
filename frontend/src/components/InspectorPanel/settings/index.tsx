@@ -2,12 +2,13 @@ import { useFlowStore } from "@/components/Canvas/flowStore";
 import { EmailSettings } from "./email";
 
 export function SettingsTab() {
-  const { selectedNode } = useFlowStore();
+  const { getSelectedNode } = useFlowStore();
 
+  const selectedNode = getSelectedNode();
   if (!selectedNode) return null;
 
-  switch (selectedNode.data.label as string) {
-    case "Send Email":
+  switch (selectedNode.data.nodeType as string) {
+    case "send_email":
       return <EmailSettings />;
     default:
       return null;

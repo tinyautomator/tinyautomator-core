@@ -15,7 +15,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const [debouncedIsNavigating] = useDebounce(
     Boolean(navigation.location),
-    300
+    300,
   );
 
   return (

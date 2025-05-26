@@ -3,6 +3,7 @@ module github.com/tinyautomator/tinyautomator-core/backend
 go 1.24.2
 
 require (
+	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/clerk/clerk-sdk-go/v2 v2.2.0
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-contrib/timeout v1.0.2

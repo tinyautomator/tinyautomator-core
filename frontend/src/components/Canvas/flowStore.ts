@@ -430,7 +430,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       if (!flowData) return state;
 
       const filtered = flowData.recentlyUsed.filter(
-        (b) => b.action_type !== block.action_type,
+        (b) => b.node_type !== block.node_type,
       );
 
       return {

@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	formatter "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -71,8 +72,9 @@ func (cfg *appConfig) initLogger() error {
 		logger.SetFormatter(&logrus.JSONFormatter{})
 		logger.SetReportCaller(true)
 	} else {
-		logger.SetFormatter(&logrus.TextFormatter{
-			FullTimestamp: true,
+		logger.SetFormatter(&formatter.Formatter{
+			TrimMessages: true,
+			CallerFirst:  true,
 		})
 	}
 

@@ -55,8 +55,9 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 
 	for i, node := range wg.Nodes {
 		n[i] = models.ValidateNode{
-			ID:         fmt.Sprintf("%d", node.ID),
-			ActionType: node.ActionType,
+			ID:       fmt.Sprintf("%d", node.ID),
+			Category: node.Category,
+			NodeType: node.NodeType,
 		}
 		isRoot := false
 

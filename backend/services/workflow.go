@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -37,8 +39,8 @@ func (s *WorkflowService) prepForValidate(
 
 	for i, node := range nodes {
 		n[i] = models.ValidateNode{
-			ID:         node.ID,
-			ActionType: node.ActionType,
+			ID:       node.ID,
+			NodeType: node.NodeType,
 		}
 	}
 
@@ -57,7 +59,7 @@ func (s *WorkflowService) ValidateWorkflowGraph(
 	edges []models.ValidateEdge,
 ) error {
 	idToIdx := make(map[string]int)
-	idxToID := make(map[int]string)
+	idxToNode := make(map[int]models.ValidateNode)
 
 	for idx, node := range nodes {
 		if node.ID == "" {
@@ -65,7 +67,7 @@ func (s *WorkflowService) ValidateWorkflowGraph(
 		}
 
 		idToIdx[node.ID] = idx
-		idxToID[idx] = node.ActionType
+		idxToNode[idx] = node
 	}
 
 	g := graph.New(len(nodes))
@@ -92,22 +94,33 @@ func (s *WorkflowService) ValidateWorkflowGraph(
 
 	level := make(map[string]int)
 	for _, nodeIdx := range order {
-		if _, ok := level[idxToID[nodeIdx]]; !ok {
-			level[idxToID[nodeIdx]] = 0
+		if _, ok := level[idxToNode[nodeIdx].ID]; !ok {
+			level[idxToNode[nodeIdx].ID] = 0
 			// TODO: for mvp restrict children from only being accessible from their root
-			s.logger.Infof("root node found %v", idxToID[nodeIdx])
+			s.logger.WithFields(logrus.Fields{
+				"node_id":       idxToNode[nodeIdx].ID,
+				"node_type":     idxToNode[nodeIdx].NodeType,
+				"node_category": idxToNode[nodeIdx].Category,
+			}).Info("root node found")
 		}
 
 		var err error
 		if notValid := g.Visit(nodeIdx, func(childIdx int, _ int64) bool {
-			parent := idxToID[nodeIdx]
-			child := idxToID[childIdx]
+			parent := idxToNode[nodeIdx].ID
+			child := idxToNode[childIdx].ID
 			parentLevel, pOk := level[parent]
 			childLevel, cOk := level[child]
 
 			if pOk && cOk && parentLevel > 0 && childLevel > 0 && parentLevel >= childLevel {
-				s.logger.Warnf("node %s → %s invalid level", parent, child)
-				err = fmt.Errorf("validation error: node %s → %s invalid relationship", parent, child)
+				s.logger.WithFields(logrus.Fields{
+					"parent_id":       parent,
+					"child_id":        child,
+					"parent_type":     idxToNode[nodeIdx].NodeType,
+					"parent_category": idxToNode[nodeIdx].Category,
+					"child_type":      idxToNode[childIdx].NodeType,
+					"child_category":  idxToNode[childIdx].Category,
+				}).Warn("invalid level")
+				err = fmt.Errorf("validation error: node id %s → %s invalid relationship", parent, child)
 				return true
 			}
 			level[child] = level[parent] + 1
@@ -115,6 +128,27 @@ func (s *WorkflowService) ValidateWorkflowGraph(
 		}); notValid {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (s *WorkflowService) validateNode(node *models.WorkflowNodeDTO) error {
+	if node.Category == "" {
+		return fmt.Errorf("validation error: node category is empty")
+	}
+
+	if node.NodeType == "" {
+		return fmt.Errorf("validation error: node type is empty")
+	}
+
+	if node.Config == nil {
+		return fmt.Errorf("validation error: node config is nil")
+	}
+
+	_, err := json.Marshal(node.Config)
+	if err != nil {
+		return fmt.Errorf("validation error: node config is not valid JSON: %w", err)
 	}
 
 	return nil
@@ -132,6 +166,12 @@ func (s *WorkflowService) CreateWorkflow(
 	n, e := s.prepForValidate(nodes, edges)
 	if err := s.ValidateWorkflowGraph(n, e); err != nil {
 		return nil, fmt.Errorf("failed to validate workflow graph: %w", err)
+	}
+
+	for _, node := range nodes {
+		if err := s.validateNode(node); err != nil {
+			return nil, fmt.Errorf("failed to validate node: %w", err)
+		}
 	}
 
 	w, err := s.workflowRepo.CreateWorkflow(ctx, userID, name, description, status, nodes, edges)
@@ -153,6 +193,12 @@ func (s *WorkflowService) UpdateWorkflow(
 	n, e := s.prepForValidate(nodes, edges)
 	if err := s.ValidateWorkflowGraph(n, e); err != nil {
 		return fmt.Errorf("failed to validate workflow graph: %w", err)
+	}
+
+	for _, node := range nodes {
+		if err := s.validateNode(node); err != nil {
+			return fmt.Errorf("failed to validate node: %w", err)
+		}
 	}
 
 	existing, err := s.workflowRepo.RenderWorkflowGraph(ctx, workflowID)
@@ -189,13 +235,19 @@ func (s *WorkflowService) UpdateWorkflow(
 			return fmt.Errorf("node ID is not present in the existing workflow")
 		}
 
-		if old.ActionType != node.ActionType || old.Config != node.Config {
+		if old.Category != node.Category || old.NodeType != node.NodeType {
+			return fmt.Errorf(
+				"node category or type cannot be changed: %s - %s",
+				old.Category,
+				old.NodeType,
+			)
+		}
+
+		if !reflect.DeepEqual(old.Config, node.Config) {
 			s.logger.WithFields(logrus.Fields{
-				"oldActionType": old.ActionType,
-				"newActionType": node.ActionType,
-				"oldConfig":     old.Config,
-				"newConfig":     node.Config,
-			}).Info("node action type or config changed")
+				"oldConfig": old.Config,
+				"newConfig": node.Config,
+			}).Info("node config changed")
 
 			delta.NodesToUpdate = append(delta.NodesToUpdate, node)
 		}
@@ -299,15 +351,15 @@ func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, workflowID int32)
 
 	rootNodes := internal.GetRootNodes(graph)
 	for _, node := range rootNodes {
-		s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).
+		s.logger.WithFields(logrus.Fields{"id": node.ID, "category": node.Category}).
 			Info("found root node")
 
-		switch node.ActionType {
+		switch node.Category {
 		case TriggerTypeScheduled:
 			_ = s.workflowScheduleRepo.DeleteWorkflowScheduleByWorkflowID(ctx, workflow.ID)
 			// TODO: Add more trigger types
 		default:
-			s.logger.WithFields(logrus.Fields{"id": node.ID, "action_type": node.ActionType}).
+			s.logger.WithFields(logrus.Fields{"id": node.ID, "category": node.Category}).
 				Info("no trigger type found, treating as manual")
 		}
 	}

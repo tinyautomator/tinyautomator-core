@@ -54,13 +54,14 @@ type Querier interface {
 	//
 	//  INSERT INTO workflow_node (
 	//    workflow_id,
-	//    action_type,
+	//    category,
+	//    node_type,
 	//    config
 	//  )
 	//  VALUES (
-	//    $1, $2, $3
+	//    $1, $2, $3, $4
 	//  )
-	//  RETURNING id, workflow_id, action_type, config
+	//  RETURNING id, workflow_id, category, node_type, config
 	CreateWorkflowNode(ctx context.Context, arg *CreateWorkflowNodeParams) (*WorkflowNode, error)
 	//CreateWorkflowNodeRun
 	//
@@ -184,7 +185,8 @@ type Querier interface {
 	//    w.status AS workflow_status,
 	//    w.created_at,
 	//    wn.id AS node_id,
-	//    action_type,
+	//    category,
+	//    node_type,
 	//    config,
 	//    source_node_id,
 	//    target_node_id
@@ -254,7 +256,8 @@ type Querier interface {
 	//    wn.id AS node_id,
 	//    wnu.x_position,
 	//    wnu.y_position,
-	//    action_type,
+	//    category,
+	//    node_type,
 	//    config,
 	//    source_node_id,
 	//    target_node_id
@@ -276,8 +279,7 @@ type Querier interface {
 	//UpdateWorkflowNode
 	//
 	//  UPDATE workflow_node
-	//  SET action_type = $2,
-	//      config = $3
+	//  SET config = $2
 	//  WHERE id = $1
 	UpdateWorkflowNode(ctx context.Context, arg *UpdateWorkflowNodeParams) error
 	//UpdateWorkflowNodeRun

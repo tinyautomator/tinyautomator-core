@@ -57,7 +57,7 @@ interface BlockItemProps {
   categoryName: string;
   viewMode: "default" | "compact";
   isFavorite: boolean;
-  onToggleFavorite: (action_type: string, categoryName: string) => void;
+  onToggleFavorite: (node_type: string, categoryName: string) => void;
   onBlockUsed?: (block: Block) => void;
 }
 
@@ -83,14 +83,16 @@ function BlockItem({
 
   return (
     <div
-      key={block.action_type}
+      key={block.node_type}
       className={`group flex items-start p-3 rounded-md cursor-grab transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${viewMode === "compact" ? "py-2" : "py-3"}`}
       draggable
       onDragStart={(event) => {
+        console.log("dragging", block);
         event.dataTransfer.setData(
           "application/reactflow",
           JSON.stringify({
-            actionType: block.action_type,
+            category: block.category,
+            nodeType: block.node_type,
           }),
         );
         event.dataTransfer.effectAllowed = "move";
@@ -116,7 +118,7 @@ function BlockItem({
         className={`ml-2 opacity-0 group-hover:opacity-100 focus:opacity-100 ${isFavorite ? "text-yellow-500" : "text-gray-400"}`}
         onClick={(e) => {
           e.stopPropagation();
-          onToggleFavorite(block.action_type, categoryName);
+          onToggleFavorite(block.node_type, categoryName);
         }}
       >
         <Star className="w-4 h-4" fill={isFavorite ? "currentColor" : "none"} />
@@ -315,13 +317,13 @@ export default function BlockPanel({
     );
   };
 
-  const toggleFavorite = (action_type: string, categoryName: string) => {
+  const toggleFavorite = (node_type: string, categoryName: string) => {
     const category = categories.find((c) => c.category === categoryName);
     if (!category) return;
-    const block = category.blocks.find((b) => b.action_type === action_type);
+    const block = category.blocks.find((b) => b.node_type === node_type);
     if (!block) return;
-    if (favorites.some((f) => f.action_type === action_type)) {
-      setFavorites(favorites.filter((f) => f.action_type !== action_type));
+    if (favorites.some((f) => f.node_type === node_type)) {
+      setFavorites(favorites.filter((f) => f.node_type !== node_type));
     } else {
       setFavorites([...favorites, block]);
     }
@@ -338,23 +340,23 @@ export default function BlockPanel({
     }))
     .filter((category) => category.blocks.length > 0);
 
-  const isBlockFavorite = (action_type: string) =>
-    favorites.some((f) => f.action_type === action_type);
+  const isBlockFavorite = (node_type: string) =>
+    favorites.some((f) => f.node_type === node_type);
 
   const renderBlock = (block: Block, categoryName: string) => (
     <BlockItem
-      key={block.action_type}
+      key={block.node_type}
       block={block}
       categoryName={categoryName}
       viewMode={viewMode}
-      isFavorite={isBlockFavorite(block.action_type)}
+      isFavorite={isBlockFavorite(block.node_type)}
       onToggleFavorite={toggleFavorite}
     />
   );
 
   const getBlockCategoryName = (block: Block): string => {
     const found = categories.find((cat) =>
-      cat.blocks.some((b) => b.action_type === block.action_type),
+      cat.blocks.some((b) => b.node_type === block.node_type),
     );
     return found ? found.category : "recent";
   };

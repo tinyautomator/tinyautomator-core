@@ -6,7 +6,7 @@ import { ReactFlow, Node } from "@xyflow/react";
 import { NodeUI } from "@/components/shared/NodeUI";
 import { useFlowStore } from "./flowStore";
 import { useCallback, useEffect, useMemo } from "react";
-import { actionTypeToBlockMap } from "../../components/shared/BlockCategories";
+import { nodeTypeToBlockMap } from "../../components/shared/BlockCategories";
 import { v4 as uuidv4 } from "uuid";
 import { useOutletContext } from "react-router";
 import { LayoutActions } from "@/routes/_workspace_layout._workflow_canvas/route";
@@ -14,27 +14,22 @@ import { LayoutActions } from "@/routes/_workspace_layout._workflow_canvas/route
 export const NodeBuilder = (
   id: string,
   position: { x: number; y: number },
-  actionType: string,
+  category: string,
+  nodeType: string,
 ): Node => {
-  const block = actionTypeToBlockMap[actionType];
+  const block = nodeTypeToBlockMap[nodeType];
   return {
     id,
-    type: block.node_type,
+    type: block.category,
     position,
     data: {
-      actionType,
-      config: { provider: "gmail" },
+      category,
+      nodeType,
+      config: {},
       label: block.label,
       description: block.description,
       icon: block.icon,
-      status:
-        block.node_type === "trigger"
-          ? "success"
-          : block.action_type === "send_email"
-            ? "failed"
-            : block.action_type === "http_request"
-              ? "pending"
-              : "pending",
+      status: block.status,
     },
   };
 };
@@ -95,7 +90,8 @@ export default function CanvasBody() {
       const data = JSON.parse(
         event.dataTransfer.getData("application/reactflow"),
       ) as {
-        actionType: string;
+        category: string;
+        nodeType: string;
       };
 
       const position = screenToFlowPosition({
@@ -103,10 +99,15 @@ export default function CanvasBody() {
         y: event.clientY,
       });
 
-      const newNode = NodeBuilder(uuidv4(), position, data.actionType);
+      const newNode = NodeBuilder(
+        uuidv4(),
+        position,
+        data.category,
+        data.nodeType,
+      );
 
       setNodes([...nodes.map((n) => ({ ...n, selected: false })), newNode]);
-      addRecentlyUsedBlock(actionTypeToBlockMap[data.actionType]);
+      addRecentlyUsedBlock(nodeTypeToBlockMap[data.nodeType]);
     },
     [
       setSelectedNode,

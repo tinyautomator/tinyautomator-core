@@ -96,13 +96,7 @@ func (r *workflowRunRepo) CreateWorkflowRun(
 		}
 
 		status := "pending"
-		// TODO: change this awful hack
-		switch node.ActionType {
-		case "schedule":
-			status = "success"
-		case "email_trigger":
-			status = "success"
-		case "webhook":
+		if node.Category == "trigger" {
 			status = "success"
 		}
 
