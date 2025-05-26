@@ -106,8 +106,13 @@ export function CustomTimePicker({
             value ? formatDisplayTime() : placeholder
           }. Click to change.`}
         >
+<<<<<<< HEAD
           <Clock className="h-4 w-4 opacity-50 flex-shrink-0" />
           {formatDisplayTime()}
+=======
+          <span className="truncate">{formatDisplayTime()}</span>
+          <Clock className="h-4 w-4 opacity-50 flex-shrink-0" />
+>>>>>>> 341b46c (more adjustments)
         </Button>
       </PopoverTrigger>
       <PopoverContent
