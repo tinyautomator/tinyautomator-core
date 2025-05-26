@@ -138,16 +138,18 @@ export default function WorkflowRun({
   }, []);
 
   return (
-    <div className="flex h-full overflow-hidden">
-      <div className="flex-1 bg-slate-50 flex flex-col">
-        <CanvasHeader workflow={workflowRun} />
-        <Separator />
-        <CanvasBody />
+    <Suspense fallback={<GlobalSpinner size="large" />}>
+      <div className="flex h-full overflow-hidden">
+        <div className="flex-1 bg-slate-50 flex flex-col">
+          <CanvasHeader workflow={workflowRun} />
+          <Separator />
+          <CanvasBody />
+        </div>
+        <InspectorPanel
+          toggleInspectorPanel={toggleInspectorPanel}
+          setToggleInspectorPanel={setToggleInspectorPanel}
+        />
       </div>
-      <InspectorPanel
-        toggleInspectorPanel={toggleInspectorPanel}
-        setToggleInspectorPanel={setToggleInspectorPanel}
-      />
-    </div>
+    </Suspense>
   );
 }
