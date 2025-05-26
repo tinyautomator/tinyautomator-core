@@ -4,18 +4,11 @@ import CanvasBody, { NodeBuilder } from "@/components/Canvas/CanvasBody";
 import InspectorPanel from "@/components/InspectorPanel";
 import { Separator } from "@/components/ui/separator";
 import CanvasHeader from "@/components/Canvas/CanvasHeader";
-<<<<<<< HEAD
 import { useEffect, useRef } from "react";
 import { useFlowStore } from "@/components/Canvas/flowStore";
 import { MarkerType } from "@xyflow/react";
 import { LayoutActions } from "../_workspace_layout._workflow_canvas/route";
 import { useOutletContext } from "react-router";
-=======
-import { useLayoutContext } from "../_workspace_layout._workflow_canvas/useLayoutContext";
-import { useEffect, useRef } from "react";
-import { useFlowStore } from "@/components/Canvas/flowStore";
-import { MarkerType } from "@xyflow/react";
->>>>>>> d1bc41b (took out suspense)
 
 interface NodeStatusUpdate {
   runId: string | number;
