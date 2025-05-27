@@ -21,7 +21,7 @@ export function useWorkflowListState() {
     (newState: Partial<WorkflowListState>) => {
       updateParams(newState);
     },
-    [updateParams]
+    [updateParams],
   );
 
   const clearSearch = useCallback(() => {
@@ -32,14 +32,14 @@ export function useWorkflowListState() {
     (page: number) => {
       updateParams({ page });
     },
-    [updateParams]
+    [updateParams],
   );
 
   const setTags = useCallback(
     (tags: string[]) => {
       updateParams({ tags });
     },
-    [updateParams]
+    [updateParams],
   );
 
   return {

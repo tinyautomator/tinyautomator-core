@@ -102,7 +102,7 @@ export function WorkflowActionsDropdown({
           variant="ghost"
           className={cn(
             ACTION_BUTTON_BASE,
-            "opacity-0 group-hover:opacity-100"
+            "opacity-0 group-hover:opacity-100",
           )}
         >
           <MoreHorizontal className={ACTION_BUTTON_ICON} />

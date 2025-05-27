@@ -29,7 +29,7 @@ export function WorkflowPagination() {
 
   const pageNumbers = Array.from(
     { length: endPage - startPage + 1 },
-    (_, i) => startPage + i
+    (_, i) => startPage + i,
   );
 
   const isFirstPage = currentPage <= 1;

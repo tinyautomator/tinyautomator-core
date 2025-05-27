@@ -17,9 +17,10 @@ export interface Workflow {
   description: string;
   lastEdited: string;
   status: "active" | "draft" | "archived" | "templates";
+  nodeCount: number;
   created_at: string;
   updated_at: string;
-  nodeCount: number;
+
   tags: string[];
   isFavorite: boolean;
 }
@@ -31,7 +32,7 @@ export async function loader() {
     title: workflow.name,
     description: workflow.description,
     status: workflow.status,
-    // TODO: Add these fields to the api response except nodeCount
+    // TODO: Add these fields to the api response
     lastEdited: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
     tags: ["type", "script", "paid"],
   }));

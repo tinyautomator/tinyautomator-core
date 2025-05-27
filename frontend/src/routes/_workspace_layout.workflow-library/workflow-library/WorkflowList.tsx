@@ -15,7 +15,7 @@ export function WorkflowList({
 }: WorkflowListProps) {
   const navigation = useNavigation();
   const [archivingWorkflow, setArchivingWorkflow] = useState<Workflow | null>(
-    null
+    null,
   );
 
   const [showLoading] = useDebounce(navigation.state !== "idle", 150);

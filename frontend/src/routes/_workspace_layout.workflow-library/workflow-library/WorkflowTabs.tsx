@@ -47,7 +47,7 @@ export function WorkflowTabs() {
                 variant="secondary"
                 className={cn(
                   "h-5 min-w-[1.25rem] px-1 flex items-center justify-center text-xs font-normal bg-transparent border border-slate-200 dark:border-slate-700",
-                  COUNTER_STYLES
+                  COUNTER_STYLES,
                 )}
               >
                 {counts[tabValue] ?? 0}
