@@ -52,7 +52,7 @@ func (c *workflowRunController) GetWorkflowRun(ctx *gin.Context) {
 		return
 	}
 
-	workflowRun, err := c.workflowRunRepo.GetWorkflowRun(ctx, int32(workflowRunID))
+	workflowRun, err := c.workflowRunService.GetWorkflowRunStatus(ctx, int32(workflowRunID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get workflow run"})
 		return
@@ -61,8 +61,18 @@ func (c *workflowRunController) GetWorkflowRun(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, workflowRun)
 }
 
+func (c *workflowRunController) GetUserWorkflowRuns(ctx *gin.Context) {
+	workflowRuns, err := c.workflowRunRepo.GetUserWorkflowRuns(ctx, "test_user")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get workflow runs"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, workflowRuns)
+}
+
 func (c *workflowRunController) GetWorkflowRuns(ctx *gin.Context) {
-	idStr := ctx.Param("id")
+	idStr := ctx.Param("workflowID")
 
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -183,7 +193,7 @@ func (c *workflowRunController) StreamWorkflowRunProgress(ctx *gin.Context) {
 
 	ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 
-	if run.Status == "success" {
+	if run.Status != "running" {
 		ctx.SSEvent("workflow_run_completed", gin.H{
 			"message": "Workflow run completed",
 			"runId":   idStr,

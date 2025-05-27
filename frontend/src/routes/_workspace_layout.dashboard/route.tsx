@@ -5,10 +5,14 @@ import { Route } from "./+types/route";
 import { CreateWorkflowButton } from "@/components/shared/CreatWorkflowButton";
 
 export async function loader() {
-  return await workflowApi.getUserWorkflows();
+  const userWorkflows = await workflowApi.getUserWorkflows();
+  const userWorkflowRuns = await workflowApi.getUserWorkflowRuns();
+  return { userWorkflows, userWorkflowRuns };
 }
 
-export default function ({ loaderData: userWorkflows }: Route.ComponentProps) {
+export default function Dashboard({
+  loaderData: { userWorkflows },
+}: Route.ComponentProps) {
   return (
     <div className="h-full overflow-auto p-6 scrollbar-hidden">
       <div className="flex items-center justify-between mb-6">
@@ -22,9 +26,7 @@ export default function ({ loaderData: userWorkflows }: Route.ComponentProps) {
         </div>
         <CreateWorkflowButton />
       </div>
-
       <Stats />
-
       <DashboardTabs userWorkflows={userWorkflows} />
     </div>
   );

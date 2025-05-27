@@ -84,7 +84,7 @@ function BlockItem({
   return (
     <div
       key={block.node_type}
-      className={`group flex items-start p-3 rounded-md cursor-grab transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${viewMode === "compact" ? "py-2" : "py-3"}`}
+      className={`group flex items-start p-3 rounded-md cursor-grab active:cursor-grabbing transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${viewMode === "compact" ? "py-2" : "py-3"}`}
       draggable
       onDragStart={(event) => {
         console.log("dragging", block);

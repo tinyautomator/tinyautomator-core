@@ -12,6 +12,20 @@ SET status = $2,
     finished_at = $3
 WHERE id = $1;
 
+-- name: GetUserWorkflowRuns :many
+SELECT
+  w.id as workflow_id,
+  w.name as workflow_name,
+  wr.id as workflow_run_id,
+  wr.status as workflow_run_status,
+  wr.created_at as workflow_run_created_at,
+  wr.finished_at as workflow_run_finished_at
+FROM workflow_run wr
+INNER JOIN workflow w ON wr.workflow_id = w.id
+WHERE w.user_id = $1
+ORDER BY wr.created_at DESC
+LIMIT 25;
+
 -- name: ListWorkflowRuns :many
 SELECT *
 FROM workflow_run

@@ -139,7 +139,7 @@ func (r *workflowRunRepo) CompleteWorkflowRun(
 	if err := r.q.CompleteWorkflowRun(ctx, &dao.CompleteWorkflowRunParams{
 		ID:         workflowRunID,
 		Status:     status,
-		FinishedAt: null.IntFrom(time.Now().Unix()),
+		FinishedAt: null.IntFrom(time.Now().UnixMilli()),
 	}); err != nil {
 		return fmt.Errorf("db error complete workflow run: %w", err)
 	}
@@ -216,6 +216,31 @@ func (r *workflowRunRepo) GetWorkflowRun(
 		},
 		Nodes: nodes,
 	}, nil
+}
+
+func (r *workflowRunRepo) GetUserWorkflowRuns(
+	ctx context.Context,
+	userID string,
+) ([]*models.UserWorkflowRunDTO, error) {
+	rows, err := r.q.GetUserWorkflowRuns(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("db error get user workflow runs: %w", err)
+	}
+
+	userWorkflowRuns := make([]*models.UserWorkflowRunDTO, len(rows))
+
+	for i, row := range rows {
+		userWorkflowRuns[i] = &models.UserWorkflowRunDTO{
+			WorkflowID:    row.WorkflowID,
+			WorkflowName:  row.WorkflowName,
+			WorkflowRunID: row.WorkflowRunID,
+			Status:        row.WorkflowRunStatus,
+			CreatedAt:     time.UnixMilli(row.WorkflowRunCreatedAt),
+			FinishedAt:    null.TimeFrom(time.UnixMilli(row.WorkflowRunFinishedAt.Int64)),
+		}
+	}
+
+	return userWorkflowRuns, nil
 }
 
 func (r *workflowRunRepo) GetWorkflowNodeRun(

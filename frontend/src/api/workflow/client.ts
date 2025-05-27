@@ -4,6 +4,7 @@ import {
   CreateWorkflowDto,
   RenderedWorkflow,
   UpdateWorkflowDto,
+  WorkflowRun,
 } from "./types";
 
 export class WorkflowApiClient extends BaseApiClient {
@@ -29,6 +30,10 @@ export class WorkflowApiClient extends BaseApiClient {
     console.log("runWorkflow", id);
     const res = await this.post<{ run_id: number }>(`/api/workflow-run/${id}`);
     return res.run_id;
+  }
+
+  async getUserWorkflowRuns(): Promise<WorkflowRun[]> {
+    return await this.get<WorkflowRun[]>(`/api/workflow-runs`);
   }
 
   async archiveWorkflow(id: string): Promise<void> {

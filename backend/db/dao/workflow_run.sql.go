@@ -70,6 +70,71 @@ func (q *Queries) CreateWorkflowRun(ctx context.Context, arg *CreateWorkflowRunP
 	return &i, err
 }
 
+const getUserWorkflowRuns = `-- name: GetUserWorkflowRuns :many
+SELECT
+  w.id as workflow_id,
+  w.name as workflow_name,
+  wr.id as workflow_run_id,
+  wr.status as workflow_run_status,
+  wr.created_at as workflow_run_created_at,
+  wr.finished_at as workflow_run_finished_at
+FROM workflow_run wr
+INNER JOIN workflow w ON wr.workflow_id = w.id
+WHERE w.user_id = $1
+ORDER BY wr.created_at DESC
+LIMIT 25
+`
+
+type GetUserWorkflowRunsRow struct {
+	WorkflowID            int32    `json:"workflow_id"`
+	WorkflowName          string   `json:"workflow_name"`
+	WorkflowRunID         int32    `json:"workflow_run_id"`
+	WorkflowRunStatus     string   `json:"workflow_run_status"`
+	WorkflowRunCreatedAt  int64    `json:"workflow_run_created_at"`
+	WorkflowRunFinishedAt null.Int `json:"workflow_run_finished_at"`
+}
+
+// GetUserWorkflowRuns
+//
+//	SELECT
+//	  w.id as workflow_id,
+//	  w.name as workflow_name,
+//	  wr.id as workflow_run_id,
+//	  wr.status as workflow_run_status,
+//	  wr.created_at as workflow_run_created_at,
+//	  wr.finished_at as workflow_run_finished_at
+//	FROM workflow_run wr
+//	INNER JOIN workflow w ON wr.workflow_id = w.id
+//	WHERE w.user_id = $1
+//	ORDER BY wr.created_at DESC
+//	LIMIT 25
+func (q *Queries) GetUserWorkflowRuns(ctx context.Context, userID string) ([]*GetUserWorkflowRunsRow, error) {
+	rows, err := q.db.Query(ctx, getUserWorkflowRuns, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetUserWorkflowRunsRow
+	for rows.Next() {
+		var i GetUserWorkflowRunsRow
+		if err := rows.Scan(
+			&i.WorkflowID,
+			&i.WorkflowName,
+			&i.WorkflowRunID,
+			&i.WorkflowRunStatus,
+			&i.WorkflowRunCreatedAt,
+			&i.WorkflowRunFinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getWorkflowRunWithNodeRuns = `-- name: GetWorkflowRunWithNodeRuns :many
 SELECT
   wr.id AS workflow_run_id,
