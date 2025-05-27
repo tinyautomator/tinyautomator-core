@@ -125,8 +125,8 @@ export function CustomDatePicker({
           variant="outline"
           className="w-full justify-start text-left font-normal"
         >
-          {formatDisplayDate()}
           <Calendar className="ml-2 h-4 w-4" />
+          {formatDisplayDate()}
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -184,7 +184,7 @@ export function CustomDatePicker({
             {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
               <div
                 key={day}
-                className="p-2 text-center text-sm font-medium text-muted-foreground"
+                className="p-0 text-center text-sm font-medium text-muted-foreground"
               >
                 {day}
               </div>
