@@ -14,8 +14,8 @@ export async function loader() {
   return { userWorkflows, userWorkflowRuns };
 }
 
-export default function ({
-  loaderData: { userWorkflows, userWorkflowRuns },
+export default function Dashboard({
+  loaderData: { userWorkflows },
 }: Route.ComponentProps) {
   return (
     <div className="h-full overflow-auto p-6 scrollbar-hidden">
@@ -33,13 +33,8 @@ export default function ({
           Create Workflow
         </NavLink>
       </div>
-
       <Stats />
-
-      <DashboardTabs
-        userWorkflows={userWorkflows}
-        userWorkflowRuns={userWorkflowRuns}
-      />
+      <DashboardTabs userWorkflows={userWorkflows} />
     </div>
   );
 }

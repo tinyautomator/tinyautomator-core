@@ -93,7 +93,7 @@ function BlockItem({
           JSON.stringify({
             category: block.category,
             nodeType: block.node_type,
-          })
+          }),
         );
         event.dataTransfer.effectAllowed = "move";
       }}
@@ -165,7 +165,7 @@ function BlockCategory({
       {category.expanded && (
         <div className="mt-1 space-y-1">
           {category.blocks.map((block) =>
-            renderBlock(block, category.category)
+            renderBlock(block, category.category),
           )}
         </div>
       )}
@@ -312,8 +312,8 @@ export default function BlockPanel({
       categories.map((category) =>
         category.category === c
           ? { ...category, expanded: !category.expanded }
-          : category
-      )
+          : category,
+      ),
     );
   };
 
@@ -335,7 +335,7 @@ export default function BlockPanel({
       blocks: category.blocks.filter(
         (block) =>
           block.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          block.description.toLowerCase().includes(searchQuery.toLowerCase())
+          block.description.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
     }))
     .filter((category) => category.blocks.length > 0);
@@ -356,7 +356,7 @@ export default function BlockPanel({
 
   const getBlockCategoryName = (block: Block): string => {
     const found = categories.find((cat) =>
-      cat.blocks.some((b) => b.node_type === block.node_type)
+      cat.blocks.some((b) => b.node_type === block.node_type),
     );
     return found ? found.category : "recent";
   };

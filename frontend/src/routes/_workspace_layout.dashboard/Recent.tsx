@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { WorkflowRun } from "@/api/workflow/types";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 
 function RecentRun({ run }: { run: WorkflowRun }) {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ function RecentRun({ run }: { run: WorkflowRun }) {
               ? "bg-yellow-500"
               : run.status === "success"
                 ? "bg-green-500"
-                : "bg-red-500"
+                : "bg-red-500",
           )}
         ></div>
         <div>
@@ -41,11 +41,11 @@ function RecentRun({ run }: { run: WorkflowRun }) {
   );
 }
 
-export function Recent({
-  userWorkflowRuns,
-}: {
-  userWorkflowRuns: WorkflowRun[];
-}) {
+export function Recent() {
+  const { userWorkflowRuns } = useLoaderData<{
+    userWorkflowRuns: WorkflowRun[];
+  }>();
+
   return (
     <Card>
       <CardHeader>
