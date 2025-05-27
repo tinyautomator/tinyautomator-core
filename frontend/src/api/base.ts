@@ -4,7 +4,7 @@ class ApiError extends Error {
   constructor(
     public status: number,
     public message: string,
-    public details?: string,
+    public details?: string
   ) {
     super(message);
     this.name = "ApiError";
@@ -14,7 +14,7 @@ class ApiError extends Error {
 export class BaseApiClient {
   protected async request<T>(
     endpoint: string,
-    options: RequestInit = {},
+    options: RequestInit = {}
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     const headers = {
@@ -30,7 +30,7 @@ export class BaseApiClient {
         throw new ApiError(
           response.status,
           data.error || "An error occurred",
-          data.details || "",
+          data.details || ""
         );
       }
 
@@ -51,7 +51,7 @@ export class BaseApiClient {
 
   protected async get<T>(
     endpoint: string,
-    params?: Record<string, string>,
+    params?: Record<string, string>
   ): Promise<T> {
     const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request<T>(`${endpoint}${queryString}`, { method: "GET" });

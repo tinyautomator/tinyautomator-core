@@ -5,6 +5,10 @@ import { WorkflowController } from "./workflow-library/WorkflowController";
 import { ActiveTagFilters } from "./workflow-library/ActiveTagFilters";
 import { cn } from "@/lib/utils";
 import { workflowApi } from "@/api";
+import { useFilteredWorkflows } from "./workflow-library/hooks/useFilteredWorkflows";
+import { EmptyState } from "./workflow-library/LibraryEmptyState";
+import { LIBRARY_GRID_LAYOUT_STYLES } from "./workflow-library/utils/library-styles";
+import { WorkflowPagination } from "./workflow-library/LibraryWorkflowPagination";
 
 // TODO: update global workflow type to match the api response
 export interface Workflow {
@@ -26,10 +30,9 @@ export async function loader() {
     id: workflow.id,
     title: workflow.name,
     description: workflow.description,
+    status: workflow.status,
     // TODO: Add these fields to the api response except nodeCount
     lastEdited: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
-    status: "active" as const,
-    nodeCount: 5,
     tags: ["type", "script", "paid"],
   }));
 
@@ -41,14 +44,14 @@ function WorkflowLibraryHeader() {
       className={cn(
         "shrink-0 flex justify-between items-center",
         "border-b border-slate-100 dark:border-slate-800",
-        "w-full ",
+        "w-full "
       )}
     >
       <div className="flex flex-col gap-1 leading-tight">
         <h1
           className={cn(
             "text-xl font-bold items-center",
-            "text-slate-900 dark:text-white",
+            "text-slate-900 dark:text-white"
           )}
         >
           Workflow Library
@@ -63,11 +66,12 @@ function WorkflowLibraryHeader() {
 }
 
 export default function WorkflowLibrary() {
+  const { workflows } = useFilteredWorkflows();
   return (
     <div
       className={cn(
         "px-4 flex flex-col items-start h-full rounded-xl justify-between gap-4 ",
-        "bg-white dark:bg-slate-950",
+        "bg-white dark:bg-slate-950"
       )}
     >
       <WorkflowLibraryHeader />
@@ -80,7 +84,12 @@ export default function WorkflowLibrary() {
       <div
         className={cn("flex-1 overflow-y-auto items-start w-full select-none")}
       >
-        <WorkflowList />
+        <WorkflowList
+          workflows={workflows}
+          emptyState={<EmptyState />}
+          pagination={<WorkflowPagination />}
+          gridClassName={LIBRARY_GRID_LAYOUT_STYLES}
+        />
       </div>
     </div>
   );

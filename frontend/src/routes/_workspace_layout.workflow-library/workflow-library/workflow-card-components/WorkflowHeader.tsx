@@ -1,26 +1,21 @@
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 import { TEXT_SLATE_DARK_SLATE_200 } from "./workflow-card.styles";
-import { useState } from "react";
+import { useWorkflowActions } from "../hooks/useWorkflowActions";
+import type { Workflow } from "../../route";
 
 interface WorkflowTitleProps {
   title: string;
   isArchived: boolean;
-  isFavorite: boolean;
+  workflow: Workflow;
 }
 
 interface WorkflowFavoriteProps {
-  isFavorite: boolean;
+  workflow: Workflow;
 }
 
-function WorkflowFavorite({ isFavorite }: WorkflowFavoriteProps) {
-  const [localIsFavorite, setLocalIsFavorite] = useState(isFavorite);
-
-  const handleFavorite = () => {
-    setLocalIsFavorite((prev) => !prev);
-    // TODO: Update the workflow in the database
-    console.log("Favorite", !localIsFavorite);
-  };
+function WorkflowFavorite({ workflow }: WorkflowFavoriteProps) {
+  const { handleFavorite } = useWorkflowActions(workflow);
 
   return (
     <button
@@ -30,9 +25,9 @@ function WorkflowFavorite({ isFavorite }: WorkflowFavoriteProps) {
       <Star
         className={cn(
           "text-xl cursor-pointer transition-colors duration-300 ease-in-out",
-          localIsFavorite
+          workflow.isFavorite
             ? "text-yellow-300 fill-yellow-200"
-            : "text-slate-400 hover:text-yellow-300 hover:fill-white",
+            : "text-slate-400 hover:text-yellow-300 hover:fill-white"
         )}
       />
     </button>
@@ -42,15 +37,15 @@ function WorkflowFavorite({ isFavorite }: WorkflowFavoriteProps) {
 export function WorkflowTitle({
   title,
   isArchived,
-  isFavorite,
+  workflow,
 }: WorkflowTitleProps) {
   return (
     <div
       className={cn(
-        "flex items-center rounded-lg w-full justify-center relative",
+        "flex items-center rounded-lg w-full justify-center relative"
       )}
     >
-      {!isArchived && <WorkflowFavorite isFavorite={isFavorite} />}
+      {!isArchived && <WorkflowFavorite workflow={workflow} />}
       <h3
         className={cn(
           "font-bold text-md text-ellipsis w-6/10 text-balance text-center leading-tight line-clamp-2 ",
@@ -58,7 +53,7 @@ export function WorkflowTitle({
           "border-slate-200 dark:border-slate-800",
           isArchived
             ? "text-slate-500 dark:text-slate-400"
-            : TEXT_SLATE_DARK_SLATE_200,
+            : TEXT_SLATE_DARK_SLATE_200
         )}
         title={title}
       >

@@ -56,7 +56,7 @@ export function EmptyState() {
       <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-4 mb-4">
         <Icon className="h-12 w-12 text-slate-300 dark:text-slate-600" />
       </div>
-      <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+      <h3 className="text-xl capitalize font-semibold text-slate-900 dark:text-white mb-2">
         {state.title}
       </h3>
       <p className="text-slate-500 dark:text-slate-400 max-w-md mb-6">

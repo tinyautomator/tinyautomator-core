@@ -11,8 +11,7 @@ import {
 } from "./WorkflowBody";
 import { WorkflowFooter } from "./WorkflowFooter";
 import { WorkflowTitle } from "./WorkflowHeader";
-import { WorkflowCardProps } from "./workflow-card.types";
-import { DeleteWorkflowDialog } from "./DeleteWorkflowDialog";
+import { Workflow, WorkflowCardProps } from "./workflow-card.types";
 import {
   CARD_BASE_STYLES,
   CARD_ACTION_BUTTON_STYLES,
@@ -21,32 +20,36 @@ import {
   TRUNCATE_STYLES,
   GROUP_HOVER_OPACITY_ZERO,
 } from "./workflow-card.styles";
+import { Dispatch, SetStateAction } from "react";
 
 export function WorkflowCard({
   workflow,
-}: Omit<WorkflowCardProps, "onDelete">) {
+  setArchivingWorkflow,
+}: Omit<WorkflowCardProps, "onDelete"> & {
+  setArchivingWorkflow: Dispatch<SetStateAction<Workflow | null>>;
+}) {
   const isArchived = workflow.status === "archived";
 
   return (
     <Card className={CARD_BASE_STYLES}>
       <div className={CARD_ACTION_BUTTON_STYLES}>
         <WorkflowActionsDropdown
-          status={workflow.status}
-          workflowId={workflow.id}
+          workflow={workflow}
+          setArchivingWorkflow={setArchivingWorkflow}
         />
       </div>
 
       <WorkflowTitle
         title={workflow.title}
         isArchived={isArchived}
-        isFavorite={workflow.isFavorite}
+        workflow={workflow}
       />
 
       <div
         className={cn(
           CARD_CONTENT_STYLES,
           GROUP_HOVER_OPACITY_ZERO,
-          "hover:opacity-100",
+          "hover:opacity-100"
         )}
       >
         <WorkflowStatusBadge status={workflow.status} />
@@ -61,7 +64,7 @@ export function WorkflowCard({
           className={cn(
             CARD_FOOTER_STYLES,
             GROUP_HOVER_OPACITY_ZERO,
-            "justify-end",
+            "justify-end"
           )}
         >
           <WorkflowFooter lastEdited={new Date(workflow.lastEdited)} />
@@ -69,7 +72,6 @@ export function WorkflowCard({
       </div>
       <WorkflowDescription description={workflow.description} />
       <WorkflowActionsHover workflow={workflow} />
-      <DeleteWorkflowDialog workflow={workflow} />
     </Card>
   );
 }
@@ -84,7 +86,7 @@ export function WorkflowCardSkeleton() {
         "border-2 border-slate-300 dark:border-slate-800",
         "shadow-[0_2px_4px_rgba(0,0,0,0.05)]",
         "transition-all duration-300",
-        "group overflow-hidden w-full min-w-0",
+        "group overflow-hidden w-full min-w-0"
       )}
       style={{ minHeight: 180 }} // Ensures consistent card height
     >

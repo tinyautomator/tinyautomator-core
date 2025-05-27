@@ -37,3 +37,10 @@ export interface WorkflowAction {
   iconClassName?: string;
   variant?: "danger";
 }
+
+export interface WorkflowListProps {
+  workflows: Workflow[];
+  emptyState?: React.ReactNode;
+  pagination?: React.ReactNode;
+  gridClassName?: string;
+}

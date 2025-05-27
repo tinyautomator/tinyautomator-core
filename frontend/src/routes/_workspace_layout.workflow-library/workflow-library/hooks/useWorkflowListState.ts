@@ -3,53 +3,49 @@ import { useValidatedSearchParams } from "./useSearchParams";
 import { useDebouncedCallback } from "use-debounce";
 import type { SearchParams } from "../utils/schemas";
 
+const DEBOUNCE_TIME = 500;
+
 export interface WorkflowListState extends SearchParams {
   isSearching?: boolean;
   selectedWorkflowId?: number;
 }
 
 export function useWorkflowListState() {
-  // Get validated search params with total pages
-  const [searchParams, setSearchParams] = useValidatedSearchParams();
+  const [validatedParams, updateParams] = useValidatedSearchParams();
 
-  // Debounced search update to prevent too many URL updates
   const debouncedSetSearch = useDebouncedCallback((value: string) => {
-    setSearchParams({ q: value });
-  }, 500);
+    updateParams({ q: value });
+  }, DEBOUNCE_TIME);
 
-  // Update state
   const updateState = useCallback(
     (newState: Partial<WorkflowListState>) => {
-      setSearchParams(newState);
+      updateParams(newState);
     },
-    [setSearchParams],
+    [updateParams]
   );
 
-  // Clear search state
   const clearSearch = useCallback(() => {
-    setSearchParams({ q: "" });
-  }, [setSearchParams]);
+    updateParams({ q: "" });
+  }, [updateParams]);
 
-  // Update page
   const setPage = useCallback(
     (page: number) => {
-      setSearchParams({ page });
+      updateParams({ page });
     },
-    [setSearchParams],
+    [updateParams]
   );
 
-  // Update tags
   const setTags = useCallback(
     (tags: string[]) => {
-      setSearchParams({ tags });
+      updateParams({ tags });
     },
-    [setSearchParams],
+    [updateParams]
   );
 
   return {
     // Current state
-    state: searchParams,
-    searchParams,
+    state: validatedParams,
+    validatedParams,
 
     // Actions
     updateState,
@@ -59,9 +55,9 @@ export function useWorkflowListState() {
     debouncedSetSearch,
 
     // Derived state
-    currentTab: searchParams.tab,
-    currentPage: searchParams.page,
-    currentTags: searchParams.tags,
-    searchQuery: searchParams.q,
+    currentTab: validatedParams.tab,
+    currentPage: validatedParams.page,
+    currentTags: validatedParams.tags,
+    searchQuery: validatedParams.q,
   };
 }
