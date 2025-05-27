@@ -18,6 +18,11 @@ import {
 import { CustomDatePicker } from "@/components/shared/CustomDatePicker";
 import { useMemo } from "react";
 import { CustomTimePicker } from "@/components/shared/CustomTimePicker";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function ScheduleForm() {
   const form = useFormContext<ScheduleFormValues>();
@@ -108,7 +113,16 @@ export function ScheduleForm() {
                     />
                   </div>
                   <span className="text-muted-foreground text-sm mr-1 pb-1.75 whitespace-nowrap">
-                    {timeZoneAbbr}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-muted-foreground text-sm mr-1 pb-1.75 whitespace-nowrap">
+                          {timeZoneAbbr}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        We have detected that you are in this timezone.
+                      </TooltipContent>
+                    </Tooltip>
                   </span>
                 </div>
               </FormControl>

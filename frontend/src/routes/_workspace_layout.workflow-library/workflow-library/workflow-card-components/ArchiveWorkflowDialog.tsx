@@ -13,7 +13,7 @@ import { useWorkflowActions } from "../hooks/useWorkflowActions";
 import { Dispatch, SetStateAction } from "react";
 
 interface ArchiveWorkflowDialogProps {
-  workflow: Workflow | null;
+  workflow: Workflow;
   isArchiving: boolean;
   setArchivingWorkflow: Dispatch<SetStateAction<Workflow | null>>;
 }
@@ -23,9 +23,6 @@ export function ArchiveWorkflowDialog({
   isArchiving,
   setArchivingWorkflow,
 }: ArchiveWorkflowDialogProps) {
-  if (!workflow) {
-    return null;
-  }
   const { handleArchive } = useWorkflowActions(workflow);
 
   const handleConfirm = (e: React.MouseEvent) => {

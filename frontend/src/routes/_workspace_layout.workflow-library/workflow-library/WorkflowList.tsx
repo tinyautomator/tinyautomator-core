@@ -42,11 +42,13 @@ export function WorkflowList({
         </div>
       </div>
       {pagination}
-      <ArchiveWorkflowDialog
-        workflow={archivingWorkflow}
-        isArchiving={archivingWorkflow !== null}
-        setArchivingWorkflow={setArchivingWorkflow}
-      />
+      {archivingWorkflow && (
+        <ArchiveWorkflowDialog
+          workflow={archivingWorkflow}
+          isArchiving={archivingWorkflow !== null}
+          setArchivingWorkflow={setArchivingWorkflow}
+        />
+      )}
     </div>
   );
 }

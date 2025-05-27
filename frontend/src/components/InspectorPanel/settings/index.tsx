@@ -11,7 +11,7 @@ export function SettingsTab() {
   switch (selectedNode.data.nodeType as string) {
     case "send_email":
       return <EmailSettings />;
-    case "Schedule":
+    case "schedule":
       return <ScheduleSettings />;
     default:
       return null;
