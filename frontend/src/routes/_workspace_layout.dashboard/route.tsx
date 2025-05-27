@@ -9,10 +9,14 @@ import { Route } from "./+types/route";
 import { NavLink } from "react-router";
 
 export async function loader() {
-  return await workflowApi.getUserWorkflows();
+  const userWorkflows = await workflowApi.getUserWorkflows();
+  const userWorkflowRuns = await workflowApi.getUserWorkflowRuns();
+  return { userWorkflows, userWorkflowRuns };
 }
 
-export default function ({ loaderData: userWorkflows }: Route.ComponentProps) {
+export default function ({
+  loaderData: { userWorkflows, userWorkflowRuns },
+}: Route.ComponentProps) {
   return (
     <div className="h-full overflow-auto p-6 scrollbar-hidden">
       <div className="flex items-center justify-between mb-6">
@@ -32,7 +36,10 @@ export default function ({ loaderData: userWorkflows }: Route.ComponentProps) {
 
       <Stats />
 
-      <DashboardTabs userWorkflows={userWorkflows} />
+      <DashboardTabs
+        userWorkflows={userWorkflows}
+        userWorkflowRuns={userWorkflowRuns}
+      />
     </div>
   );
 }

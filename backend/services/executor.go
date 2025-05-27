@@ -153,7 +153,7 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	doTask := func() error {
 		randomNum := rand.Float64()
 
-		sleepDuration := time.Duration(1) * time.Second
+		sleepDuration := time.Duration(10) * time.Second
 		time.Sleep(sleepDuration)
 
 		if randomNum < 0.25 {

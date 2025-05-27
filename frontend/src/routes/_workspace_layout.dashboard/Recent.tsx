@@ -5,8 +5,47 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { WorkflowRun } from "@/api/workflow/types";
+import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router";
 
-export function Recent() {
+function RecentRun({ run }: { run: WorkflowRun }) {
+  const navigate = useNavigate();
+
+  return (
+    <div
+      className="flex items-center justify-between rounded-md border p-3"
+      onClick={() => {
+        navigate(`/workflow/${run.workflow_id}/run/${run.workflow_run_id}`);
+      }}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={cn(
+            "h-2 w-2 rounded-full",
+            run.status === "running"
+              ? "bg-yellow-500"
+              : run.status === "success"
+                ? "bg-green-500"
+                : "bg-red-500"
+          )}
+        ></div>
+        <div>
+          <p className="font-medium">{run.workflow_name}</p>
+          <p className="text-xs text-muted-foreground">{run.status}</p>
+          <p className="text-xs text-muted-foreground">{run.finished_at}</p>
+        </div>
+      </div>
+      <div className="text-sm text-muted-foreground">{run.created_at}</div>
+    </div>
+  );
+}
+
+export function Recent({
+  userWorkflowRuns,
+}: {
+  userWorkflowRuns: WorkflowRun[];
+}) {
   return (
     <Card>
       <CardHeader>
@@ -17,70 +56,9 @@ export function Recent() {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div className="flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-green-500"></div>
-              <div>
-                <p className="font-medium">Meeting Follow-ups</p>
-                <p className="text-xs text-muted-foreground">
-                  Completed in 1.2s
-                </p>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">Today, 2:15 PM</div>
-          </div>
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div className="flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-green-500"></div>
-              <div>
-                <p className="font-medium">Lead Capture</p>
-                <p className="text-xs text-muted-foreground">
-                  Completed in 0.8s
-                </p>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">Today, 1:42 PM</div>
-          </div>
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div className="flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-green-500"></div>
-              <div>
-                <p className="font-medium">Daily Team Digest</p>
-                <p className="text-xs text-muted-foreground">
-                  Completed in 3.5s
-                </p>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">Today, 9:00 AM</div>
-          </div>
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div className="flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-red-500"></div>
-              <div>
-                <p className="font-medium">Data Formatting</p>
-                <p className="text-xs text-muted-foreground">
-                  Failed - Timeout error
-                </p>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Yesterday, 11:00 PM
-            </div>
-          </div>
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div className="flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-green-500"></div>
-              <div>
-                <p className="font-medium">Customer Onboarding</p>
-                <p className="text-xs text-muted-foreground">
-                  Completed in 2.1s
-                </p>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Yesterday, 4:30 PM
-            </div>
-          </div>
+          {userWorkflowRuns.map((run) => (
+            <RecentRun key={run.workflow_run_id} run={run} />
+          ))}
         </div>
       </CardContent>
     </Card>

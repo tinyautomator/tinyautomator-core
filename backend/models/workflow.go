@@ -90,6 +90,15 @@ type WorkflowRunCore struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
+type UserWorkflowRunDTO struct {
+	WorkflowID    int32     `json:"workflow_id"`
+	WorkflowName  string    `json:"workflow_name"`
+	WorkflowRunID int32     `json:"workflow_run_id"`
+	Status        string    `json:"status"`
+	CreatedAt     time.Time `json:"created_at"`
+	FinishedAt    null.Time `json:"finished_at"`
+}
+
 type WorkflowRunWithNodesDTO struct {
 	WorkflowRunCore
 	Nodes []*WorkflowNodeRunCore `json:"nodes"`

@@ -1,12 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkflowCard } from "@/routes/_workspace_layout.dashboard/WorkFlowCard";
 import { Recent } from "@/routes/_workspace_layout.dashboard/Recent";
-import { Workflow } from "@/api/workflow/types";
+import { Workflow, WorkflowRun } from "@/api/workflow/types";
 
 export function DashboardTabs({
   userWorkflows,
+  userWorkflowRuns,
 }: {
   userWorkflows: Workflow[];
+  userWorkflowRuns: WorkflowRun[];
 }) {
   return (
     <Tabs defaultValue="active" className="space-y-4">
@@ -32,7 +34,7 @@ export function DashboardTabs({
       </TabsContent>
 
       <TabsContent value="recent">
-        <Recent />
+        <Recent userWorkflowRuns={userWorkflowRuns} />
       </TabsContent>
     </Tabs>
   );

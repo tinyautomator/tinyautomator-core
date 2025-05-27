@@ -164,6 +164,21 @@ type Querier interface {
 	//  WHERE workflow_run_id = $1
 	//  AND target_node_id = $2
 	GetParentWorkflowNodeRuns(ctx context.Context, arg *GetParentWorkflowNodeRunsParams) ([]*WorkflowNodeRun, error)
+	//GetUserWorkflowRuns
+	//
+	//  SELECT
+	//    w.id as workflow_id,
+	//    w.name as workflow_name,
+	//    wr.id as workflow_run_id,
+	//    wr.status as workflow_run_status,
+	//    wr.created_at as workflow_run_created_at,
+	//    wr.finished_at as workflow_run_finished_at
+	//  FROM workflow_run wr
+	//  INNER JOIN workflow w ON wr.workflow_id = w.id
+	//  WHERE w.user_id = $1
+	//  ORDER BY wr.created_at DESC
+	//  LIMIT 25
+	GetUserWorkflowRuns(ctx context.Context, userID string) ([]*GetUserWorkflowRunsRow, error)
 	//GetUserWorkflows
 	//
 	//  SELECT id, user_id, name, description, status, created_at, updated_at

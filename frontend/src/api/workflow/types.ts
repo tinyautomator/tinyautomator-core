@@ -47,3 +47,12 @@ export interface RenderedWorkflow {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
 }
+
+export interface WorkflowRun {
+  workflow_id: string;
+  workflow_name: string;
+  workflow_run_id: string;
+  status: string;
+  created_at: string;
+  finished_at?: string;
+}

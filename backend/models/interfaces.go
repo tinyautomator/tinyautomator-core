@@ -86,6 +86,7 @@ type WorkflowRunRepository interface {
 	) error
 	GetWorkflowRun(ctx context.Context, id int32) (*WorkflowRunWithNodesDTO, error)
 	GetWorkflowRuns(ctx context.Context, workflowID int32) ([]*WorkflowRunCore, error)
+	GetUserWorkflowRuns(ctx context.Context, userID string) ([]*UserWorkflowRunDTO, error)
 	GetWorkflowNodeRun(
 		ctx context.Context,
 		workflowRunID int32,
