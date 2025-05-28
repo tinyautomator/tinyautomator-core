@@ -9,14 +9,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { useFormContext } from "react-hook-form";
-import { EmailFormValues } from "./utils/emailValidation";
-import { useEmailRecipients } from "./utils/useEmailRecipents";
+import { EmailFormValues, parseEmail } from "./utils/emailValidation";
 
 export function EmailPreview() {
   const { getValues } = useFormContext<EmailFormValues>();
-  const { validRecipients } = useEmailRecipients();
+  const recipients = getValues("recipients");
   const subject = getValues("subject");
   const body = getValues("message");
+
+  const validRecipients = recipients.filter(
+    (email) => parseEmail(email) !== null
+  );
 
   const recipientLengthLimit = 3;
   const formatPreviewRecipients = () => {
