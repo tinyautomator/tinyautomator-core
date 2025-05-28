@@ -135,14 +135,7 @@ export default function WorkflowRun({
         }
       };
     }
-  }, [
-    workflowRun,
-    runId,
-    setNodes,
-    setEdges,
-    setNodeStatus,
-    setToggleInspectorPanel,
-  ]);
+  }, []);
 
   return (
     <div className="flex h-full overflow-hidden">
