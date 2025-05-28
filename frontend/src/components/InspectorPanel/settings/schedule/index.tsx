@@ -8,15 +8,30 @@ import { ScheduleForm } from "./ScheduleForm";
 import { SchedulePreviewModal } from "./SchedulePreview";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useFlowStore } from "@/components/Canvas/flowStore";
 
 export function ScheduleSettings() {
+  const { getSelectedNode } = useFlowStore();
+  const selectedNode = getSelectedNode();
+  const savedConfig = selectedNode?.data?.config as
+    | Partial<ScheduleFormValues>
+    | undefined;
+
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleFormSchema),
-    defaultValues: {
-      scheduleType: "once",
-      scheduledDate: new Date(),
-      scheduledTime: "",
-    },
+    defaultValues: savedConfig
+      ? {
+          scheduleType: savedConfig.scheduleType || "once",
+          scheduledDate: savedConfig.scheduledDate
+            ? new Date(savedConfig.scheduledDate)
+            : new Date(),
+          scheduledTime: savedConfig.scheduledTime || "",
+        }
+      : {
+          scheduleType: "once",
+          scheduledDate: new Date(),
+          scheduledTime: "",
+        },
     mode: "onSubmit",
     reValidateMode: "onSubmit",
     delayError: 500,

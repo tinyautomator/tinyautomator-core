@@ -3,8 +3,15 @@ import { z } from "zod";
 const now = new Date();
 now.setHours(0, 0, 0, 0);
 
+export const SCHEDULE_TYPE_ENUM = [
+  "once",
+  "daily",
+  "weekly",
+  "monthly",
+] as const;
+
 export const scheduleFormSchema = z.object({
-  scheduleType: z.enum(["once", "daily", "weekly", "monthly"], {
+  scheduleType: z.enum(SCHEDULE_TYPE_ENUM, {
     required_error: "Please select a schedule type",
   }),
   scheduledDate: z

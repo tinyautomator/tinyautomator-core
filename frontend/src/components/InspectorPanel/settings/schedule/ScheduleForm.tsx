@@ -16,9 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScheduleDatePickerField } from "@/components/InspectorPanel/settings/schedule/CustomDatePicker"; //
+import { ScheduleDatePickerField } from "./FormDatePicker"; //
 import { useMemo } from "react";
-import { CustomTimePicker } from "@/components/InspectorPanel/settings/schedule/CustomTimePicker"; //
+import { CustomTimePicker } from "./FormTimePicker"; //
 import {
   Tooltip,
   TooltipContent,
@@ -57,13 +57,11 @@ export function ScheduleForm() {
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="scheduledDate"
           render={({ field }) => <ScheduleDatePickerField field={field} />}
         />
-
         <FormField
           control={form.control}
           name="scheduledTime"

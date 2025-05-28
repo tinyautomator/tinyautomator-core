@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { format, addDays, addWeeks, addMonths } from "date-fns";
 
 export function SchedulePreviewModal() {
   const form = useFormContext<ScheduleFormValues>();
@@ -22,17 +23,11 @@ export function SchedulePreviewModal() {
       return "Complete the form to see schedule preview";
     }
 
-    const year = scheduledDate.getFullYear();
-    const month = (scheduledDate.getMonth() + 1).toString().padStart(2, "0");
-    const day = scheduledDate.getDate().toString().padStart(2, "0");
-    const formattedScheduledDate = `${year}-${month}-${day}`;
+    const dateTimeString = `${format(scheduledDate, "yyyy-MM-dd")}T${scheduledTime}`;
+    const date = new Date(dateTimeString);
 
-    const date = new Date(`${formattedScheduledDate}T${scheduledTime}`);
-    const formattedDate = date.toLocaleDateString();
-    const formattedTime = date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const formattedDate = format(date, "P");
+    const formattedTime = format(date, "p");
 
     switch (scheduleType) {
       case "once": {
@@ -42,20 +37,12 @@ export function SchedulePreviewModal() {
         return `Run daily at ${formattedTime}, starting ${formattedDate}`;
       }
       case "weekly": {
-        const dayName = date.toLocaleDateString([], { weekday: "long" });
+        const dayName = format(date, "EEEE");
         return `Run weekly on ${dayName}s at ${formattedTime}, starting ${formattedDate}`;
       }
       case "monthly": {
-        const dayOfMonth = date.getDate();
-        const suffix =
-          dayOfMonth === 1
-            ? "st"
-            : dayOfMonth === 2
-              ? "nd"
-              : dayOfMonth === 3
-                ? "rd"
-                : "th";
-        return `Run monthly on the ${dayOfMonth}${suffix} at ${formattedTime}, starting ${formattedDate}`;
+        const dayOfMonth = format(date, "do");
+        return `Run monthly on the ${dayOfMonth} at ${formattedTime}, starting ${formattedDate}`;
       }
       default:
         return "Invalid schedule configuration";
@@ -69,36 +56,27 @@ export function SchedulePreviewModal() {
       return [];
     }
 
-    const year = scheduledDate.getFullYear();
-    const month = (scheduledDate.getMonth() + 1).toString().padStart(2, "0");
-    const day = scheduledDate.getDate().toString().padStart(2, "0");
-    const formattedScheduledDate = `${year}-${month}-${day}`;
-
-    const baseDate = new Date(`${formattedScheduledDate}T${scheduledTime}`);
-    const runs = [];
+    const dateTimeString = `${format(scheduledDate, "yyyy-MM-dd")}T${scheduledTime}`;
+    const baseDate = new Date(dateTimeString);
+    const runs: Date[] = [];
 
     if (scheduleType === "once") {
       return [baseDate];
     }
 
     for (let i = 0; i < 3; i++) {
-      const runDate = new Date(baseDate);
-
+      let runDate = baseDate;
       switch (scheduleType) {
-        case "daily": {
-          runDate.setDate(baseDate.getDate() + i);
+        case "daily":
+          runDate = addDays(baseDate, i);
           break;
-        }
-        case "weekly": {
-          runDate.setDate(baseDate.getDate() + i * 7);
+        case "weekly":
+          runDate = addWeeks(baseDate, i);
           break;
-        }
-        case "monthly": {
-          runDate.setMonth(baseDate.getMonth() + i);
+        case "monthly":
+          runDate = addMonths(baseDate, i);
           break;
-        }
       }
-
       runs.push(runDate);
     }
 
@@ -141,11 +119,7 @@ export function SchedulePreviewModal() {
               {getNextRuns().length > 0 ? (
                 getNextRuns().map((date, index) => (
                   <div key={index} className="text-sm text-muted-foreground">
-                    {date.toLocaleDateString()} at{" "}
-                    {date.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {format(date, "P")} at {format(date, "p")}
                   </div>
                 ))
               ) : (
