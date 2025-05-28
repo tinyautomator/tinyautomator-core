@@ -45,7 +45,7 @@ export default function WorkflowBuilder({
   useEffect(() => {
     if (workflowToEdit) {
       const parsedNodes = workflowToEdit.nodes.map((n) => {
-        return NodeBuilder(n.id, n.position, n.category, n.node_type);
+        return NodeBuilder(n.id, n.position, n.category, n.node_type, n.config);
       });
 
       setNodes(parsedNodes);

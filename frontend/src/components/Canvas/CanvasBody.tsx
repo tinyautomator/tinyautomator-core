@@ -10,12 +10,13 @@ import { nodeTypeToBlockMap } from "../../components/shared/BlockCategories";
 import { v4 as uuidv4 } from "uuid";
 import { useOutletContext } from "react-router";
 import { LayoutActions } from "@/routes/_workspace_layout._workflow_canvas/route";
+import { Config } from "@/api/workflow/types";
 
 export const NodeBuilder = (
   id: string,
   position: { x: number; y: number },
   category: string,
-  nodeType: string,
+  nodeType: string
 ): Node => {
   const block = nodeTypeToBlockMap[nodeType];
   return {
@@ -25,7 +26,7 @@ export const NodeBuilder = (
     data: {
       category,
       nodeType,
-      config: {},
+      config: config,
       label: block.label,
       description: block.description,
       icon: block.icon,
@@ -59,7 +60,7 @@ export default function CanvasBody() {
       action: NodeUI,
       trigger: NodeUI,
     }),
-    [],
+    []
   );
 
   const setSelectedNode = useFlowStore((s) => s.setSelectedNode);
@@ -70,7 +71,7 @@ export default function CanvasBody() {
     (_: React.MouseEvent, node: Node) => {
       setSelectedNode(node);
     },
-    [setSelectedNode],
+    [setSelectedNode]
   );
 
   const onPaneClick = useCallback(() => {
@@ -88,7 +89,7 @@ export default function CanvasBody() {
       setSelectedNode(null);
 
       const data = JSON.parse(
-        event.dataTransfer.getData("application/reactflow"),
+        event.dataTransfer.getData("application/reactflow")
       ) as {
         category: string;
         nodeType: string;
@@ -104,6 +105,7 @@ export default function CanvasBody() {
         position,
         data.category,
         data.nodeType,
+        {} as Config
       );
 
       setNodes([...nodes.map((n) => ({ ...n, selected: false })), newNode]);
@@ -115,7 +117,7 @@ export default function CanvasBody() {
       screenToFlowPosition,
       setNodes,
       nodes,
-    ],
+    ]
   );
 
   return (
