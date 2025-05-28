@@ -3,10 +3,13 @@ import { DashboardTabs } from "@/routes/_workspace_layout.dashboard/DashboardTab
 import { workflowApi } from "@/api";
 import { Route } from "./+types/route";
 import { CreateWorkflowButton } from "@/components/shared/CreatWorkflowButton";
+import { getAuth } from "@clerk/react-router/ssr.server";
 
-export async function loader() {
-  const userWorkflows = await workflowApi.getUserWorkflows();
-  const userWorkflowRuns = await workflowApi.getUserWorkflowRuns();
+export async function loader(args: Route.LoaderArgs) {
+  const { getToken } = await getAuth(args);
+  const token = (await getToken()) as string;
+  const userWorkflows = await workflowApi.getUserWorkflows(token);
+  const userWorkflowRuns = await workflowApi.getUserWorkflowRuns(token);
   return { userWorkflows, userWorkflowRuns };
 }
 
