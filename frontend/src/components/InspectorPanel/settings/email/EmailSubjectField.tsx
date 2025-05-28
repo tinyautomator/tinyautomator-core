@@ -4,12 +4,14 @@ import {
   MAX_SUBJECT_CHAR_COUNT,
 } from "./utils/emailValidation";
 import { Input } from "@/components/ui/input";
+import { ControllerRenderProps } from "react-hook-form";
 
-export function EmailSubjectField() {
+interface EmailSubjectFieldProps
+  extends ControllerRenderProps<EmailFormValues, "subject"> {}
+
+export function EmailSubjectField({ ...field }: EmailSubjectFieldProps) {
   const {
-    register,
     watch,
-
     formState: { errors },
   } = useFormContext<EmailFormValues>();
   const subject = watch("subject") || "";
@@ -21,19 +23,16 @@ export function EmailSubjectField() {
   };
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">Subject</label>
-      <div className="space-y-1">
-        <Input
-          {...register("subject")}
-          aria-invalid={!!errors.subject}
-          onKeyDown={handleKeyDown}
-        />
-        <div className="flex justify-end">
-          <span className="text-xs text-muted-foreground">
-            {subject.length}/{MAX_SUBJECT_CHAR_COUNT} characters
-          </span>
-        </div>
+    <div className="space-y-1">
+      <Input
+        {...field}
+        onKeyDown={handleKeyDown}
+        aria-invalid={!!errors.subject}
+      />
+      <div className="flex justify-end">
+        <span className="text-xs text-muted-foreground">
+          {subject.length}/{MAX_SUBJECT_CHAR_COUNT} characters
+        </span>
       </div>
     </div>
   );
