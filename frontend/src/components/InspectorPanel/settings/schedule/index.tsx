@@ -5,7 +5,7 @@ import {
   type ScheduleFormValues,
 } from "./utils/scheduleValidation";
 import { ScheduleForm } from "./ScheduleForm";
-import { SchedulePreviewModal } from "./SchedulePreviewModal";
+import { SchedulePreviewModal } from "./SchedulePreview";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 

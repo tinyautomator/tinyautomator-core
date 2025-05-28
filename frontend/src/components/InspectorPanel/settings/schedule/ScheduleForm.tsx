@@ -1,5 +1,6 @@
+// frontend/src/components/ScheduleForm.tsx
 import { useFormContext } from "react-hook-form";
-import type { ScheduleFormValues } from "./utils/scheduleValidation";
+import type { ScheduleFormValues } from "./utils/scheduleValidation"; //
 import { Card, CardContent } from "@/components/ui/card";
 import {
   FormControl,
@@ -15,9 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CustomDatePicker } from "@/components/shared/CustomDatePicker";
+import { CustomDatePicker } from "@/components/shared/CustomDatePicker"; //
 import { useMemo } from "react";
-import { CustomTimePicker } from "@/components/shared/CustomTimePicker";
+import { CustomTimePicker } from "@/components/shared/CustomTimePicker"; //
 import {
   Tooltip,
   TooltipContent,
@@ -26,6 +27,7 @@ import {
 
 export function ScheduleForm() {
   const form = useFormContext<ScheduleFormValues>();
+  const scheduledDateValue = form.watch("scheduledDate"); // Watch the scheduledDate field
 
   const timeZone = useMemo(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -34,17 +36,14 @@ export function ScheduleForm() {
 
   const timeZoneAbbr = useMemo(() => {
     try {
-      const date = new Date();
       const formatter = new Intl.DateTimeFormat("en-US", {
         timeZone,
         timeZoneName: "short",
         hour: "2-digit",
         minute: "2-digit",
       });
-
-      const parts = formatter.formatToParts(date);
-      const tzPart = parts.find((part) => part.type === "timeZoneName");
-      return tzPart?.value || null;
+      const parts = formatter.formatToParts(new Date());
+      return parts.find((part) => part.type === "timeZoneName")?.value ?? null;
     } catch {
       return null;
     }
@@ -110,6 +109,7 @@ export function ScheduleForm() {
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Select time"
+                      selectedDate={scheduledDateValue}
                     />
                   </div>
                   <span className="text-muted-foreground text-sm mr-1 pb-1.75 whitespace-nowrap">
@@ -119,8 +119,10 @@ export function ScheduleForm() {
                           {timeZoneAbbr}
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent side="top">
-                        We have detected that you are in this timezone.
+                      <TooltipContent side="top" className="alignOffset={-40}">
+                        {" "}
+                        {/* Ensure className is correct if this is a prop */}
+                        We've detected this timezone.
                       </TooltipContent>
                     </Tooltip>
                   </span>
