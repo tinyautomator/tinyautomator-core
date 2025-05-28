@@ -2,10 +2,16 @@ package routes
 
 import (
 	"context"
+	"net/http"
+	"strings"
 	"time"
 
+	"github.com/clerk/clerk-sdk-go/v2"
+	"github.com/clerk/clerk-sdk-go/v2/jwt"
+	"github.com/clerk/clerk-sdk-go/v2/user"
 	"github.com/gin-contrib/timeout"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/controllers"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
@@ -15,6 +21,40 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 		c.JSON(200, gin.H{
 			"message": "TinyAutomator backend is live 🚀",
 		})
+	})
+
+	r.Use(func(ctx *gin.Context) {
+		// Question: don't we do this config init
+		clerk.SetKey(cfg.GetEnvVars().ClerkSecretKey)
+		sessionToken := strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer ")
+		claims, err := jwt.Verify(ctx.Request.Context(), &jwt.VerifyParams{
+			Token: sessionToken,
+		})
+
+		if err != nil {
+			cfg.GetLogger().WithError(err).Error("Failed to verify session")
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Unauthorized",
+			})
+			ctx.Abort()
+			return
+		}
+
+		usr, err := user.Get(ctx.Request.Context(), claims.Subject)
+		if err != nil {
+			cfg.GetLogger().WithError(err).Error("Failed to get user")
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Unauthorized",
+			})
+			ctx.Abort()
+			return
+		}
+		cfg.GetLogger().WithFields(logrus.Fields{
+			"user_id":     usr.ID,
+			"user_banned": usr.Banned,
+			"user_email":  usr.EmailAddresses[0].EmailAddress,
+		}).Info("User")
+		ctx.Next()
 	})
 
 	workflowController := controllers.NewWorkflowController(cfg)

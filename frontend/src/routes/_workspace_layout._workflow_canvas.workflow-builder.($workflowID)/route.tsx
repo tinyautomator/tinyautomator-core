@@ -13,10 +13,13 @@ import { useFlowStore } from "@/components/Canvas/flowStore";
 import { Route } from "./+types/route";
 import { useOutletContext } from "react-router";
 import { LayoutActions } from "../_workspace_layout._workflow_canvas/route";
+import { getAuth } from "@clerk/react-router/ssr.server";
 
-export async function loader({ params }: Route.LoaderArgs) {
-  if (params.workflowID) {
-    return await workflowApi.renderWorkflow(params.workflowID);
+export async function loader(args: Route.LoaderArgs) {
+  const { getToken } = await getAuth(args);
+  const token = (await getToken()) as string;
+  if (args.params.workflowID) {
+    return await workflowApi.renderWorkflow(args.params.workflowID, token);
   }
 }
 
@@ -58,7 +61,7 @@ export default function WorkflowBuilder({
             type: MarkerType.ArrowClosed,
             color: "#60a5fa",
           },
-        })),
+        }))
       );
     }
   }, [workflowToEdit, setNodes, setEdges, key]);
@@ -70,7 +73,7 @@ export default function WorkflowBuilder({
           "transition-all duration-300 overflow-hidden bg-white dark:bg-gray-900 flex flex-col h-full max-w-72",
           toggleBlockPanel
             ? "w-72 pointer-events-auto"
-            : "w-0 pointer-events-none",
+            : "w-0 pointer-events-none"
         )}
       >
         <BlockPanel
