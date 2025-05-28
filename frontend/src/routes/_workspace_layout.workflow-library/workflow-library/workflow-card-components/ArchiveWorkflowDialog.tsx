@@ -23,7 +23,7 @@ export function ArchiveWorkflowDialog({
   isArchiving,
   setArchivingWorkflow,
 }: ArchiveWorkflowDialogProps) {
-    if (!workflow) {
+  if (!workflow) {
     return null;
   }
   const { handleArchive } = useWorkflowActions(workflow);
