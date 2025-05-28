@@ -111,7 +111,7 @@ export function CustomDatePicker({
           onClick={() => handleDateSelect(day)}
         >
           {day}
-        </Button>
+        </Button>,
       );
     }
 
