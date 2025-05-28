@@ -74,6 +74,16 @@ func (c *workflowController) GetWorkflow(ctx *gin.Context) {
 }
 
 func (c *workflowController) GetUserWorkflows(ctx *gin.Context) {
+	for name, values := range ctx.Request.Header {
+		// Headers can have multiple values, so 'values' is a slice of strings
+		for _, value := range values {
+			c.logger.WithFields(logrus.Fields{
+				"name":  name,
+				"value": value,
+			}).Info("Header")
+		}
+	}
+
 	w, err := c.repo.GetUserWorkflows(ctx.Request.Context(), "test_user")
 	if err != nil {
 		c.logger.WithError(err).Error("failed to get user workflows")

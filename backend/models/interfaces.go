@@ -12,7 +12,7 @@ import (
 
 type EnvironmentVariables struct {
 	LogLevel           string        `envconfig:"LOG_LEVEL"               default:"INFO"`
-	ClerkSecretKey     string        `envconfig:"CLERK_SECRET_KEY"`
+	ClerkSecretKey     string        `envconfig:"CLERK_API_KEY" required:"true"`
 	Port               string        `envconfig:"PORT"                    default:"9000"`
 	WorkerPollInterval time.Duration `envconfig:"WORKER_POLLING_INTERVAL" default:"10m"`
 	Env                string        `envconfig:"APPLICATION_ENV"         default:"development"`
