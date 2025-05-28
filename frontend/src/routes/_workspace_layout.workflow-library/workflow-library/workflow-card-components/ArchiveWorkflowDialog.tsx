@@ -13,7 +13,7 @@ import { useWorkflowActions } from "../hooks/useWorkflowActions";
 import { Dispatch, SetStateAction } from "react";
 
 interface ArchiveWorkflowDialogProps {
-  workflow: Workflow;
+  workflow: Workflow | null;
   isArchiving: boolean;
   setArchivingWorkflow: Dispatch<SetStateAction<Workflow | null>>;
 }
