@@ -14,11 +14,11 @@ export function ScheduleSettings() {
     resolver: zodResolver(scheduleFormSchema),
     defaultValues: {
       scheduleType: "once",
-      scheduledDate: "",
+      scheduledDate: new Date(),
       scheduledTime: "",
     },
     mode: "onSubmit",
-    reValidateMode: "onChange",
+    reValidateMode: "onSubmit",
     delayError: 500,
     resetOptions: {
       keepDirty: true,
@@ -30,7 +30,7 @@ export function ScheduleSettings() {
   const handleReset = () => {
     form.reset({
       scheduleType: "once",
-      scheduledDate: "",
+      scheduledDate: new Date(),
       scheduledTime: "",
     });
     toast.info("Form reset to default values");

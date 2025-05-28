@@ -22,7 +22,12 @@ export function SchedulePreviewModal() {
       return "Complete the form to see schedule preview";
     }
 
-    const date = new Date(`${scheduledDate}T${scheduledTime}`);
+    const year = scheduledDate.getFullYear();
+    const month = (scheduledDate.getMonth() + 1).toString().padStart(2, "0");
+    const day = scheduledDate.getDate().toString().padStart(2, "0");
+    const formattedScheduledDate = `${year}-${month}-${day}`;
+
+    const date = new Date(`${formattedScheduledDate}T${scheduledTime}`);
     const formattedDate = date.toLocaleDateString();
     const formattedTime = date.toLocaleTimeString([], {
       hour: "2-digit",
@@ -64,7 +69,12 @@ export function SchedulePreviewModal() {
       return [];
     }
 
-    const baseDate = new Date(`${scheduledDate}T${scheduledTime}`);
+    const year = scheduledDate.getFullYear();
+    const month = (scheduledDate.getMonth() + 1).toString().padStart(2, "0");
+    const day = scheduledDate.getDate().toString().padStart(2, "0");
+    const formattedScheduledDate = `${year}-${month}-${day}`;
+
+    const baseDate = new Date(`${formattedScheduledDate}T${scheduledTime}`);
     const runs = [];
 
     if (scheduleType === "once") {

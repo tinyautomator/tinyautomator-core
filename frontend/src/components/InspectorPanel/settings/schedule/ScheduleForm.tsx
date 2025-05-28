@@ -16,38 +16,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CustomDatePicker } from "@/components/shared/CustomDatePicker"; //
+import { ScheduleDatePickerField } from "@/components/InspectorPanel/settings/schedule/CustomDatePicker"; //
 import { useMemo } from "react";
-import { CustomTimePicker } from "@/components/shared/CustomTimePicker"; //
+import { CustomTimePicker } from "@/components/InspectorPanel/settings/schedule/CustomTimePicker"; //
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getTimeZoneAbbreviation } from "./utils/getTimeZone";
 
 export function ScheduleForm() {
   const form = useFormContext<ScheduleFormValues>();
-  const scheduledDateValue = form.watch("scheduledDate"); // Watch the scheduledDate field
 
-  const timeZone = useMemo(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
-    [],
-  );
-
-  const timeZoneAbbr = useMemo(() => {
-    try {
-      const formatter = new Intl.DateTimeFormat("en-US", {
-        timeZone,
-        timeZoneName: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const parts = formatter.formatToParts(new Date());
-      return parts.find((part) => part.type === "timeZoneName")?.value ?? null;
-    } catch {
-      return null;
-    }
-  }, [timeZone]);
+  const timeZoneAbbr = useMemo(() => getTimeZoneAbbreviation(), []);
 
   return (
     <Card>
@@ -79,21 +61,7 @@ export function ScheduleForm() {
         <FormField
           control={form.control}
           name="scheduledDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date</FormLabel>
-              <FormControl>
-                <div className="flex items-center h-12 gap-2 w-[200px] rounded-md">
-                  <CustomDatePicker
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select date"
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => <ScheduleDatePickerField field={field} />}
         />
 
         <FormField
@@ -108,8 +76,6 @@ export function ScheduleForm() {
                     <CustomTimePicker
                       value={field.value}
                       onChange={field.onChange}
-                      placeholder="Select time"
-                      selectedDate={scheduledDateValue}
                     />
                   </div>
                   <span className="text-muted-foreground text-sm mr-1 pb-1.75 whitespace-nowrap">
@@ -120,8 +86,6 @@ export function ScheduleForm() {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="alignOffset={-40}">
-                        {" "}
-                        {/* Ensure className is correct if this is a prop */}
                         We've detected this timezone.
                       </TooltipContent>
                     </Tooltip>
