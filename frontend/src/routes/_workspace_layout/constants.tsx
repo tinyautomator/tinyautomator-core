@@ -42,13 +42,30 @@ export const WORKSPACE_ITEMS: {
 export const INTEGRATION_ITEMS: {
   label: string;
   icon: JSX.Element;
+  path: string;
 }[] = [
-  { label: "Email", icon: <Mail className="h-4 w-4" /> },
-  { label: "Calendar", icon: <Calendar className="h-4 w-4" /> },
-  { label: "Slack", icon: <MessageSquare className="h-4 w-4" /> },
-  { label: "Spreadsheets", icon: <Database className="h-4 w-4" /> },
-  { label: "Forms", icon: <FileText className="h-4 w-4" /> },
-  { label: "Custom Code", icon: <Code className="h-4 w-4" /> },
+  { label: "Email", icon: <Mail className="h-4 w-4" />, path: "/email" },
+  {
+    label: "Calendar",
+    icon: <Calendar className="h-4 w-4" />,
+    path: "/calendar",
+  },
+  {
+    label: "Slack",
+    icon: <MessageSquare className="h-4 w-4" />,
+    path: "/slack",
+  },
+  {
+    label: "Spreadsheets",
+    icon: <Database className="h-4 w-4" />,
+    path: "/spreadsheets",
+  },
+  { label: "Forms", icon: <FileText className="h-4 w-4" />, path: "/forms" },
+  {
+    label: "Custom Code",
+    icon: <Code className="h-4 w-4" />,
+    path: "/custom-code",
+  },
 ];
 
 export const FOOTER_ITEMS = [

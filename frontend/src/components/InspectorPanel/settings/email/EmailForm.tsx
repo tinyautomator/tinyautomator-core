@@ -11,37 +11,33 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useFlowStore } from "@/components/Canvas/flowStore";
 
 export function EmailForm() {
   const { reset, handleSubmit, getValues, control } =
     useFormContext<EmailFormValues>();
+  const { getSelectedNode } = useFlowStore();
+  const selectedNode = getSelectedNode();
 
   const onSubmit = handleSubmit(
     (data) => {
-      console.log("Submitting email settings data:", data);
+      if (!selectedNode) return;
+      selectedNode.data.config = data;
       toast.success("Email settings saved successfully");
     },
     (errors) => {
       const fieldOrder = Object.keys(getValues());
-
-      const orderedErrors = fieldOrder
-        .map((field) => errors[field as keyof EmailFormValues]?.message)
-        .filter(Boolean);
-
-      orderedErrors.forEach((message) => {
-        toast.error(message, {
-          duration: 3000,
-        });
+      fieldOrder.forEach((field) => {
+        const message = errors[field as keyof EmailFormValues]?.message;
+        if (message) {
+          toast.error(message, { duration: 3000 });
+        }
       });
     }
   );
 
   const handleReset = () => {
-    reset({
-      recipients: [],
-      subject: "",
-      message: "",
-    });
+    reset({ recipients: [], subject: "", message: "" });
     toast.info("Email settings reset");
   };
 
