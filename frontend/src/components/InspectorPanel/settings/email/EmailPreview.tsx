@@ -18,7 +18,7 @@ export function EmailPreview() {
   const body = getValues("message");
 
   const validRecipients = recipients.filter(
-    (email) => parseEmail(email) !== null
+    (email) => parseEmail(email) !== null,
   );
 
   const recipientLengthLimit = 3;

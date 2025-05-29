@@ -31,8 +31,14 @@ func (r *TriggerRegistry) Register(nodeType string, handler TriggerHandler) {
 func (r *TriggerRegistry) Execute(nodeType string, input TriggerNodeInput) error {
 	handler, exists := r.handlers[nodeType]
 	if !exists {
-		return fmt.Errorf("unknown Trigger type: %s", nodeType)
+		// return fmt.Errorf("unknown Trigger type: %s", nodeType)
+		return nil
 	}
 
-	return handler.Execute(context.Background(), input)
+	err := handler.Execute(context.Background(), input)
+	if err != nil {
+		return fmt.Errorf("failed to execute trigger: %w", err)
+	}
+
+	return nil
 }

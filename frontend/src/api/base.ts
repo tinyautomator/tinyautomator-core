@@ -1,20 +1,10 @@
-declare global {
-  interface Window {
-    Clerk?: {
-      session?: {
-        getToken(): Promise<string | null>;
-      };
-    };
-  }
-}
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 class ApiError extends Error {
   constructor(
     public status: number,
     public message: string,
-    public details?: string
+    public details?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -25,29 +15,32 @@ export class BaseApiClient {
   protected async request<T>(
     endpoint: string,
     authToken?: string | null,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
 
-    if (typeof window !== "undefined" && !authToken) {
-      authToken = (await window.Clerk?.session?.getToken()) as string;
+    const headers = new Headers({
+      "Content-Type": "application/json",
+      ...options.headers,
+    });
+
+    if (authToken) {
+      headers.set("Authorization", `Bearer ${authToken}`);
     }
 
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${authToken}`,
-      ...options.headers,
-    };
-
     try {
-      const response = await fetch(url, { ...options, headers });
+      const response = await fetch(url, {
+        ...options,
+        credentials: "include",
+        headers,
+      });
       const data = await response.json();
 
       if (!response.ok) {
         throw new ApiError(
           response.status,
           data.error || "An error occurred",
-          data.details || ""
+          data.details || "",
         );
       }
 
@@ -70,7 +63,7 @@ export class BaseApiClient {
     endpoint: string,
     authToken?: string | null,
     params?: Record<string, string>,
-    options?: RequestInit
+    options?: RequestInit,
   ): Promise<T> {
     const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request<T>(`${endpoint}${queryString}`, authToken, {
@@ -82,7 +75,7 @@ export class BaseApiClient {
   protected async post<T>(
     endpoint: string,
     authToken?: string | null,
-    body?: unknown
+    body?: unknown,
   ): Promise<T> {
     return this.request<T>(endpoint, authToken, {
       method: "POST",
@@ -93,7 +86,7 @@ export class BaseApiClient {
   protected async put<T>(
     endpoint: string,
     authToken?: string | null,
-    body?: unknown
+    body?: unknown,
   ): Promise<T> {
     return this.request<T>(endpoint, authToken, {
       method: "PUT",
@@ -103,7 +96,7 @@ export class BaseApiClient {
 
   protected async delete<T>(
     endpoint: string,
-    authToken?: string | null
+    authToken?: string | null,
   ): Promise<T> {
     return this.request<T>(endpoint, authToken, {
       method: "DELETE",
@@ -113,7 +106,7 @@ export class BaseApiClient {
   protected async patch<T>(
     endpoint: string,
     authToken?: string | null,
-    body?: unknown
+    body?: unknown,
   ): Promise<T> {
     return this.request<T>(endpoint, authToken, {
       method: "PATCH",

@@ -27,6 +27,7 @@ type workflowRunController struct {
 	workflowRunRepo    models.WorkflowRunRepository
 	orchestrator       models.OrchestratorService
 	logger             logrus.FieldLogger
+	workflowService    models.WorkflowService
 	workflowRunService *services.WorkflowRunService
 }
 
@@ -35,6 +36,7 @@ func NewWorkflowRunController(cfg models.AppConfig, ctx context.Context) *workfl
 		workflowRunRepo:    cfg.GetWorkflowRunRepository(),
 		orchestrator:       services.NewOrchestratorService(cfg),
 		logger:             cfg.GetLogger(),
+		workflowService:    services.NewWorkflowService(cfg),
 		workflowRunService: services.NewWorkflowRunService(cfg),
 	}
 
@@ -44,11 +46,30 @@ func NewWorkflowRunController(cfg models.AppConfig, ctx context.Context) *workfl
 }
 
 func (c *workflowRunController) GetWorkflowRun(ctx *gin.Context) {
-	idStr := ctx.Param("id")
+	idStr := ctx.Param("runID")
 
 	workflowRunID, err := strconv.Atoi(idStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
+	if err := c.workflowService.VerifyWorkflowAccess(ctx, int32(workflowRunID), userID); err != nil {
+		if err == services.ErrUserDoesNotHaveAccessToWorkflow {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to view workflow run"})
+
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify workflow access"})
+
 		return
 	}
 
@@ -62,7 +83,17 @@ func (c *workflowRunController) GetWorkflowRun(ctx *gin.Context) {
 }
 
 func (c *workflowRunController) GetUserWorkflowRuns(ctx *gin.Context) {
-	workflowRuns, err := c.workflowRunRepo.GetUserWorkflowRuns(ctx, "test_user")
+	user, ok := ctx.Get("user")
+	if !ok {
+		c.logger.Error("user not found")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+
+		return
+	}
+
+	userID := user.(*models.User).ID
+
+	workflowRuns, err := c.workflowRunRepo.GetUserWorkflowRuns(ctx, userID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get workflow runs"})
 		return
@@ -80,6 +111,25 @@ func (c *workflowRunController) GetWorkflowRuns(ctx *gin.Context) {
 		return
 	}
 
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
+	if err := c.workflowService.VerifyWorkflowAccess(ctx, int32(workflowID), userID); err != nil {
+		if err == services.ErrUserDoesNotHaveAccessToWorkflow {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to view workflow runs"})
+
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify workflow access"})
+
+		return
+	}
+
 	workflowRuns, err := c.workflowRunRepo.GetWorkflowRuns(ctx, int32(workflowID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get workflow runs"})
@@ -90,11 +140,33 @@ func (c *workflowRunController) GetWorkflowRuns(ctx *gin.Context) {
 }
 
 func (c *workflowRunController) GetWorkflowNodeRuns(ctx *gin.Context) {
-	idStr := ctx.Param("id")
+	idStr := ctx.Param("runID")
 
 	workflowRunID, err := strconv.Atoi(idStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
+	if err := c.workflowService.VerifyWorkflowAccess(ctx, int32(workflowRunID), userID); err != nil {
+		if err == services.ErrUserDoesNotHaveAccessToWorkflow {
+			ctx.JSON(
+				http.StatusForbidden,
+				gin.H{"error": "unauthorized to view workflow node runs"},
+			)
+
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify workflow access"})
+
 		return
 	}
 
@@ -108,12 +180,31 @@ func (c *workflowRunController) GetWorkflowNodeRuns(ctx *gin.Context) {
 }
 
 func (c *workflowRunController) RunWorkflow(ctx *gin.Context) {
-	idStr := ctx.Param("id")
+	idStr := ctx.Param("workflowID")
 
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.logger.Error("failed to convert id to int: %v", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid workflow id"})
+
+		return
+	}
+
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
+	if err := c.workflowService.VerifyWorkflowAccess(ctx, int32(workflowID), userID); err != nil {
+		if err == services.ErrUserDoesNotHaveAccessToWorkflow {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to run workflow"})
+
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify workflow access"})
 
 		return
 	}
@@ -134,12 +225,46 @@ func (c *workflowRunController) RunWorkflow(ctx *gin.Context) {
 }
 
 func (c *workflowRunController) StreamWorkflowRunProgress(ctx *gin.Context) {
-	idStr := ctx.Param("id")
+	idStr := ctx.Param("runID")
+	workflowIDStr := ctx.Param("workflowID")
+
+	workflowID, err := strconv.Atoi(workflowIDStr)
+	if err != nil {
+		c.logger.Error("failed to convert workflow id to int: %v", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid workflow id"})
+
+		return
+	}
 
 	runID, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.logger.Error("failed to convert id to int: %v", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid workflow id"})
+
+		return
+	}
+
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
+	c.logger.WithField("userID", userID).Info("verifying workflow access")
+
+	if err := c.workflowService.VerifyWorkflowAccess(ctx, int32(workflowID), userID); err != nil {
+		if err == services.ErrUserDoesNotHaveAccessToWorkflow {
+			ctx.JSON(
+				http.StatusForbidden,
+				gin.H{"error": "unauthorized to stream workflow run progress"},
+			)
+
+			return
+		}
+
+		c.logger.WithError(err).Error("failed to verify workflow access")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify workflow access"})
 
 		return
 	}
@@ -164,7 +289,7 @@ func (c *workflowRunController) StreamWorkflowRunProgress(ctx *gin.Context) {
 	clientChan := make(chan []byte, 10)
 	c.workflowRunService.RegisterClient(idStr, clientChan)
 
-	heartbeatInterval := 5 * time.Second
+	heartbeatInterval := 30 * time.Second
 	ticker := time.NewTicker(heartbeatInterval)
 
 	defer func() {
@@ -186,9 +311,8 @@ func (c *workflowRunController) StreamWorkflowRunProgress(ctx *gin.Context) {
 	}
 
 	c.logger.WithFields(logrus.Fields{
-		"runId":   runID,
-		"status":  run.Status,
-		"details": run.Nodes,
+		"runId":  runID,
+		"status": run.Status,
 	}).Info("workflow run status")
 
 	ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")

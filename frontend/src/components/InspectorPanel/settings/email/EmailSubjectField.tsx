@@ -6,10 +6,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { ControllerRenderProps } from "react-hook-form";
 
-interface EmailSubjectFieldProps
-  extends ControllerRenderProps<EmailFormValues, "subject"> {}
-
-export function EmailSubjectField({ ...field }: EmailSubjectFieldProps) {
+export function EmailSubjectField({
+  ...field
+}: ControllerRenderProps<EmailFormValues, "subject">) {
   const {
     watch,
     formState: { errors },

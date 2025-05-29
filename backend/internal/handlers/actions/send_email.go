@@ -17,14 +17,14 @@ func NewSendEmailHandler(logger logrus.FieldLogger) ActionHandler {
 }
 
 func (h *SendEmailHandler) Execute(ctx context.Context, input ActionNodeInput) error {
-	email := input.Config["email"].(string)
-	subject := input.Config["subject"].(string)
-	body := input.Config["body"].(string)
+	recipients := input.Config["recipients"]
+	subject := input.Config["subject"]
+	body := input.Config["message"]
 
 	h.logger.WithFields(logrus.Fields{
-		"email":   email,
-		"subject": subject,
-		"body":    body,
+		"recipients": recipients,
+		"subject":    subject,
+		"body":       body,
 	}).Info("sending email")
 
 	return nil

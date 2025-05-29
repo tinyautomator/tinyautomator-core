@@ -8,7 +8,7 @@ import (
 )
 
 type ActionNodeInput struct {
-	Config map[string]interface{}
+	Config map[string]any
 }
 
 type ActionHandler interface {
@@ -33,8 +33,14 @@ func (r *ActionRegistry) Register(nodeType string, handler ActionHandler) {
 func (r *ActionRegistry) Execute(nodeType string, input ActionNodeInput) error {
 	handler, exists := r.handlers[nodeType]
 	if !exists {
-		return fmt.Errorf("unknown action type: %s", nodeType)
+		// return fmt.Errorf("unknown action type: %s", nodeType)
+		return nil
 	}
 
-	return handler.Execute(context.Background(), input)
+	err := handler.Execute(context.Background(), input)
+	if err != nil {
+		return fmt.Errorf("failed to execute action: %w", err)
+	}
+
+	return nil
 }

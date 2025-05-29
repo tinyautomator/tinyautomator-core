@@ -6,9 +6,6 @@ import { parseEmail } from "./utils/emailValidation";
 import { ControllerRenderProps } from "react-hook-form";
 import { EmailFormValues } from "./utils/emailValidation";
 
-interface RecipientChipsProps
-  extends ControllerRenderProps<EmailFormValues, "recipients"> {}
-
 function RecipientChip({
   recipient,
   isValid,
@@ -99,7 +96,9 @@ function RecipientChip({
   );
 }
 
-export function RecipientChips({ ...field }: RecipientChipsProps) {
+export function RecipientChips({
+  ...field
+}: ControllerRenderProps<EmailFormValues, "recipients">) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { validRecipients, invalidRecipients } = field.value.reduce(
@@ -112,12 +111,12 @@ export function RecipientChips({ ...field }: RecipientChipsProps) {
       }
       return acc;
     },
-    { validRecipients: [] as string[], invalidRecipients: [] as string[] }
+    { validRecipients: [] as string[], invalidRecipients: [] as string[] },
   );
 
   const handleUpdate = (oldRecipient: string, newRecipient: string) => {
     const newValue = field.value.map((recipient) =>
-      recipient === oldRecipient ? newRecipient : recipient
+      recipient === oldRecipient ? newRecipient : recipient,
     );
     field.onChange(newValue);
   };

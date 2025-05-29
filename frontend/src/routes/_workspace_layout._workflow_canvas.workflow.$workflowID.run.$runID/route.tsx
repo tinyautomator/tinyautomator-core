@@ -67,13 +67,15 @@ export default function WorkflowRun({
             type: MarkerType.ArrowClosed,
             color: "#60a5fa",
           },
-        }))
+        })),
       );
 
-      const sseUrl = `http://localhost:9000/api/workflow-run/${runId}/progress`;
+      const sseUrl = `http://localhost:9000/api/workflow-progress/${workflowRun.id}/run/${runId}`;
       console.log(`Attempting to connect to SSE: ${sseUrl}`);
 
-      const eventSource = new EventSource(sseUrl);
+      const eventSource = new EventSource(sseUrl, {
+        withCredentials: true,
+      });
       eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {
@@ -93,7 +95,7 @@ export default function WorkflowRun({
           console.error(
             "Failed to parse connection_established event data:",
             event.data,
-            e
+            e,
           );
         }
       });
@@ -107,7 +109,7 @@ export default function WorkflowRun({
           console.error(
             "Failed to parse node_update event data:",
             event.data,
-            e
+            e,
           );
         }
       });
@@ -133,7 +135,7 @@ export default function WorkflowRun({
           eventSourceRef.current.close();
           eventSourceRef.current = null;
           console.log(
-            "SSE Connection closed due to component unmount or runId change."
+            "SSE Connection closed due to component unmount or runId change.",
           );
         }
       };

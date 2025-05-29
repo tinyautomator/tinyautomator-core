@@ -53,7 +53,7 @@ func NewWorkflowController(cfg models.AppConfig) *workflowController {
 }
 
 func (c *workflowController) GetWorkflow(ctx *gin.Context) {
-	idStr := ctx.Param("id")
+	idStr := ctx.Param("workflowID")
 
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -61,6 +61,14 @@ func (c *workflowController) GetWorkflow(ctx *gin.Context) {
 
 		return
 	}
+
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
 
 	w, err := c.repo.GetWorkflow(ctx.Request.Context(), int32(workflowID))
 	if err != nil {
@@ -70,21 +78,24 @@ func (c *workflowController) GetWorkflow(ctx *gin.Context) {
 		return
 	}
 
+	if userID != w.UserID {
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to view workflow"})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, w)
 }
 
 func (c *workflowController) GetUserWorkflows(ctx *gin.Context) {
-	for name, values := range ctx.Request.Header {
-		// Headers can have multiple values, so 'values' is a slice of strings
-		for _, value := range values {
-			c.logger.WithFields(logrus.Fields{
-				"name":  name,
-				"value": value,
-			}).Info("Header")
-		}
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
 	}
 
-	w, err := c.repo.GetUserWorkflows(ctx.Request.Context(), "test_user")
+	userID := user.(*models.User).ID
+
+	w, err := c.repo.GetUserWorkflows(ctx.Request.Context(), userID)
 	if err != nil {
 		c.logger.WithError(err).Error("failed to get user workflows")
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "workflows not found"})
@@ -107,9 +118,19 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 		return
 	}
 
+	user, ok := ctx.Get("user")
+	if !ok {
+		c.logger.Error("user not found")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+
+		return
+	}
+
+	userID := user.(*models.User).ID
+
 	workflow, err := c.workflowService.CreateWorkflow(
 		ctx.Request.Context(),
-		"test_user", // TODO: replace this later
+		userID,
 		req.Name,
 		req.Description,
 		req.Status,
@@ -127,11 +148,32 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 }
 
 func (c *workflowController) UpdateWorkflow(ctx *gin.Context) {
-	idStr := ctx.Param("id")
+	idStr := ctx.Param("workflowID")
 
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+
+		return
+	}
+
+	user, ok := ctx.Get("user")
+	if !ok {
+		c.logger.Error("user not found")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+
+		return
+	}
+
+	userID := user.(*models.User).ID
+	if err := c.workflowService.VerifyWorkflowAccess(ctx.Request.Context(), int32(workflowID), userID); err != nil {
+		if err == services.ErrUserDoesNotHaveAccessToWorkflow {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to update workflow"})
+
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify workflow access"})
 
 		return
 	}
@@ -165,11 +207,30 @@ func (c *workflowController) UpdateWorkflow(ctx *gin.Context) {
 }
 
 func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
-	idStr := ctx.Param("id")
+	idStr := ctx.Param("workflowID")
 
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+
+		return
+	}
+
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
+	if err := c.workflowService.VerifyWorkflowAccess(ctx.Request.Context(), int32(workflowID), userID); err != nil {
+		if err == services.ErrUserDoesNotHaveAccessToWorkflow {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to view workflow"})
+
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify workflow access"})
 
 		return
 	}
@@ -186,11 +247,30 @@ func (c *workflowController) GetWorkflowRender(ctx *gin.Context) {
 }
 
 func (c *workflowController) ArchiveWorkflow(ctx *gin.Context) {
-	idStr := ctx.Param("id")
+	idStr := ctx.Param("workflowID")
 
 	workflowID, err := strconv.Atoi(idStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
+	if err := c.workflowService.VerifyWorkflowAccess(ctx.Request.Context(), int32(workflowID), userID); err != nil {
+		if err == services.ErrUserDoesNotHaveAccessToWorkflow {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to archive workflow"})
+
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify workflow access"})
+
 		return
 	}
 

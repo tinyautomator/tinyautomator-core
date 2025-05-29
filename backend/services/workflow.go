@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -13,6 +14,8 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/yourbasic/graph"
 )
+
+var ErrUserDoesNotHaveAccessToWorkflow = errors.New("user does not have access to workflow")
 
 type WorkflowService struct {
 	logger               logrus.FieldLogger
@@ -28,6 +31,23 @@ func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
 		orchestrator:         cfg.GetOrchestratorService(),
 	}
+}
+
+func (s *WorkflowService) VerifyWorkflowAccess(
+	ctx context.Context,
+	workflowID int32,
+	userID string,
+) error {
+	workflow, err := s.workflowRepo.GetWorkflow(ctx, workflowID)
+	if err != nil {
+		return fmt.Errorf("failed to get workflow: %w", err)
+	}
+
+	if workflow.UserID != userID {
+		return ErrUserDoesNotHaveAccessToWorkflow
+	}
+
+	return nil
 }
 
 func (s *WorkflowService) prepForValidate(
