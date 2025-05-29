@@ -12,34 +12,24 @@ import { useFlowStore } from "@/components/Canvas/flowStore";
 
 export function ScheduleSettings() {
   const { getSelectedNode } = useFlowStore();
-  const selectedNode = getSelectedNode();
-  const savedConfig = selectedNode?.data?.config as
+  const config = getSelectedNode()?.data?.config as
     | Partial<ScheduleFormValues>
     | undefined;
 
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleFormSchema),
-    defaultValues: savedConfig
-      ? {
-          scheduleType: savedConfig.scheduleType || "once",
-          scheduledDate: savedConfig.scheduledDate
-            ? new Date(savedConfig.scheduledDate)
-            : new Date(),
-          scheduledTime: savedConfig.scheduledTime || "",
-        }
-      : {
-          scheduleType: "once",
-          scheduledDate: new Date(),
-          scheduledTime: "",
-        },
+    defaultValues: {
+      scheduleType: config?.scheduleType ?? "once",
+      scheduledDate: config?.scheduledDate
+        ? new Date(config.scheduledDate)
+        : new Date(),
+      scheduledTime: config?.scheduledTime ?? "",
+    },
     mode: "onSubmit",
     reValidateMode: "onSubmit",
     delayError: 500,
-    resetOptions: {
-      keepDirty: true,
-      keepErrors: false,
-    },
     shouldFocusError: false,
+    resetOptions: { keepDirty: true, keepErrors: false },
   });
 
   const handleReset = () => {
@@ -57,14 +47,8 @@ export function ScheduleSettings() {
       toast.success("Schedule settings saved successfully");
     },
     (errors) => {
-      const fieldOrder = Object.keys(form.getValues());
-      const orderedErrors = fieldOrder
-        .map((field) => errors[field as keyof ScheduleFormValues]?.message)
-        .filter(Boolean);
-      orderedErrors.forEach((message) => {
-        toast.error(message, {
-          duration: 3000,
-        });
+      Object.values(errors).forEach((e) => {
+        if (e?.message) toast.error(e.message, { duration: 3000 });
       });
     },
   );

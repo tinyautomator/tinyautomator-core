@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -10,15 +11,139 @@ import {
   format as dfFormat,
   parse as dfParse,
   isValid as dfIsValid,
+  addMinutes as dfAddMinutes,
+  isBefore as dfIsBefore,
+  set as dfSet,
+  getHours as dfGetHours,
+  getMinutes as dfGetMinutes,
+  startOfDay as dfStartOfDay,
+  isSameDay as dfIsSameDay,
 } from "date-fns";
 import { ScheduleFormValues } from "./utils/scheduleValidation";
 import { useFormContext, useWatch } from "react-hook-form";
-import {
-  calculateInitialTimeParts,
-  checkTimeSlotDisabled,
-} from "./utils/timePickerUtils";
-import { TimeDropdown } from "./TimeDropdown";
 
+interface TimeParts {
+  hour: string;
+  minute: string;
+  period: string;
+}
+
+const calculateInitialTimeParts = (
+  timeString24: string | undefined,
+  dateContextStr?: string,
+): TimeParts => {
+  let initialDateToProcess: Date;
+  const systemNow = new Date();
+  const systemTodayStart = dfStartOfDay(systemNow);
+
+  let contextDateIsToday = true;
+  if (dateContextStr) {
+    const parsedContextDate = dfParse(dateContextStr, "yyyy-MM-dd", systemNow);
+    if (dfIsValid(parsedContextDate)) {
+      contextDateIsToday = dfIsSameDay(
+        dfStartOfDay(parsedContextDate),
+        systemTodayStart,
+      );
+    }
+  }
+
+  if (timeString24) {
+    const parsedTimeInput = dfParse(timeString24, "HH:mm", new Date());
+    if (dfIsValid(parsedTimeInput)) {
+      initialDateToProcess = parsedTimeInput;
+    } else {
+      initialDateToProcess = dfSet(new Date(), { hours: 0, minutes: 0 });
+    }
+  } else {
+    if (contextDateIsToday) {
+      let tempDate = dfAddMinutes(systemNow, 15);
+      const currentMinute = dfGetMinutes(tempDate);
+      tempDate = dfSet(tempDate, {
+        minutes: Math.ceil(currentMinute / 15) * 15,
+        seconds: 0,
+        milliseconds: 0,
+      });
+
+      const minAllowedFromNow = dfAddMinutes(systemNow, 15);
+      if (dfIsBefore(tempDate, minAllowedFromNow)) {
+        tempDate = dfSet(minAllowedFromNow, {
+          minutes: Math.ceil(dfGetMinutes(minAllowedFromNow) / 15) * 15,
+          seconds: 0,
+          milliseconds: 0,
+        });
+        if (dfIsBefore(tempDate, minAllowedFromNow)) {
+          tempDate = dfAddMinutes(tempDate, 15);
+        }
+      }
+      initialDateToProcess = tempDate;
+    } else {
+      initialDateToProcess = dfSet(new Date(), {
+        hours: 9,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0,
+      });
+    }
+  }
+
+  const h24 = dfGetHours(initialDateToProcess);
+  const m = dfGetMinutes(initialDateToProcess);
+  const currentPeriod = h24 >= 12 ? "PM" : "AM";
+  let currentHour12 = h24 % 12;
+  if (currentHour12 === 0) currentHour12 = 12;
+
+  return {
+    hour: currentHour12.toString().padStart(2, "0"),
+    minute: (Math.floor(m / 15) * 15).toString().padStart(2, "0"),
+    period: currentPeriod,
+  };
+};
+
+const checkTimeSlotDisabled = (
+  h12Str: string,
+  mStr: string,
+  pStr: string,
+  selectedDateString?: string,
+): boolean => {
+  const systemNow = new Date();
+  const systemTodayStart = dfStartOfDay(systemNow);
+
+  if (!selectedDateString) {
+    // No date context, assume enable unless it's today and past
+  } else {
+    const parsedSelectedDate = dfParse(
+      selectedDateString,
+      "yyyy-MM-dd",
+      new Date(),
+    );
+
+    if (!dfIsValid(parsedSelectedDate)) {
+      return true;
+    }
+
+    const selectedDateStart = dfStartOfDay(parsedSelectedDate);
+
+    if (dfIsBefore(selectedDateStart, systemTodayStart)) {
+      return true;
+    } else if (dfIsBefore(systemTodayStart, selectedDateStart)) {
+      return false;
+    }
+  }
+
+  const minAllowedDateTime = dfAddMinutes(systemNow, 15);
+  let h24 = parseInt(h12Str, 10);
+  if (pStr === "AM" && h24 === 12) h24 = 0;
+  else if (pStr === "PM" && h24 < 12) h24 += 12;
+
+  const prospectiveDateTimeOnToday = dfSet(systemTodayStart, {
+    hours: h24,
+    minutes: parseInt(mStr, 10),
+    seconds: 0,
+    milliseconds: 0,
+  });
+
+  return dfIsBefore(prospectiveDateTimeOnToday, minAllowedDateTime);
+};
 interface CustomTimePickerProps {
   value: string;
   onChange: (value: string) => void;
@@ -30,20 +155,8 @@ const HOUR_OPTIONS = Array.from({ length: 12 }, (_, i) =>
 const MINUTE_OPTIONS = ["00", "15", "30", "45"];
 const PERIOD_OPTIONS = ["AM", "PM"];
 
-export type DropdownField = "hour" | "minute" | "period";
-
-interface DropdownConfig {
-  field: DropdownField;
-  label: string;
-  options: string[];
-  value: string;
-  setter: (value: string) => void;
-  ariaLabel: string;
-}
-
 export function CustomTimePicker({ value, onChange }: CustomTimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [openField, setOpenField] = useState<DropdownField | null>(null);
   const placeholder = "Select time";
   const { control } = useFormContext<ScheduleFormValues>();
   const dateField = useWatch({ control, name: "scheduledDate" });
@@ -60,15 +173,6 @@ export function CustomTimePicker({ value, onChange }: CustomTimePickerProps) {
     }
     return undefined;
   }, [dateField]);
-
-  const dropdownRefs = useMemo(
-    () => ({
-      hour: React.createRef<HTMLDivElement>(),
-      minute: React.createRef<HTMLDivElement>(),
-      period: React.createRef<HTMLDivElement>(),
-    }),
-    [],
-  );
 
   const parseValueToInternalState = useCallback(
     (timeString24: string | undefined, dateContextStr?: string) => {
@@ -96,7 +200,6 @@ export function CustomTimePicker({ value, onChange }: CustomTimePickerProps) {
       setInternalHour(newParts.hour);
       setInternalMinute(newParts.minute);
       setInternalPeriod(newParts.period);
-      setOpenField(null);
     }
   }, [value, isOpen, selectedDateString, parseValueToInternalState]);
 
@@ -128,54 +231,11 @@ export function CustomTimePicker({ value, onChange }: CustomTimePickerProps) {
       : placeholder;
   }, [value, placeholder]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!openField) return;
-      const activeRef = dropdownRefs[openField];
-      if (
-        activeRef.current &&
-        !activeRef.current.contains(event.target as Node)
-      ) {
-        setOpenField(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [openField, dropdownRefs]);
-
-  const dropdownConfigurations: DropdownConfig[] = [
-    {
-      field: "hour",
-      label: "Hour",
-      options: HOUR_OPTIONS,
-      value: internalHour,
-      setter: setInternalHour,
-      ariaLabel: "Select Hour",
-    },
-    {
-      field: "minute",
-      label: "Minute",
-      options: MINUTE_OPTIONS,
-      value: internalMinute,
-      setter: setInternalMinute,
-      ariaLabel: "Select Minute",
-    },
-    {
-      field: "period",
-      label: "Period",
-      options: PERIOD_OPTIONS,
-      value: internalPeriod,
-      setter: setInternalPeriod,
-      ariaLabel: "Select AM/PM",
-    },
-  ];
-
   return (
     <Popover
       open={isOpen}
       onOpenChange={(openState) => {
         setIsOpen(openState);
-        if (!openState) setOpenField(null);
       }}
     >
       <PopoverTrigger asChild>
@@ -193,36 +253,95 @@ export function CustomTimePicker({ value, onChange }: CustomTimePickerProps) {
         className="w-auto p-3 space-y-3 select-none"
         align="start"
       >
-        <div className="flex items-end gap-1.5">
-          {dropdownConfigurations.map((config, index) => (
-            <React.Fragment key={config.field}>
-              <div className="flex-1">
-                <LocalFormLabel>{config.label}</LocalFormLabel>
-                <TimeDropdown
-                  field={config.field}
-                  items={config.options}
-                  currentSelectedValue={config.value}
-                  onItemSelect={config.setter}
-                  ariaLabel={config.ariaLabel}
-                  dropdownRef={dropdownRefs[config.field]}
-                  openField={openField}
-                  setOpenField={setOpenField}
-                  isTimeSlotDisabled={isTimeSlotDisabledCallback}
-                  internalHour={internalHour}
-                  internalMinute={internalMinute}
-                  internalPeriod={internalPeriod}
-                />
-              </div>
-              {index < dropdownConfigurations.length - 1 && (
-                <div className="pb-1.5">
-                  <span className="text-xl font-semibold text-muted-foreground">
-                    :
-                  </span>
-                </div>
-              )}
-            </React.Fragment>
-          ))}
+        <div className="flex gap-2">
+          <div className="flex-1 space-y-1">
+            <Label className="block text-sm font-medium text-center text-muted-foreground">
+              Hour
+            </Label>
+            <div className="bg-background border border-border rounded-md max-h-[15vh] overflow-y-auto py-1">
+              {HOUR_OPTIONS.map((hour) => {
+                const isDisabled = isTimeSlotDisabledCallback(
+                  hour,
+                  internalMinute,
+                  internalPeriod,
+                );
+                return (
+                  <Button
+                    key={hour}
+                    variant="ghost"
+                    className={`w-full justify-center h-auto py-1.5 text-sm rounded-sm mx-auto block
+                      ${isDisabled ? "text-muted-foreground opacity-50 pointer-events-none" : "hover:bg-accent hover:text-accent-foreground"}
+                      ${hour === internalHour && !isDisabled ? "bg-accent text-accent-foreground font-semibold" : ""}`}
+                    onClick={() => !isDisabled && setInternalHour(hour)}
+                  >
+                    {hour}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <span className="text-xl font-semibold text-muted-foreground">
+              :
+            </span>
+          </div>
+
+          <div className="flex-1 space-y-1">
+            <Label className="block text-sm font-medium text-center text-muted-foreground">
+              Minute
+            </Label>
+            <div className="bg-background border border-border rounded-md max-h-[15vh] overflow-y-auto py-1">
+              {MINUTE_OPTIONS.map((minute) => {
+                const isDisabled = isTimeSlotDisabledCallback(
+                  internalHour,
+                  minute,
+                  internalPeriod,
+                );
+                return (
+                  <Button
+                    key={minute}
+                    variant="ghost"
+                    className={`w-full justify-center h-auto py-1.5 text-sm rounded-sm mx-auto block
+                      ${isDisabled ? "text-muted-foreground opacity-50 pointer-events-none" : "hover:bg-accent hover:text-accent-foreground"}
+                      ${minute === internalMinute && !isDisabled ? "bg-accent text-accent-foreground font-semibold" : ""}`}
+                    onClick={() => !isDisabled && setInternalMinute(minute)}
+                  >
+                    {minute}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-1">
+            <Label className="block text-sm font-medium text-center text-muted-foreground">
+              Period
+            </Label>
+            <div className="bg-background border border-border rounded-md max-h-[15vh] overflow-y-auto py-1">
+              {PERIOD_OPTIONS.map((period) => {
+                const isDisabled = isTimeSlotDisabledCallback(
+                  internalHour,
+                  internalMinute,
+                  period,
+                );
+                return (
+                  <Button
+                    key={period}
+                    variant="ghost"
+                    className={`w-full justify-center h-auto py-1.5 text-sm rounded-sm mx-auto block
+                      ${isDisabled ? "text-muted-foreground opacity-50 pointer-events-none" : "hover:bg-accent hover:text-accent-foreground"}
+                      ${period === internalPeriod && !isDisabled ? "bg-accent text-accent-foreground font-semibold" : ""}`}
+                    onClick={() => !isDisabled && setInternalPeriod(period)}
+                  >
+                    {period}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
         </div>
+
         <div className="flex gap-2 pt-3 border-t border-border mt-3">
           <Button
             type="button"
@@ -246,19 +365,3 @@ export function CustomTimePicker({ value, onChange }: CustomTimePickerProps) {
     </Popover>
   );
 }
-
-const LocalFormLabel = React.forwardRef<
-  HTMLLabelElement,
-  React.LabelHTMLAttributes<HTMLLabelElement>
->(({ className, children, ...props }, ref) => {
-  return (
-    <label
-      ref={ref}
-      className={`block text-sm font-medium text-center mb-1 text-muted-foreground ${className || ""}`}
-      {...props}
-    >
-      {children}
-    </label>
-  );
-});
-LocalFormLabel.displayName = "LocalFormLabel";
