@@ -48,7 +48,7 @@ export default function WorkflowRun({
     setToggleInspectorPanel(false);
     if (workflowRun) {
       const parsedNodes = workflowRun.nodes.map((n) => {
-        return NodeBuilder(n.id, n.position, n.category, n.node_type);
+        return NodeBuilder(n.id, n.position, n.category, n.node_type, n.config);
       });
 
       setNodes(parsedNodes);

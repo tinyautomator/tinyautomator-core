@@ -16,25 +16,6 @@ export async function loader(): Promise<Workflow[]> {
   return await workflowApi.getUserWorkflows();
 }
 
-export const shouldRevalidate: ShouldRevalidateFunction = ({
-  currentUrl,
-  nextUrl,
-}: {
-  currentUrl: URL;
-  nextUrl: URL;
-}) => {
-  // Only revalidate if the search params change (excluding tab changes)
-  const currentParams = new URLSearchParams(currentUrl.search);
-  const nextParams = new URLSearchParams(nextUrl.search);
-
-  // Remove the tab parameter from both
-  currentParams.delete("tab");
-  nextParams.delete("tab");
-
-  // Compare the remaining parameters
-  return currentParams.toString() !== nextParams.toString();
-};
-
 export default function WorkflowLibrary({ loaderData }: Route.ComponentProps) {
   const { workflows: filteredWorkflows } = useFilteredWorkflows(loaderData);
   return (

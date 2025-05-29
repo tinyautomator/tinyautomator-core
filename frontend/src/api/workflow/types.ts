@@ -25,11 +25,13 @@ export interface UpdateWorkflowDto {
   edges: WorkflowEdge[];
 }
 
+export type Config = { [key: string]: string | number | boolean | Config };
+
 export interface WorkflowNode extends Record<string, unknown> {
   id: string;
   category: string;
   node_type: string;
-  config: Record<string, unknown>;
+  config: Config;
   position: {
     x: number;
     y: number;
