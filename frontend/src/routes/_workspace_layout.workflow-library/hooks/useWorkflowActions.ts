@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import type { Workflow } from "../../route";
+import type { Workflow } from "../route";
 import { workflowApi } from "@/api";
 
 export function useWorkflowActions(workflow: Workflow) {

@@ -107,6 +107,7 @@ func (cfg *appConfig) initRepositories() {
 	cfg.workflowRepo = repositories.NewWorkflowRepository(q, cfg.pgPool)
 	cfg.workflowScheduleRepo = repositories.NewWorkflowScheduleRepository(q, cfg.pgPool)
 	cfg.workflowRunRepo = repositories.NewWorkflowRunRepository(q, cfg.pgPool)
+	cfg.oauthIntegrationRepo = repositories.NewOauthIntegrationRepository(q, cfg.pgPool)
 }
 
 func (cfg *appConfig) initExternalServices(ctx context.Context) error {

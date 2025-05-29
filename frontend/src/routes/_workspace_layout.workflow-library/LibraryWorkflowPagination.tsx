@@ -1,3 +1,4 @@
+import { Workflow } from "@/api";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import { useWorkflowListState } from "./hooks/useWorkflowListState";
 import {
@@ -10,8 +11,8 @@ import {
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 
-export function WorkflowPagination() {
-  const { pagination } = useFilteredWorkflows();
+export function WorkflowPagination({ workflows }: { workflows: Workflow[] }) {
+  const { pagination } = useFilteredWorkflows(workflows);
   const { currentPage, updateState } = useWorkflowListState();
 
   if (pagination.totalPages <= 1) return null;

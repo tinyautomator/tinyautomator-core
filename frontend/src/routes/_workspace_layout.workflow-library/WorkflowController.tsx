@@ -2,6 +2,7 @@ import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { TagFilter } from "./TagFilter";
 import { useWorkflowListState } from "./hooks/useWorkflowListState";
+import { Workflow } from "@/api/workflow/types";
 
 const SearchInput = () => {
   const {
@@ -31,11 +32,11 @@ const SearchInput = () => {
   );
 };
 
-export function WorkflowController() {
+export function WorkflowController({ workflows }: { workflows: Workflow[] }) {
   return (
     <div className="flex w-full items-center gap-3 border-b border-slate-100 dark:border-slate-800 select-none">
       <SearchInput />
-      <TagFilter />
+      <TagFilter workflows={workflows} />
     </div>
   );
 }

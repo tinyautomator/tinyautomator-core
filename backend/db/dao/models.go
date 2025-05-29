@@ -8,6 +8,20 @@ import (
 	null "github.com/guregu/null/v6"
 )
 
+type OauthIntegration struct {
+	ID                   int32       `json:"id"`
+	UserID               string      `json:"user_id"`
+	Provider             string      `json:"provider"`
+	ProviderUserID       string      `json:"provider_user_id"`
+	AccessToken          string      `json:"access_token"`
+	RefreshToken         null.String `json:"refresh_token"`
+	ExpiresAt            int64       `json:"expires_at"`
+	Scopes               string      `json:"scopes"`
+	CreatedAt            int64       `json:"created_at"`
+	UpdatedAt            int64       `json:"updated_at"`
+	AdditionalParameters []byte      `json:"additional_parameters"`
+}
+
 type Workflow struct {
 	ID          int32  `json:"id"`
 	UserID      string `json:"user_id"`

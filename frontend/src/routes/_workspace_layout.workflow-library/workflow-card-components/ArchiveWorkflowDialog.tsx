@@ -8,12 +8,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { Workflow } from "../../route";
+import type { Workflow } from "@/api/workflow/types";
 import { useWorkflowActions } from "../hooks/useWorkflowActions";
 import { Dispatch, SetStateAction } from "react";
 
 interface ArchiveWorkflowDialogProps {
-  workflow: Workflow | null;
+  workflow: Workflow;
   isArchiving: boolean;
   setArchivingWorkflow: Dispatch<SetStateAction<Workflow | null>>;
 }
@@ -23,9 +23,6 @@ export function ArchiveWorkflowDialog({
   isArchiving,
   setArchivingWorkflow,
 }: ArchiveWorkflowDialogProps) {
-  if (!workflow) {
-    return null;
-  }
   const { handleArchive } = useWorkflowActions(workflow);
 
   const handleConfirm = (e: React.MouseEvent) => {
@@ -67,7 +64,7 @@ export function ArchiveWorkflowDialog({
           <DialogDescription className="text-center text-sm text-slate-600 dark:text-slate-400 mt-2">
             Are you sure you want to archive{" "}
             <span className="font-medium text-slate-900 dark:text-slate-200">
-              {workflow.title}
+              {workflow.name}
             </span>
             ? This action cannot be undone. Archived workflows are still
             accessible in the archive tab.

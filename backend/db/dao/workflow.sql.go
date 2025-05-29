@@ -405,6 +405,30 @@ func (q *Queries) GetWorkflowGraph(ctx context.Context, id int32) ([]*GetWorkflo
 	return items, nil
 }
 
+const getWorkflowNode = `-- name: GetWorkflowNode :one
+SELECT id, workflow_id, category, node_type, config
+FROM workflow_node
+WHERE id = $1
+`
+
+// GetWorkflowNode
+//
+//	SELECT id, workflow_id, category, node_type, config
+//	FROM workflow_node
+//	WHERE id = $1
+func (q *Queries) GetWorkflowNode(ctx context.Context, id int32) (*WorkflowNode, error) {
+	row := q.db.QueryRow(ctx, getWorkflowNode, id)
+	var i WorkflowNode
+	err := row.Scan(
+		&i.ID,
+		&i.WorkflowID,
+		&i.Category,
+		&i.NodeType,
+		&i.Config,
+	)
+	return &i, err
+}
+
 const renderWorkflowGraph = `-- name: RenderWorkflowGraph :many
 SELECT
   w.id AS workflow_id,

@@ -1,4 +1,4 @@
-import type { Workflow } from "../../route";
+import type { Workflow } from "@/api";
 import type { SearchParams } from "./schemas";
 
 interface WorkflowResult {
@@ -11,7 +11,7 @@ export function getWorkflowData(
   workflows: Workflow[],
   { q: searchQuery, tab: selectedTab, tags: selectedTags }: SearchParams,
 ): WorkflowResult {
-  if (!workflows.length) {
+  if (!workflows?.length) {
     return {
       workflows: [],
       tagCounts: new Map(),
@@ -27,16 +27,16 @@ export function getWorkflowData(
   const filteredWorkflows: Workflow[] = [];
 
   for (const workflow of workflows) {
-    if (hasTags && !selectedTags.some((tag) => workflow.tags.includes(tag)))
+    if (hasTags && !selectedTags.some((tag) => workflow.tags?.includes(tag)))
       continue;
 
     if (query && query !== "") {
-      const title = workflow.title.toLowerCase();
+      const title = workflow.name.toLowerCase();
       const description = workflow.description.toLowerCase();
       const matches =
         title.includes(query) ||
         description.includes(query) ||
-        workflow.tags.some((tag) => tag.toLowerCase().includes(query));
+        workflow.tags?.some((tag) => tag.toLowerCase().includes(query));
 
       if (!matches) continue;
     }
@@ -47,7 +47,7 @@ export function getWorkflowData(
 
     filteredWorkflows.push(workflow);
 
-    workflow.tags.forEach((tag) => {
+    workflow.tags?.forEach((tag) => {
       tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
     });
   }

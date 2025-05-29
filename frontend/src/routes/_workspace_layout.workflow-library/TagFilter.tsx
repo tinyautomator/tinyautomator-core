@@ -13,14 +13,15 @@ import { ListFilter } from "lucide-react";
 import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
 import { Form } from "react-router";
 import { useWorkflowListState } from "./hooks/useWorkflowListState";
+import { Workflow } from "@/api/workflow/types";
 
 // TODO: Take away button and as user clicks on a tag, it should be applied immediately and do a union instead of intersection.
-export function TagFilter() {
+export function TagFilter({ workflows }: { workflows: Workflow[] }) {
   const {
     state: { tags },
     updateState,
   } = useWorkflowListState();
-  const { tagCounts } = useFilteredWorkflows();
+  const { tagCounts } = useFilteredWorkflows(workflows);
   const [open, setOpen] = useState(false);
 
   // TODO: Derive this in useFilteredWorkflows...

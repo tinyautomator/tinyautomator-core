@@ -3,9 +3,11 @@ export interface Workflow {
   user_id: string;
   name: string;
   description: string;
-  status: string;
+  status: "draft" | "active" | "archived";
   created_at: string;
   updated_at: string;
+  tags?: string[];
+  isFavorite?: boolean;
 }
 
 export interface CreateWorkflowDto {

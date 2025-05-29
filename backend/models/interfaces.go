@@ -43,7 +43,7 @@ type AppConfig interface {
 	GetWorkflowRepository() WorkflowRepository
 	GetWorkflowScheduleRepository() WorkflowScheduleRepository
 	GetWorkflowRunRepository() WorkflowRunRepository
-
+	GetOauthIntegrationRepository() OauthIntegrationRepository
 	GetOrchestratorService() OrchestratorService
 	GetExecutorService() ExecutorService
 	GetSchedulerService() SchedulerService
@@ -57,6 +57,7 @@ type AppConfig interface {
 }
 
 type WorkflowRepository interface {
+	GetWorkflowNode(ctx context.Context, id int32) (*WorkflowNode, error)
 	GetWorkflow(ctx context.Context, id int32) (*Workflow, error)
 	GetUserWorkflows(ctx context.Context, userID string) ([]*Workflow, error)
 	CreateWorkflow(

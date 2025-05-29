@@ -1,28 +1,15 @@
-import { WorkflowStatus } from "../utils/schemas";
 import { LucideIcon } from "lucide-react";
+import { Workflow } from "@/api";
 
 export interface WorkflowCardProps {
   workflow: Workflow;
-  onDelete?: (id: number) => void;
-}
-
-export interface Workflow {
-  id: number;
-  title: string;
-  description: string;
-  lastEdited: string;
-  status: WorkflowStatus;
-  created_at: string;
-  updated_at: string;
-  nodeCount: number;
-  tags: string[];
-  isFavorite: boolean;
+  onDelete?: (id: Workflow["id"]) => void;
 }
 
 export interface WorkflowActionsProps {
-  status: WorkflowStatus;
-  workflowId: number;
-  onEdit: (id: number) => void;
+  status: Workflow["status"];
+  workflowId: Workflow["id"];
+  onEdit: (id: Workflow["id"]) => void;
   onDelete: () => void;
   onArchive: () => void;
   onRestore: () => void;

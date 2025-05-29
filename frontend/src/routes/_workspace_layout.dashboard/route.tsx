@@ -17,7 +17,7 @@ export default function Dashboard({
     <div className="h-full overflow-auto p-6 scrollbar-hidden">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+          <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
             Dashboard
           </h3>
           <p className="text-muted-foreground">

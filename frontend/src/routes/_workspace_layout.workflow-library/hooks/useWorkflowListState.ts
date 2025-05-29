@@ -2,12 +2,13 @@ import { useCallback } from "react";
 import { useValidatedSearchParams } from "./useSearchParams";
 import { useDebouncedCallback } from "use-debounce";
 import type { SearchParams } from "../utils/schemas";
+import { Workflow } from "@/api";
 
 const DEBOUNCE_TIME = 500;
 
 export interface WorkflowListState extends SearchParams {
   isSearching?: boolean;
-  selectedWorkflowId?: number;
+  selectedWorkflowId?: Workflow["id"];
 }
 
 export function useWorkflowListState() {
