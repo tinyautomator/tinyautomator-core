@@ -9,12 +9,9 @@ import { FormLabel } from "@/components/ui/form";
 
 type InputMode = "manual" | "csv" | "google" | "contacts";
 
-interface RecipientInputSectionProps
-  extends ControllerRenderProps<EmailFormValues, "recipients"> {}
-
 export function RecipientInputSection({
   ...field
-}: RecipientInputSectionProps) {
+}: ControllerRenderProps<EmailFormValues, "recipients">) {
   const [inputMode, setInputMode] = useState<InputMode>("manual");
 
   return (

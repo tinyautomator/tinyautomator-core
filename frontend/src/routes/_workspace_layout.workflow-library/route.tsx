@@ -10,10 +10,12 @@ import { EmptyState } from "./LibraryEmptyState";
 import { LIBRARY_GRID_LAYOUT_STYLES } from "./utils/library-styles";
 import { WorkflowPagination } from "./LibraryWorkflowPagination";
 import { Route } from "./+types/route";
-import type { ShouldRevalidateFunction } from "react-router";
+import { getAuth } from "@clerk/react-router/ssr.server";
 
-export async function loader(): Promise<Workflow[]> {
-  return await workflowApi.getUserWorkflows();
+export async function loader(args: Route.LoaderArgs): Promise<Workflow[]> {
+  const { getToken } = await getAuth(args);
+  const token = (await getToken()) as string;
+  return await workflowApi.getUserWorkflows(token);
 }
 
 export default function WorkflowLibrary({ loaderData }: Route.ComponentProps) {

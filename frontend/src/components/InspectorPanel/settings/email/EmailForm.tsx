@@ -33,7 +33,7 @@ export function EmailForm() {
           toast.error(message, { duration: 3000 });
         }
       });
-    }
+    },
   );
 
   const handleReset = () => {

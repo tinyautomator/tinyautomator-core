@@ -6,10 +6,9 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ControllerRenderProps } from "react-hook-form";
 
-interface RecipientInputFieldProps
-  extends ControllerRenderProps<EmailFormValues, "recipients"> {}
-
-export function RecipientInputField({ ...field }: RecipientInputFieldProps) {
+export function RecipientInputField({
+  ...field
+}: ControllerRenderProps<EmailFormValues, "recipients">) {
   const {
     formState: { errors },
   } = useFormContext<EmailFormValues>();

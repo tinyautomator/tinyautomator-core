@@ -14,16 +14,26 @@ class ApiError extends Error {
 export class BaseApiClient {
   protected async request<T>(
     endpoint: string,
+    authToken?: string | null,
     options: RequestInit = {},
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    const headers = {
+
+    const headers = new Headers({
       "Content-Type": "application/json",
       ...options.headers,
-    };
+    });
+
+    if (authToken) {
+      headers.set("Authorization", `Bearer ${authToken}`);
+    }
 
     try {
-      const response = await fetch(url, { ...options, headers });
+      const response = await fetch(url, {
+        ...options,
+        credentials: "include",
+        headers,
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -51,32 +61,54 @@ export class BaseApiClient {
 
   protected async get<T>(
     endpoint: string,
+    authToken?: string | null,
     params?: Record<string, string>,
+    options?: RequestInit,
   ): Promise<T> {
     const queryString = params ? `?${new URLSearchParams(params)}` : "";
-    return this.request<T>(`${endpoint}${queryString}`, { method: "GET" });
+    return this.request<T>(`${endpoint}${queryString}`, authToken, {
+      method: "GET",
+      ...options,
+    });
   }
 
-  protected async post<T>(endpoint: string, body?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
+  protected async post<T>(
+    endpoint: string,
+    authToken?: string | null,
+    body?: unknown,
+  ): Promise<T> {
+    return this.request<T>(endpoint, authToken, {
       method: "POST",
       body: body ? JSON.stringify(body) : undefined,
     });
   }
 
-  protected async put<T>(endpoint: string, body?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
+  protected async put<T>(
+    endpoint: string,
+    authToken?: string | null,
+    body?: unknown,
+  ): Promise<T> {
+    return this.request<T>(endpoint, authToken, {
       method: "PUT",
       body: body ? JSON.stringify(body) : undefined,
     });
   }
 
-  protected async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: "DELETE" });
+  protected async delete<T>(
+    endpoint: string,
+    authToken?: string | null,
+  ): Promise<T> {
+    return this.request<T>(endpoint, authToken, {
+      method: "DELETE",
+    });
   }
 
-  protected async patch<T>(endpoint: string, body?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
+  protected async patch<T>(
+    endpoint: string,
+    authToken?: string | null,
+    body?: unknown,
+  ): Promise<T> {
+    return this.request<T>(endpoint, authToken, {
       method: "PATCH",
       body: body ? JSON.stringify(body) : undefined,
     });

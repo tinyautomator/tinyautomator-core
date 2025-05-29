@@ -8,36 +8,50 @@ import {
 } from "./types";
 
 export class WorkflowApiClient extends BaseApiClient {
-  async getUserWorkflows(): Promise<Workflow[]> {
-    return await this.get<Workflow[]>("/api/workflow");
+  async getUserWorkflows(authToken?: string): Promise<Workflow[]> {
+    return await this.get<Workflow[]>("/api/workflow", authToken);
   }
 
-  async renderWorkflow(id: string): Promise<RenderedWorkflow> {
-    return await this.get(`/api/workflow/${id}/render`);
+  async renderWorkflow(
+    id: string,
+    authToken?: string,
+  ): Promise<RenderedWorkflow> {
+    return await this.get(`/api/workflow/${id}/render`, authToken);
   }
 
-  async createWorkflow(data: CreateWorkflowDto): Promise<number> {
+  async createWorkflow(
+    data: CreateWorkflowDto,
+    authToken?: string,
+  ): Promise<number> {
     console.log("createWorkflow", data);
-    return await this.post<number>("/api/workflow", data);
+    return await this.post<number>("/api/workflow", authToken, data);
   }
 
-  async updateWorkflow(id: string, data: UpdateWorkflowDto): Promise<void> {
+  async updateWorkflow(
+    id: string,
+    data: UpdateWorkflowDto,
+    authToken?: string,
+  ): Promise<void> {
     console.log("updateWorkflow", data);
-    return await this.put(`/api/workflow/${id}`, data);
+    return await this.put(`/api/workflow/${id}`, authToken, data);
   }
 
-  async runWorkflow(id: string): Promise<number> {
+  async runWorkflow(id: string, authToken?: string): Promise<number> {
     console.log("runWorkflow", id);
-    const res = await this.post<{ run_id: number }>(`/api/workflow-run/${id}`);
+    const res = await this.post<{ run_id: number }>(
+      `/api/workflow-run/${id}`,
+      authToken,
+      {},
+    );
     return res.run_id;
   }
 
-  async getUserWorkflowRuns(): Promise<WorkflowRun[]> {
-    return await this.get<WorkflowRun[]>(`/api/workflow-runs`);
+  async getUserWorkflowRuns(authToken?: string): Promise<WorkflowRun[]> {
+    return await this.get<WorkflowRun[]>(`/api/workflow-runs`, authToken);
   }
 
-  async archiveWorkflow(id: string): Promise<void> {
+  async archiveWorkflow(id: string, authToken?: string): Promise<void> {
     console.log("archiveWorkflow", id);
-    return await this.patch(`/api/workflow/${id}/archive`);
+    return await this.patch(`/api/workflow/${id}/archive`, authToken);
   }
 }

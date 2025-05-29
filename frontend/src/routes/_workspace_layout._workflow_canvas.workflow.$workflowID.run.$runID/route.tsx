@@ -9,6 +9,7 @@ import { useFlowStore } from "@/components/Canvas/flowStore";
 import { MarkerType } from "@xyflow/react";
 import { LayoutActions } from "../_workspace_layout._workflow_canvas/route";
 import { useOutletContext } from "react-router";
+import { getAuth } from "@clerk/react-router/ssr.server";
 
 interface NodeStatusUpdate {
   runId: string | number;
@@ -23,11 +24,13 @@ interface ConnectionEstablishedData {
   runId: string | number;
 }
 
-export async function loader({ params }: Route.LoaderArgs) {
-  const res = await workflowApi.renderWorkflow(params.workflowID as string);
+export async function loader(args: Route.LoaderArgs) {
+  const { getToken } = await getAuth(args);
+  const token = (await getToken()) as string;
+  const res = await workflowApi.renderWorkflow(args.params.workflowID, token);
   return {
     workflowRun: res,
-    runId: params.runID,
+    runId: args.params.runID,
   };
 }
 
@@ -67,10 +70,12 @@ export default function WorkflowRun({
         })),
       );
 
-      const sseUrl = `http://localhost:9000/api/workflow-run/${runId}/progress`;
+      const sseUrl = `http://localhost:9000/api/workflow-progress/${workflowRun.id}/run/${runId}`;
       console.log(`Attempting to connect to SSE: ${sseUrl}`);
 
-      const eventSource = new EventSource(sseUrl);
+      const eventSource = new EventSource(sseUrl, {
+        withCredentials: true,
+      });
       eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {

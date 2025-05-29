@@ -4,10 +4,9 @@ import { parseEmailCsv } from "./utils/csvParser";
 import { ControllerRenderProps } from "react-hook-form";
 import { EmailFormValues } from "./utils/emailValidation";
 
-interface CsvUploaderProps
-  extends ControllerRenderProps<EmailFormValues, "recipients"> {}
-
-export function CsvUploader({ ...field }: CsvUploaderProps) {
+export function CsvUploader({
+  ...field
+}: ControllerRenderProps<EmailFormValues, "recipients">) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);

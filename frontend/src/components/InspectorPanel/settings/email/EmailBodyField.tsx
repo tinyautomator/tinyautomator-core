@@ -7,10 +7,9 @@ import {
 } from "./utils/emailValidation";
 import { ControllerRenderProps } from "react-hook-form";
 
-interface EmailBodyFieldProps
-  extends ControllerRenderProps<EmailFormValues, "message"> {}
-
-export function EmailBodyField({ ...field }: EmailBodyFieldProps) {
+export function EmailBodyField({
+  ...field
+}: ControllerRenderProps<EmailFormValues, "message">) {
   const {
     watch,
     formState: { errors },

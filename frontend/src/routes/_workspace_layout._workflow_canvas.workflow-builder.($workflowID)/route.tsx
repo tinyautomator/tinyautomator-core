@@ -13,10 +13,13 @@ import { useFlowStore } from "@/components/Canvas/flowStore";
 import { Route } from "./+types/route";
 import { useOutletContext } from "react-router";
 import { LayoutActions } from "../_workspace_layout._workflow_canvas/route";
+import { getAuth } from "@clerk/react-router/ssr.server";
 
-export async function loader({ params }: Route.LoaderArgs) {
-  if (params.workflowID) {
-    return await workflowApi.renderWorkflow(params.workflowID);
+export async function loader(args: Route.LoaderArgs) {
+  const { getToken } = await getAuth(args);
+  const token = (await getToken()) as string;
+  if (args.params.workflowID) {
+    return await workflowApi.renderWorkflow(args.params.workflowID, token);
   }
 }
 
