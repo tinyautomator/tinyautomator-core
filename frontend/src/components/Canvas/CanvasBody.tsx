@@ -10,12 +10,14 @@ import { nodeTypeToBlockMap } from "../../components/shared/BlockCategories";
 import { v4 as uuidv4 } from "uuid";
 import { useOutletContext } from "react-router";
 import { LayoutActions } from "@/routes/_workspace_layout._workflow_canvas/route";
+import { Config } from "@/api/workflow/types";
 
 export const NodeBuilder = (
   id: string,
   position: { x: number; y: number },
   category: string,
   nodeType: string,
+  config: Config,
 ): Node => {
   const block = nodeTypeToBlockMap[nodeType];
   return {
@@ -25,7 +27,7 @@ export const NodeBuilder = (
     data: {
       category,
       nodeType,
-      config: {},
+      config,
       label: block.label,
       description: block.description,
       icon: block.icon,
@@ -104,6 +106,7 @@ export default function CanvasBody() {
         position,
         data.category,
         data.nodeType,
+        {},
       );
 
       setNodes([...nodes.map((n) => ({ ...n, selected: false })), newNode]);

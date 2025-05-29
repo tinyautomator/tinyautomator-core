@@ -5,13 +5,16 @@ import { EmailBodyField } from "./EmailBodyField";
 import { RecipientInputSection } from "./RecipientSection";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useFlowStore } from "@/components/Canvas/flowStore";
 
 export function EmailForm() {
   const { reset, handleSubmit, getValues } = useFormContext<EmailFormValues>();
-
+  const { getSelectedNode } = useFlowStore();
+  const selectedNode = getSelectedNode();
   const onSubmit = handleSubmit(
     (data) => {
-      console.log("Submitting email settings data:", data);
+      if (!selectedNode) return;
+      selectedNode.data.config = data;
       toast.success("Email settings saved successfully");
     },
     (errors) => {
@@ -26,7 +29,7 @@ export function EmailForm() {
           duration: 3000,
         });
       });
-    },
+    }
   );
 
   const handleReset = () => {
