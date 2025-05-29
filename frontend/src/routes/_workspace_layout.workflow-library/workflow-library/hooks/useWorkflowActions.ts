@@ -2,8 +2,17 @@ import { useNavigate } from "react-router";
 import type { Workflow } from "../../route";
 import { workflowApi } from "@/api";
 
-export function useWorkflowActions(workflow: Workflow) {
+export function useWorkflowActions(workflow: Workflow | null) {
   const navigate = useNavigate();
+  if (!workflow) {
+    return {
+      handleEdit: () => {},
+      handleRun: () => {},
+      handleArchive: () => {},
+      handleRestore: () => {},
+      handleFavorite: () => {},
+    };
+  }
   const workflowId = workflow.id.toString();
 
   const handleEdit = () => {
