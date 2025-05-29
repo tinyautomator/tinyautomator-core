@@ -33,9 +33,8 @@ export function EmailSettings() {
 
   return (
     <FormProvider {...form}>
-      <div className="space-y-6">
+      <div className="flex flex-col gap-4">
         <EmailForm />
-        <div className="flex justify-end"></div>
         <EmailPreview />
       </div>
     </FormProvider>

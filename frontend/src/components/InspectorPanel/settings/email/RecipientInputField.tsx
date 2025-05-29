@@ -2,26 +2,32 @@ import { useState, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { useFormContext } from "react-hook-form";
 import { EmailFormValues } from "./utils/emailValidation";
-import { useEmailRecipients } from "./utils/useEmailRecipents";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ControllerRenderProps } from "react-hook-form";
 
-export function RecipientInputField() {
+interface RecipientInputFieldProps
+  extends ControllerRenderProps<EmailFormValues, "recipients"> {}
+
+export function RecipientInputField({ ...field }: RecipientInputFieldProps) {
   const {
     formState: { errors },
   } = useFormContext<EmailFormValues>();
-  const { addEmail } = useEmailRecipients();
   const [inputValue, setInputValue] = useState("");
 
   const handleAdd = (email: string) => {
-    addEmail(email);
+    if (!email) return;
+    field.onChange([...field.value.filter((e) => e !== email), email]);
     setInputValue("");
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Tab" && inputValue.trim() === "") {
+      return;
+    }
     if (["Enter", ",", "Tab"].includes(e.key)) {
-      e.preventDefault();
       handleAdd(inputValue);
+      e.preventDefault();
     }
   };
 
@@ -29,36 +35,33 @@ export function RecipientInputField() {
     const pastedText = e.clipboardData.getData("text");
     if (/\s/.test(pastedText)) {
       e.preventDefault();
-      pastedText
-        .split(/[\s,]+/)
-        .map((email) => email.trim())
-        .filter(Boolean)
-        .forEach((email) => handleAdd(email));
+      const newEmails = pastedText.split(/[\s,]+/).map((email) => email.trim());
+
+      const newEmailsSet = new Set([...field.value, ...newEmails]);
+      field.onChange(Array.from(newEmailsSet));
+      setInputValue("");
     }
   };
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">Add Recipients</label>
-      <div className="space-y-1">
-        <div className="flex gap-2">
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            placeholder="Type or paste email addresses"
-            aria-invalid={!!errors.recipients}
-          />
-          <Button
-            type="button"
-            size="icon"
-            onClick={() => handleAdd(inputValue)}
-            className="shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+    <div className="space-y-1">
+      <div className="flex gap-2">
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          placeholder="Type or paste email addresses"
+          aria-invalid={!!errors.recipients}
+        />
+        <Button
+          type="button"
+          size="icon"
+          onClick={() => handleAdd(inputValue)}
+          className="shrink-0"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

@@ -2,16 +2,24 @@ import { Badge } from "@/components/ui/badge";
 import { useRef, useState } from "react";
 import { Pencil, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useEmailRecipients } from "./utils/useEmailRecipents";
+import { parseEmail } from "./utils/emailValidation";
+import { ControllerRenderProps } from "react-hook-form";
+import { EmailFormValues } from "./utils/emailValidation";
+
+interface RecipientChipsProps
+  extends ControllerRenderProps<EmailFormValues, "recipients"> {}
 
 function RecipientChip({
   recipient,
   isValid,
+  onUpdate,
+  onRemove,
 }: {
   recipient: string;
   isValid: boolean;
+  onUpdate: (oldEmail: string, newEmail: string) => void;
+  onRemove: (email: string) => void;
 }) {
-  const { updateEmail, removeEmail } = useEmailRecipients();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(recipient);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,8 +30,13 @@ function RecipientChip({
   };
 
   const handleSave = () => {
-    updateEmail(recipient, editValue);
     setIsEditing(false);
+    const parsed = parseEmail(editValue);
+    if (!parsed) {
+      onUpdate(recipient, editValue);
+      return;
+    }
+    onUpdate(recipient, parsed);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -76,7 +89,7 @@ function RecipientChip({
         <Pencil className="h-3 w-3" />
       </button>
       <button
-        onClick={() => removeEmail(recipient)}
+        onClick={() => onRemove(recipient)}
         className="ml-1 rounded-full hover:bg-white/10"
         aria-label={`Remove ${recipient}`}
       >
@@ -86,21 +99,58 @@ function RecipientChip({
   );
 }
 
-export function RecipientChips() {
-  const { validRecipients, invalidRecipients } = useEmailRecipients();
+export function RecipientChips({ ...field }: RecipientChipsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  return (
+  const { validRecipients, invalidRecipients } = field.value.reduce(
+    (acc, email) => {
+      const isValid = parseEmail(email) !== null;
+      if (isValid) {
+        acc.validRecipients.push(email);
+      } else {
+        acc.invalidRecipients.push(email);
+      }
+      return acc;
+    },
+    { validRecipients: [] as string[], invalidRecipients: [] as string[] }
+  );
+
+  const handleUpdate = (oldRecipient: string, newRecipient: string) => {
+    const newValue = field.value.map((recipient) =>
+      recipient === oldRecipient ? newRecipient : recipient
+    );
+    field.onChange(newValue);
+  };
+
+  const handleRemove = (recipient: string) => {
+    field.onChange(field.value.filter((r) => r !== recipient));
+  };
+
+  return field.value.length > 0 ? (
     <div
       ref={containerRef}
       className="recipient-scroll max-h-40 overflow-y-auto flex flex-wrap gap-2 p-1 border rounded-md"
     >
       {validRecipients.map((recipient) => (
-        <RecipientChip key={recipient} recipient={recipient} isValid={true} />
+        <RecipientChip
+          key={recipient}
+          recipient={recipient}
+          isValid={true}
+          onUpdate={handleUpdate}
+          onRemove={handleRemove}
+        />
       ))}
       {invalidRecipients.map((recipient) => (
-        <RecipientChip key={recipient} recipient={recipient} isValid={false} />
+        <RecipientChip
+          key={recipient}
+          recipient={recipient}
+          isValid={false}
+          onUpdate={handleUpdate}
+          onRemove={handleRemove}
+        />
       ))}
     </div>
+  ) : (
+    <div className="text-sm text-muted-foreground"></div>
   );
 }
