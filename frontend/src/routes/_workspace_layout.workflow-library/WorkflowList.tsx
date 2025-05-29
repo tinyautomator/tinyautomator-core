@@ -4,7 +4,7 @@ import { useDebounce } from "use-debounce";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { ArchiveWorkflowDialog } from "./workflow-card-components/ArchiveWorkflowDialog";
-import type { Workflow } from "../route";
+import type { Workflow } from "@/api";
 import type { WorkflowListProps } from "./workflow-card-components/workflow-card.types";
 
 export function WorkflowList({
@@ -42,11 +42,13 @@ export function WorkflowList({
         </div>
       </div>
       {pagination}
-      <ArchiveWorkflowDialog
-        workflow={archivingWorkflow}
-        isArchiving={archivingWorkflow !== null}
-        setArchivingWorkflow={setArchivingWorkflow}
-      />
+      {archivingWorkflow && (
+        <ArchiveWorkflowDialog
+          workflow={archivingWorkflow}
+          isArchiving={archivingWorkflow !== null}
+          setArchivingWorkflow={setArchivingWorkflow}
+        />
+      )}
     </div>
   );
 }

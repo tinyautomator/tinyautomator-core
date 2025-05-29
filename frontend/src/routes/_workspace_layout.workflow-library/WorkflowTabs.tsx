@@ -10,27 +10,27 @@ import {
   TABS_LIST_STYLES,
   ICON_SPACING_STYLES,
 } from "./utils/library-styles";
-import { WORKFLOW_STATUSES, WorkflowStatus } from "./utils/schemas";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Workflow } from "@/api";
 
-export function WorkflowTabs() {
+export function WorkflowTabs({ workflows }: { workflows: Workflow[] }) {
   const { currentTab, updateState } = useWorkflowListState();
-  const { statusCounts: counts } = useFilteredWorkflows();
+  const { statusCounts: counts } = useFilteredWorkflows(workflows);
 
-  const handleTabChange = (value: WorkflowStatus) => {
+  const handleTabChange = (value: Workflow["status"]) => {
     updateState({ tab: value });
   };
 
   return (
     <Tabs
       value={currentTab}
-      onValueChange={(value) => handleTabChange(value as WorkflowStatus)}
+      onValueChange={(value) => handleTabChange(value as Workflow["status"])}
       className={BORDER_STYLES}
     >
       <ScrollArea>
         <TabsList className={TABS_LIST_STYLES}>
-          {WORKFLOW_STATUSES.map((tabValue) => (
+          {["draft", "active", "archived"].map((tabValue) => (
             <TabsTrigger
               key={tabValue}
               value={tabValue}
@@ -50,7 +50,7 @@ export function WorkflowTabs() {
                   COUNTER_STYLES,
                 )}
               >
-                {counts[tabValue] ?? 0}
+                {counts[tabValue as Workflow["status"]] ?? 0}
               </Badge>
             </TabsTrigger>
           ))}

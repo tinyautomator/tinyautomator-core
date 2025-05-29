@@ -22,6 +22,31 @@ func NewWorkflowRepository(q *dao.Queries, pool *pgxpool.Pool) models.WorkflowRe
 	return &workflowRepo{q, pool}
 }
 
+func (r *workflowRepo) GetWorkflowNode(
+	ctx context.Context,
+	id int32,
+) (*models.WorkflowNode, error) {
+	n, err := r.q.GetWorkflowNode(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("db error get workflow node: %w", err)
+	}
+
+	m := &models.WorkflowNode{}
+	m.ID = n.ID
+	m.Category = n.Category
+	m.NodeType = n.NodeType
+	m.WorkflowID = n.WorkflowID
+
+	config := make(map[string]any)
+	if err := json.Unmarshal(n.Config, &config); err != nil {
+		return nil, fmt.Errorf("error unmarshalling config: %w", err)
+	}
+
+	m.Config = &config
+
+	return m, nil
+}
+
 func (r *workflowRepo) GetWorkflow(ctx context.Context, id int32) (*models.Workflow, error) {
 	w, err := r.q.GetWorkflow(ctx, id)
 	if err != nil {

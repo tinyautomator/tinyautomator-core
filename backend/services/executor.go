@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/rabbitmq"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
 	"github.com/tinyautomator/tinyautomator-core/backend/internal"
+	handlers "github.com/tinyautomator/tinyautomator-core/backend/internal/handlers/actions"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
@@ -21,15 +21,21 @@ type ExecutorService struct {
 	redisClient     redis.RedisClient
 	workflowRepo    models.WorkflowRepository
 	workflowRunRepo models.WorkflowRunRepository
+	actionRegistry  *handlers.ActionRegistry
 }
 
 func NewExecutorService(cfg models.AppConfig) models.ExecutorService {
+	logger := cfg.GetLogger()
+	actionRegistry := handlers.NewActionRegistry(logger)
+	actionRegistry.Register("send_email", handlers.NewSendEmailHandler(logger))
+
 	return &ExecutorService{
-		logger:          cfg.GetLogger(),
+		logger:          logger,
 		rabbitMQClient:  cfg.GetRabbitMQClient(),
 		redisClient:     cfg.GetRedisClient(),
 		workflowRepo:    cfg.GetWorkflowRepository(),
 		workflowRunRepo: cfg.GetWorkflowRunRepository(),
+		actionRegistry:  actionRegistry,
 	}
 }
 
@@ -129,11 +135,31 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	ctx context.Context,
 	task *models.WorkflowNodeTask,
 ) error {
+	workflowNode, err := s.workflowRepo.GetWorkflowNode(ctx, task.NodeID)
+	if err != nil {
+		return fmt.Errorf("failed to get workflow node: %w", err)
+	}
+
+	config := make(map[string]any)
+	if workflowNode.Config != nil {
+		config = *workflowNode.Config
+	} else {
+		s.logger.WithFields(logrus.Fields{
+			"workflow_id": task.WorkflowID,
+			"run_id":      task.RunID,
+			"node_id":     task.NodeID,
+			"node_run_id": task.NodeRunID,
+		}).Warn("workflow node config is nil")
+	}
+
 	kv := logrus.Fields{
-		"workflow_id": task.WorkflowID,
-		"run_id":      task.RunID,
-		"node_id":     task.NodeID,
-		"node_run_id": task.NodeRunID,
+		"workflow_id":   task.WorkflowID,
+		"run_id":        task.RunID,
+		"node_id":       task.NodeID,
+		"node_run_id":   task.NodeRunID,
+		"node_type":     workflowNode.NodeType,
+		"node_category": workflowNode.Category,
+		"node_config":   config,
 	}
 
 	s.logger.WithFields(kv).Info("executing workflow node")
@@ -145,19 +171,15 @@ func (s *ExecutorService) runWorkflowNodeTask(
 		return fmt.Errorf("failed to mark node run as running: %w", err)
 	}
 
-	err := s.redisClient.PublishNodeStatusUpdate(ctx, task.RunID, task.NodeID, "running", nil)
-	if err != nil {
+	if err := s.redisClient.PublishNodeStatusUpdate(ctx, task.RunID, task.NodeID, "running", nil); err != nil {
 		s.logger.WithError(err).WithFields(kv).Warn("failed to publish node status update")
 	}
 
 	doTask := func() error {
-		randomNum := rand.Float64()
-
-		sleepDuration := time.Duration(10) * time.Second
-		time.Sleep(sleepDuration)
-
-		if randomNum < 0.25 {
-			return errors.New("test error")
+		if err := s.actionRegistry.Execute(workflowNode.NodeType, handlers.ActionNodeInput{
+			Config: config,
+		}); err != nil {
+			return fmt.Errorf("failed to execute %s action: %w", workflowNode.NodeType, err)
 		}
 
 		return nil
@@ -186,7 +208,8 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	}
 
 	statusDetails := map[string]interface{}{
-		"message": "Node processing finished.",
+		"message": fmt.Sprintf("Node processing finished. %s", workflowNode.NodeType),
+		"config":  workflowNode.Config,
 	}
 	if errPub := s.redisClient.PublishNodeStatusUpdate(ctx, task.RunID, task.NodeID, task.Status, statusDetails); errPub != nil {
 		s.logger.WithError(errPub).WithFields(logrus.Fields{

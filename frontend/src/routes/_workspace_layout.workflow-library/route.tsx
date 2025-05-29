@@ -1,94 +1,75 @@
 import { CreateWorkflowButton } from "@/components/shared/CreatWorkflowButton";
-import { WorkflowTabs } from "./workflow-library/WorkflowTabs";
-import { WorkflowList } from "./workflow-library/WorkflowList";
-import { WorkflowController } from "./workflow-library/WorkflowController";
-import { ActiveTagFilters } from "./workflow-library/ActiveTagFilters";
+import { WorkflowTabs } from "./WorkflowTabs";
+import { WorkflowList } from "./WorkflowList";
+import { WorkflowController } from "./WorkflowController";
+import { ActiveTagFilters } from "./ActiveTagFilters";
 import { cn } from "@/lib/utils";
-import { workflowApi } from "@/api";
-import { useFilteredWorkflows } from "./workflow-library/hooks/useFilteredWorkflows";
-import { EmptyState } from "./workflow-library/LibraryEmptyState";
-import { LIBRARY_GRID_LAYOUT_STYLES } from "./workflow-library/utils/library-styles";
-import { WorkflowPagination } from "./workflow-library/LibraryWorkflowPagination";
+import { Workflow, workflowApi } from "@/api";
+import { useFilteredWorkflows } from "./hooks/useFilteredWorkflows";
+import { EmptyState } from "./LibraryEmptyState";
+import { LIBRARY_GRID_LAYOUT_STYLES } from "./utils/library-styles";
+import { WorkflowPagination } from "./LibraryWorkflowPagination";
+import { Route } from "./+types/route";
+import type { ShouldRevalidateFunction } from "react-router";
 
-// TODO: update global workflow type to match the api response
-export interface Workflow {
-  id: number;
-  title: string;
-  description: string;
-  lastEdited: string;
-  status: "active" | "draft" | "archived" | "templates";
-  nodeCount: number;
-  created_at: string;
-  updated_at: string;
-
-  tags: string[];
-  isFavorite: boolean;
+export async function loader(): Promise<Workflow[]> {
+  return await workflowApi.getUserWorkflows();
 }
-export async function loader() {
-  const data = await workflowApi.getUserWorkflows();
 
-  const mappedData = data.map((workflow) => ({
-    id: workflow.id,
-    title: workflow.name,
-    description: workflow.description,
-    status: workflow.status,
-    // TODO: Add these fields to the api response
-    lastEdited: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
-    tags: ["type", "script", "paid"],
-  }));
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  currentUrl,
+  nextUrl,
+}: {
+  currentUrl: URL;
+  nextUrl: URL;
+}) => {
+  // Only revalidate if the search params change (excluding tab changes)
+  const currentParams = new URLSearchParams(currentUrl.search);
+  const nextParams = new URLSearchParams(nextUrl.search);
 
-  return mappedData;
-}
-function WorkflowLibraryHeader() {
+  // Remove the tab parameter from both
+  currentParams.delete("tab");
+  nextParams.delete("tab");
+
+  // Compare the remaining parameters
+  return currentParams.toString() !== nextParams.toString();
+};
+
+export default function WorkflowLibrary({ loaderData }: Route.ComponentProps) {
+  const { workflows: filteredWorkflows } = useFilteredWorkflows(loaderData);
   return (
     <div
       className={cn(
-        "shrink-0 flex justify-between items-center",
-        "border-b border-slate-100 dark:border-slate-800",
-        "w-full "
+        "p-6 flex flex-col items-start h-full rounded-xl justify-between gap-4 ",
       )}
     >
-      <div className="flex flex-col gap-1 leading-tight">
-        <h1
-          className={cn(
-            "text-xl font-bold items-center",
-            "text-slate-900 dark:text-white"
-          )}
-        >
-          Workflow Library
-        </h1>
-        <p className={cn("text-sm text-slate-500 dark:text-slate-400")}>
-          Manage and organize your automated workflows
-        </p>
+      <div
+        className={cn(
+          "shrink-0 flex justify-between items-center",
+          "border-b border-slate-100 dark:border-slate-800",
+          "w-full ",
+        )}
+      >
+        <div className="flex flex-col gap-1 leading-tight">
+          <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
+            Workflow Library
+          </h3>
+          <p className="text-muted-foreground">
+            Manage and organize your automated workflows
+          </p>
+        </div>
+        <CreateWorkflowButton />
       </div>
-      <CreateWorkflowButton />
-    </div>
-  );
-}
-
-export default function WorkflowLibrary() {
-  const { workflows } = useFilteredWorkflows();
-  return (
-    <div
-      className={cn(
-        "px-4 flex flex-col items-start h-full rounded-xl justify-between gap-4 ",
-        "bg-white dark:bg-slate-950"
-      )}
-    >
-      <WorkflowLibraryHeader />
-
-      <WorkflowController />
-
-      <WorkflowTabs />
+      <WorkflowController workflows={filteredWorkflows} />
+      <WorkflowTabs workflows={filteredWorkflows} />
       <ActiveTagFilters />
-
       <div
         className={cn("flex-1 overflow-y-auto items-start w-full select-none")}
       >
         <WorkflowList
-          workflows={workflows}
+          workflows={filteredWorkflows}
           emptyState={<EmptyState />}
-          pagination={<WorkflowPagination />}
+          pagination={<WorkflowPagination workflows={filteredWorkflows} />}
           gridClassName={LIBRARY_GRID_LAYOUT_STYLES}
         />
       </div>

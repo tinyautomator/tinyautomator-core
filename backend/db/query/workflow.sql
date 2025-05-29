@@ -1,3 +1,8 @@
+-- name: GetWorkflowNode :one
+SELECT *
+FROM workflow_node
+WHERE id = $1;
+
 -- name: GetWorkflow :one
 SELECT *
 FROM workflow

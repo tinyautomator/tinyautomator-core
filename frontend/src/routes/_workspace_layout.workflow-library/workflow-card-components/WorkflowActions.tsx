@@ -14,7 +14,7 @@ import {
   ACTION_MENU_ITEM_DEFAULT,
 } from "./workflow-card.styles";
 import { useWorkflowActions } from "../hooks/useWorkflowActions";
-import type { Workflow } from "../../route";
+import type { Workflow } from "@/api/workflow/types";
 import { Dispatch, SetStateAction, useState } from "react";
 
 interface WorkflowActionsHoverProps {

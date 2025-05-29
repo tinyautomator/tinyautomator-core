@@ -11,7 +11,7 @@ import {
 } from "./WorkflowBody";
 import { WorkflowFooter } from "./WorkflowFooter";
 import { WorkflowTitle } from "./WorkflowHeader";
-import { Workflow, WorkflowCardProps } from "./workflow-card.types";
+import { WorkflowCardProps } from "./workflow-card.types";
 import {
   CARD_BASE_STYLES,
   CARD_ACTION_BUTTON_STYLES,
@@ -21,6 +21,7 @@ import {
   GROUP_HOVER_OPACITY_ZERO,
 } from "./workflow-card.styles";
 import { Dispatch, SetStateAction } from "react";
+import { Workflow } from "@/api";
 
 export function WorkflowCard({
   workflow,
@@ -40,7 +41,7 @@ export function WorkflowCard({
       </div>
 
       <WorkflowTitle
-        title={workflow.title}
+        title={workflow.name}
         isArchived={isArchived}
         workflow={workflow}
       />
@@ -56,7 +57,7 @@ export function WorkflowCard({
       </div>
 
       <WorkflowTags
-        tags={workflow.tags}
+        tags={workflow.tags ?? []}
         className={cn(TRUNCATE_STYLES, GROUP_HOVER_OPACITY_ZERO)}
       />
       <div className="w-full">
@@ -67,7 +68,7 @@ export function WorkflowCard({
             "justify-end",
           )}
         >
-          <WorkflowFooter lastEdited={new Date(workflow.lastEdited)} />
+          <WorkflowFooter lastEdited={new Date(workflow.updated_at)} />
         </div>
       </div>
       <WorkflowDescription description={workflow.description} />

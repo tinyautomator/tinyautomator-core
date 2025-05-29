@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 import { TEXT_SLATE_DARK_SLATE_200 } from "./workflow-card.styles";
 import { useWorkflowActions } from "../hooks/useWorkflowActions";
-import type { Workflow } from "../../route";
+import type { Workflow } from "@/api/workflow/types";
 
 interface WorkflowTitleProps {
   title: string;

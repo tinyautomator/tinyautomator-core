@@ -23,6 +23,22 @@ type Querier interface {
 	//      finished_at = $3
 	//  WHERE id = $1
 	CompleteWorkflowRun(ctx context.Context, arg *CompleteWorkflowRunParams) error
+	//CreateOauthIntegration
+	//
+	//  INSERT INTO oauth_integration (
+	//      user_id,
+	//      provider,
+	//      provider_user_id,
+	//      access_token,
+	//      refresh_token,
+	//      expires_at,
+	//      scopes,
+	//      created_at,
+	//      updated_at,
+	//      additional_parameters
+	//  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	//  RETURNING id, user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scopes, created_at, updated_at, additional_parameters
+	CreateOauthIntegration(ctx context.Context, arg *CreateOauthIntegrationParams) (*OauthIntegration, error)
 	//CreateWorkflow
 	//
 	//  INSERT INTO workflow (
@@ -156,6 +172,24 @@ type Querier interface {
 	//  WHERE workflow_schedule.id = locked.id
 	//  RETURNING locked.id, workflow_schedule.id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
 	GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*GetDueSchedulesLockedRow, error)
+	//GetOauthIntegrationByID
+	//
+	//  SELECT id, user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scopes, created_at, updated_at, additional_parameters FROM oauth_integration
+	//  WHERE id = $1
+	//  LIMIT 1
+	GetOauthIntegrationByID(ctx context.Context, id int32) (*OauthIntegration, error)
+	//GetOauthIntegrationByProviderAndProviderUserID
+	//
+	//  SELECT id, user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scopes, created_at, updated_at, additional_parameters FROM oauth_integration
+	//  WHERE provider = $1 AND provider_user_id = $2
+	//  LIMIT 1
+	GetOauthIntegrationByProviderAndProviderUserID(ctx context.Context, arg *GetOauthIntegrationByProviderAndProviderUserIDParams) (*OauthIntegration, error)
+	//GetOauthIntegrationsByUserID
+	//
+	//  SELECT id, user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scopes, created_at, updated_at, additional_parameters FROM oauth_integration
+	//  WHERE user_id = $1
+	//  ORDER BY created_at DESC
+	GetOauthIntegrationsByUserID(ctx context.Context, userID string) ([]*OauthIntegration, error)
 	//GetParentWorkflowNodeRuns
 	//
 	//  SELECT wnr.id, wnr.workflow_run_id, wnr.workflow_node_id, wnr.status, wnr.retry_count, wnr.started_at, wnr.finished_at, wnr.metadata, wnr.error_message
@@ -211,6 +245,12 @@ type Querier interface {
 	//    AND we.source_node_id = wn.id
 	//  WHERE w.id = $1
 	GetWorkflowGraph(ctx context.Context, id int32) ([]*GetWorkflowGraphRow, error)
+	//GetWorkflowNode
+	//
+	//  SELECT id, workflow_id, category, node_type, config
+	//  FROM workflow_node
+	//  WHERE id = $1
+	GetWorkflowNode(ctx context.Context, id int32) (*WorkflowNode, error)
 	//GetWorkflowNodeRunByWorkflowRunIDAndNodeID
 	//
 	//  SELECT id, workflow_run_id, workflow_node_id, status, retry_count, started_at, finished_at, metadata, error_message
@@ -283,6 +323,19 @@ type Querier interface {
 	//    AND we.source_node_id = wn.id
 	//  WHERE w.id = $1
 	RenderWorkflowGraph(ctx context.Context, id int32) ([]*RenderWorkflowGraphRow, error)
+	//UpdateOauthIntegration
+	//
+	//  UPDATE oauth_integration
+	//  SET
+	//      access_token = $2,
+	//      refresh_token = $3,
+	//      expires_at = $4,
+	//      scopes = $5,
+	//      updated_at = $6,
+	//      additional_parameters = $7
+	//  WHERE id = $1
+	//  RETURNING id, user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scopes, created_at, updated_at, additional_parameters
+	UpdateOauthIntegration(ctx context.Context, arg *UpdateOauthIntegrationParams) (*OauthIntegration, error)
 	//UpdateWorkflow
 	//
 	//  UPDATE workflow

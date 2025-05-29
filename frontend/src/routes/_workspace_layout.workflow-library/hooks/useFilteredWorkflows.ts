@@ -1,14 +1,11 @@
-import { useLoaderData } from "react-router";
 import { useMemo } from "react";
 import { useValidatedSearchParams } from "./useSearchParams";
 import { getWorkflowData } from "../utils/filterWorkflows";
-import type { Workflow } from "../../route";
+import type { Workflow } from "@/api";
 
 const ITEMS_PER_PAGE = 8;
 
-export function useFilteredWorkflows() {
-  const workflows = useLoaderData<Workflow[]>();
-
+export function useFilteredWorkflows(workflows: Workflow[]) {
   const [params] = useValidatedSearchParams();
 
   const { workflows: filteredWorkflows, ...rest } = useMemo(

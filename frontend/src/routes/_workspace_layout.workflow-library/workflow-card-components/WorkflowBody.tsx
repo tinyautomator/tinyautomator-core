@@ -1,6 +1,5 @@
 import {
   WORKFLOW_STATUS_CONFIG,
-  WorkflowStatus,
   STATUS_BADGE_BASE,
   STATUS_BADGE_ICON,
   STATUS_BADGE_TEXT,
@@ -10,9 +9,10 @@ import {
 } from "./workflow-card.styles";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Workflow } from "@/api/workflow/types";
 
 interface StatusBadgeProps {
-  status: WorkflowStatus;
+  status: Workflow["status"];
 }
 
 export function WorkflowStatusBadge({ status }: StatusBadgeProps) {

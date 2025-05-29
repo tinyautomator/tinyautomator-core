@@ -62,9 +62,7 @@ export function EmptyState() {
       <p className="text-slate-500 dark:text-slate-400 max-w-md mb-6">
         {state.description}
       </p>
-      {!searchQuery &&
-        selectedTab !== "archived" &&
-        selectedTab !== "templates" && <CreateWorkflowButton />}
+      {!searchQuery && selectedTab !== "archived" && <CreateWorkflowButton />}
     </div>
   );
 }

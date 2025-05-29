@@ -1,20 +1,12 @@
 import { z } from "zod";
 
-export const WORKFLOW_STATUSES = [
-  "active",
-  "draft",
-  "templates",
-  "archived",
-] as const;
-export type WorkflowStatus = (typeof WORKFLOW_STATUSES)[number];
-
 export const searchParamsSchema = z.object({
   q: z.string().optional().default(""),
 
   tab: z
     .string()
     .transform((val) => val.toLowerCase())
-    .pipe(z.enum(WORKFLOW_STATUSES))
+    .pipe(z.enum(["draft", "active", "archived"]))
     .catch("active"),
 
   tags: z
