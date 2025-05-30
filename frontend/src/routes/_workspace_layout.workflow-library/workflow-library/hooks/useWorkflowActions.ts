@@ -4,7 +4,6 @@ import { workflowApi } from "@/api";
 
 export function useWorkflowActions(workflow: Workflow) {
   const navigate = useNavigate();
-  
   const workflowId = workflow.id.toString();
 
   const handleEdit = () => {
