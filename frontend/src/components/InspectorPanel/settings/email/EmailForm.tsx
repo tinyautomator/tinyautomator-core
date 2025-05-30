@@ -3,7 +3,6 @@ import { EmailFormValues } from "./utils/emailValidation";
 import { EmailSubjectField } from "./EmailSubjectField";
 import { EmailBodyField } from "./EmailBodyField";
 import { RecipientInputSection } from "./RecipientSection";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   FormField,
@@ -13,12 +12,13 @@ import {
 } from "@/components/ui/form";
 import { useFlowStore } from "@/components/Canvas/flowStore";
 
+import { FormControls } from "@/components/shared/FormControls";
+
 export function EmailForm() {
   const { reset, handleSubmit, getValues, control } =
     useFormContext<EmailFormValues>();
   const { getSelectedNode } = useFlowStore();
   const selectedNode = getSelectedNode();
-
   const onSubmit = handleSubmit(
     (data) => {
       if (!selectedNode) return;
@@ -30,7 +30,7 @@ export function EmailForm() {
       fieldOrder.forEach((field) => {
         const message = errors[field as keyof EmailFormValues]?.message;
         if (message) {
-          toast.error(message, { duration: 3000 });
+          toast.error(message);
         }
       });
     },
@@ -78,19 +78,7 @@ export function EmailForm() {
         )}
       />
 
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleReset}
-          className="flex-1"
-        >
-          Reset
-        </Button>
-        <Button type="submit" className="flex-1">
-          Save Email Settings
-        </Button>
-      </div>
+      <FormControls handleReset={handleReset} text="email" />
     </form>
   );
 }

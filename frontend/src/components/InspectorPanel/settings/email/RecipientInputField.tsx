@@ -42,6 +42,10 @@ export function RecipientInputField({
     }
   };
 
+  const handleBlur = () => {
+    inputValue !== "" && handleAdd(inputValue);
+  };
+
   return (
     <div className="space-y-1">
       <div className="flex gap-2">
@@ -52,6 +56,7 @@ export function RecipientInputField({
           onPaste={handlePaste}
           placeholder="Type or paste email addresses"
           aria-invalid={!!errors.recipients}
+          onBlur={handleBlur}
         />
         <Button
           type="button"
