@@ -52,6 +52,12 @@ export default function Layout() {
         setOpen(isFullscreen);
         setToggleInspectorPanel(isFullscreen);
         setToggleBlockPanel(isFullscreen);
+      } else if (e.key === "b" && !(e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setToggleBlockPanel((prev) => !prev);
+      } else if (e.key === "i") {
+        e.preventDefault();
+        setToggleInspectorPanel((prev) => !prev);
       }
     },
     [open, toggleBlockPanel, toggleInspectorPanel, setOpen],
