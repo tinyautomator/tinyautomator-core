@@ -77,7 +77,7 @@ export default function CanvasHeader({
               collapsed ? "Expand block panel" : "Collapse block panel"
             }
           >
-            <Menu className="w-5 h-5" />
+            <Menu />
           </Button>
         )}
         {(workflow?.name || name) && !editing ? (
