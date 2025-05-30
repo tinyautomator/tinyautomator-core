@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { FieldValues } from "react-hook-form";
+import { useState } from "react";
 
 interface ScheduleDatePickerFieldProps {
   field: FieldValues;
@@ -30,11 +31,11 @@ export function ScheduleDatePickerField({
 }: ScheduleDatePickerFieldProps) {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
-
+  const [open, setOpen] = useState(false);
   return (
     <FormItem className="flex flex-col">
       <FormLabel>{label}</FormLabel>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <FormControl>
             <Button
@@ -57,7 +58,10 @@ export function ScheduleDatePickerField({
           <Calendar
             mode="single"
             selected={field.value ? new Date(field.value) : now}
-            onSelect={field.onChange}
+            onSelect={(date) => {
+              field.onChange(date);
+              setOpen(false);
+            }}
             disabled={(date) => date < now}
             initialFocus
           />

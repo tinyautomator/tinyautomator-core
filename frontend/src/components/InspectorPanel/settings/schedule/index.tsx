@@ -12,19 +12,20 @@ import { useFlowStore } from "@/components/Canvas/flowStore";
 
 export function ScheduleSettings() {
   const { getSelectedNode } = useFlowStore();
-  const config = getSelectedNode()?.data?.config as
-    | Partial<ScheduleFormValues>
-    | undefined;
-
+  let config = getSelectedNode()?.data?.config as ScheduleFormValues;
+  const formDefaultValues = {
+    scheduleType: "once",
+    scheduledDate: new Date(),
+    scheduledTime: "00:00",
+  };
+  console.log("config", config);
+  if (Object.keys(config).length === 0) {
+    config = formDefaultValues as ScheduleFormValues;
+  }
+  const formValues = config || formDefaultValues;
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleFormSchema),
-    defaultValues: {
-      scheduleType: config?.scheduleType ?? "once",
-      scheduledDate: config?.scheduledDate
-        ? new Date(config.scheduledDate)
-        : new Date(),
-      scheduledTime: config?.scheduledTime ?? "",
-    },
+    defaultValues: formValues,
     mode: "onSubmit",
     reValidateMode: "onSubmit",
     delayError: 500,
@@ -43,6 +44,9 @@ export function ScheduleSettings() {
 
   const onSubmit = form.handleSubmit(
     (data) => {
+      if (getSelectedNode()) {
+        getSelectedNode()!.data.config = data;
+      }
       console.log("Submitting schedule settings data:", data);
       toast.success("Schedule settings saved successfully");
     },

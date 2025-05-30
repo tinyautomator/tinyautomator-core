@@ -43,7 +43,7 @@ export function ScheduleForm() {
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger className="h-12 gap-2 w-[200px]  rounded-md">
-                    <SelectValue placeholder="Select schedule frequency" />
+                    <SelectValue placeholder="Schedule Frequency" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
