@@ -24,7 +24,7 @@ export default function InspectorPanel({
   ) => void;
 }) {
   const [showPanel, setShowPanel] = useState(true);
-  const [width, setWidth] = useState(400);
+  const [width, setWidth] = useState(minWidth);
   const [isResizing, setIsResizing] = useState(false);
   const [z, setZ] = useState(false);
 
@@ -107,7 +107,6 @@ export default function InspectorPanel({
 
       if (duration > 300) {
         // holding down
-        console.log(newWidth, "im always zero");
         if (newWidth < minWidth && newWidth > 0) {
           setWidth(minWidth);
         }
@@ -120,7 +119,7 @@ export default function InspectorPanel({
         if (width) {
           setWidth(0);
         } else {
-          setWidth(400);
+          setWidth(minWidth);
         }
       }
       setIsResizing(false);
