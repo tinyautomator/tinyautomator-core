@@ -27,6 +27,7 @@ export function ArchiveWorkflowDialog({
     return null;
   }
   const { handleArchive } = useWorkflowActions(workflow);
+
   
   const handleConfirm = (e: React.MouseEvent) => {
     e.preventDefault();
