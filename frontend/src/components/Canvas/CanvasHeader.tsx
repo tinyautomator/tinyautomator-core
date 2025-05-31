@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Config, RenderedWorkflow, workflowApi } from "@/api";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Menu, Pencil } from "lucide-react";
 import { useFlowStore } from "@/components/Canvas/flowStore";
@@ -19,7 +19,18 @@ export default function CanvasHeader({
   const nodes = useFlowStore((s) => s.getNodes());
   const edges = useFlowStore((s) => s.getEdges());
   const [name, setName] = useState(workflow?.name || "");
-  const [editing, setEditing] = useState(workflow?.name ? false : true);
+  const [editingName, setEditingName] = useState(!workflow?.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSaveName = () => {
+    setEditingName(false);
+    setName(name.trim());
+  };
+
+  const handleEditName = () => {
+    setEditingName(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
 
   const handleSaveWorkflow = async () => {
     if (workflow) {
@@ -62,6 +73,11 @@ export default function CanvasHeader({
     }
   };
 
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleSaveName();
+    if (e.key === "Escape") setEditingName(false);
+  };
+
   return (
     <div className="flex h-1/15 items-center justify-between bg-white px-4">
       <div className="flex items-center gap-2">
@@ -70,9 +86,7 @@ export default function CanvasHeader({
             variant="ghost"
             size="icon"
             className="mr-2"
-            onClick={() => {
-              onCollapseToggle();
-            }}
+            onClick={onCollapseToggle}
             aria-label={
               collapsed ? "Expand block panel" : "Collapse block panel"
             }
@@ -80,52 +94,33 @@ export default function CanvasHeader({
             <Menu />
           </Button>
         )}
-        {(workflow?.name || name) && !editing ? (
+        {editingName ? (
+          <Input
+            ref={inputRef}
+            type="text"
+            placeholder="Enter workflow name..."
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={handleSaveName}
+            onKeyDown={handleInputKeyDown}
+            className="w-48"
+          />
+        ) : (
           <div className="flex items-center gap-2">
             <h4 className="text-md tracking-tighter text-gray-800 leading-tight">
               {name}
             </h4>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setEditing(true);
-              }}
-            >
+            <Button variant="ghost" size="icon" onClick={handleEditName}>
               <Pencil className="w-5 h-5" />
             </Button>
           </div>
-        ) : (
-          editing && (
-            <Input
-              type="text"
-              placeholder="Enter workflow name..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSaveWorkflow();
-                  setEditing(false);
-                  setName(name);
-                }
-              }}
-            />
-          )
         )}
         <Badge variant="outline" className="text-xs">
           Draft
         </Badge>
       </div>
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            handleSaveWorkflow();
-            setName(name);
-            setEditing(false);
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={handleSaveWorkflow}>
           Save
         </Button>
         <Button size="sm">Publish</Button>
