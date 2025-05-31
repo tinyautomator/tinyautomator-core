@@ -22,9 +22,9 @@ export class WorkflowApiClient extends BaseApiClient {
   async createWorkflow(
     data: CreateWorkflowDto,
     authToken?: string,
-  ): Promise<number> {
+  ): Promise<{ id: number }> {
     console.log("createWorkflow", data);
-    return await this.post<number>("/api/workflow", authToken, data);
+    return await this.post<{ id: number }>("/api/workflow", authToken, data);
   }
 
   async updateWorkflow(
@@ -41,7 +41,6 @@ export class WorkflowApiClient extends BaseApiClient {
     const res = await this.post<{ run_id: number }>(
       `/api/workflow-run/${id}`,
       authToken,
-      {},
     );
     return res.run_id;
   }

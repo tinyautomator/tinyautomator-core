@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Menu, Pencil } from "lucide-react";
 import { useFlowStore } from "@/components/Canvas/flowStore";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 export default function CanvasHeader({
   workflow,
@@ -20,45 +21,50 @@ export default function CanvasHeader({
   const edges = useFlowStore((s) => s.getEdges());
   const [name, setName] = useState(workflow?.name || "");
   const [editing, setEditing] = useState(workflow?.name ? false : true);
-
+  const navigate = useNavigate();
   const handleSaveWorkflow = async () => {
-    if (workflow) {
-      workflowApi.updateWorkflow(workflow.id, {
-        name: name || workflow.name,
-        description: workflow.description,
-        nodes: nodes.map((node) => ({
-          id: node.id,
-          category: node.data.category as string,
-          node_type: node.data.nodeType as string,
-          config: node.data.config as Config,
-          position: node.position,
-        })),
-        edges: edges.map((edge) => ({
-          id: edge.id,
-          source_node_id: edge.source,
-          target_node_id: edge.target,
-        })),
-      });
-      toast.success("Workflow updated successfully");
-    } else {
-      workflowApi.createWorkflow({
-        name: name,
-        description: "New Workflow Description",
-        status: "draft",
-        nodes: nodes.map((node) => ({
-          id: node.id,
-          category: node.data.category as string,
-          node_type: node.data.nodeType as string,
-          config: node.data.config as Config,
-          position: node.position,
-        })),
-        edges: edges.map((edge) => ({
-          id: edge.id,
-          source_node_id: edge.source,
-          target_node_id: edge.target,
-        })),
-      });
+    try {
+      if (workflow) {
+        workflowApi.updateWorkflow(workflow.id, {
+          name: name || workflow.name,
+          description: workflow.description,
+          nodes: nodes.map((node) => ({
+            id: node.id,
+            category: node.data.category as string,
+            node_type: node.data.nodeType as string,
+            config: node.data.config as Config,
+            position: node.position,
+          })),
+          edges: edges.map((edge) => ({
+            id: edge.id,
+            source_node_id: edge.source,
+            target_node_id: edge.target,
+          })),
+        });
+      } else {
+        const response = await workflowApi.createWorkflow({
+          name: name,
+          description: "New Workflow Description",
+          status: "draft",
+          nodes: nodes.map((node) => ({
+            id: node.id,
+            category: node.data.category as string,
+            node_type: node.data.nodeType as string,
+            config: node.data.config as Config,
+            position: node.position,
+          })),
+          edges: edges.map((edge) => ({
+            id: edge.id,
+            source_node_id: edge.source,
+            target_node_id: edge.target,
+          })),
+        });
+        navigate(`/workflow-builder/${response.id}`);
+      }
       toast.success("Workflow saved successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save workflow");
     }
   };
 
