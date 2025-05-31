@@ -3,26 +3,29 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   scheduleFormSchema,
   type ScheduleFormValues,
-} from "./utils/scheduleValidation";
+} from "./scheduleValidation";
 import { ScheduleForm } from "./ScheduleForm";
 import { SchedulePreviewModal } from "./SchedulePreview";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useFlowStore } from "@/components/Canvas/flowStore";
+import { combineDateAndTime, getNextHalfHour } from "./utils";
+import { ScheduleType } from "./scheduleValidation";
 
 export function ScheduleSettings() {
+  const now = new Date();
   const { getSelectedNode } = useFlowStore();
-  let config = getSelectedNode()?.data?.config as ScheduleFormValues;
+  const config = getSelectedNode()?.data?.config || ({} as ScheduleFormValues);
+
   const formDefaultValues = {
-    scheduleType: "once",
-    scheduledDate: new Date(),
-    scheduledTime: "00:00",
+    scheduleType: ScheduleType.ONCE,
+    scheduledDate: now,
+    scheduledTime: getNextHalfHour(now),
   };
-  console.log("config", config);
-  if (Object.keys(config).length === 0) {
-    config = formDefaultValues as ScheduleFormValues;
-  }
-  const formValues = config || formDefaultValues;
+
+  const formValues =
+    Object.keys(config || {}).length === 0 ? formDefaultValues : config;
+
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleFormSchema),
     defaultValues: formValues,
@@ -34,20 +37,28 @@ export function ScheduleSettings() {
   });
 
   const handleReset = () => {
+    const resetDate = new Date();
     form.reset({
-      scheduleType: "once",
-      scheduledDate: new Date(),
-      scheduledTime: "",
+      scheduleType: ScheduleType.ONCE,
+      scheduledDate: resetDate,
+      scheduledTime: getNextHalfHour(resetDate),
     });
     toast.info("Form reset to default values");
   };
 
   const onSubmit = form.handleSubmit(
     (data) => {
-      if (getSelectedNode()) {
-        getSelectedNode()!.data.config = data;
+      const node = getSelectedNode();
+      if (node) {
+        node.data.config = {
+          scheduleType: data.scheduleType,
+          scheduledDate: combineDateAndTime(
+            data.scheduledDate,
+            data.scheduledTime,
+          ).toISOString(),
+        };
       }
-      console.log("Submitting schedule settings data:", data);
+      console.log("node", node?.data.config);
       toast.success("Schedule settings saved successfully");
     },
     (errors) => {
@@ -61,23 +72,21 @@ export function ScheduleSettings() {
     <FormProvider {...form}>
       <form onSubmit={onSubmit}>
         <div className="space-y-6 select-none">
-          <ScheduleForm />
+          <ScheduleForm now={now} />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-6">
+          <SchedulePreviewModal />
           <Button
+            className="w-24"
             type="button"
             variant="outline"
             onClick={handleReset}
-            className="flex-1"
           >
             Reset
           </Button>
-          <Button type="submit" className="flex-1">
-            Save Schedule Settings
+          <Button className="flex-1" type="submit">
+            Save
           </Button>
-        </div>
-        <div className="flex justify-start">
-          <SchedulePreviewModal />
         </div>
       </form>
     </FormProvider>

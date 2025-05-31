@@ -20,21 +20,20 @@ import { useState } from "react";
 
 interface ScheduleDatePickerFieldProps {
   field: FieldValues;
-  label?: string;
   description?: string;
+  now: Date;
 }
 
 export function ScheduleDatePickerField({
   field,
-  label = "Date",
   description,
+  now,
 }: ScheduleDatePickerFieldProps) {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
   const [open, setOpen] = useState(false);
+
   return (
     <FormItem className="flex flex-col">
-      <FormLabel>{label}</FormLabel>
+      <FormLabel>Date</FormLabel>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <FormControl>
@@ -45,11 +44,7 @@ export function ScheduleDatePickerField({
                 !field.value && "text-muted-foreground",
               )}
             >
-              {field.value ? (
-                format(field.value, "PPP")
-              ) : (
-                <span>Pick a date</span>
-              )}
+              {field.value ? format(field.value, "PPPP") : "Pick a date"}
               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
             </Button>
           </FormControl>
@@ -57,7 +52,7 @@ export function ScheduleDatePickerField({
         <PopoverContent className="w-64 p-0" align="start">
           <Calendar
             mode="single"
-            selected={field.value ? new Date(field.value) : now}
+            selected={field.value}
             onSelect={(date) => {
               field.onChange(date);
               setOpen(false);

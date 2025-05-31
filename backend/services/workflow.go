@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/internal"
+	"github.com/tinyautomator/tinyautomator-core/backend/internal/handlers/triggers"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/yourbasic/graph"
 )
@@ -22,14 +23,20 @@ type WorkflowService struct {
 	workflowRepo         models.WorkflowRepository
 	workflowScheduleRepo models.WorkflowScheduleRepository
 	orchestrator         models.OrchestratorService
+	triggerRegistry      *triggers.TriggerRegistry
 }
 
 func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
+	logger := cfg.GetLogger()
+	t := triggers.NewTriggerRegistry()
+	t.Register("schedule", triggers.NewScheduleTriggerHandler(cfg.GetLogger()))
+
 	return &WorkflowService{
-		logger:               cfg.GetLogger(),
+		logger:               logger,
 		workflowRepo:         cfg.GetWorkflowRepository(),
 		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
 		orchestrator:         cfg.GetOrchestratorService(),
+		triggerRegistry:      t,
 	}
 }
 
@@ -183,7 +190,7 @@ func (s *WorkflowService) CreateWorkflow(
 	status string,
 	nodes []*models.WorkflowNodeDTO,
 	edges []*models.WorkflowEdgeDTO,
-) (*models.Workflow, error) {
+) (*models.WorkflowGraph, error) {
 	n, e := s.prepForValidate(nodes, edges)
 	if err := s.ValidateWorkflowGraph(n, e); err != nil {
 		return nil, fmt.Errorf("failed to validate workflow graph: %w", err)
@@ -198,6 +205,17 @@ func (s *WorkflowService) CreateWorkflow(
 	w, err := s.workflowRepo.CreateWorkflow(ctx, userID, name, description, status, nodes, edges)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create workflow: %w", err)
+	}
+
+	rootNodes := internal.GetRootNodes(w)
+	for _, node := range rootNodes {
+		if node.Category == "trigger" {
+			if err := s.triggerRegistry.Execute(node.NodeType, triggers.TriggerNodeInput{
+				Config: node.Config,
+			}); err != nil {
+				return nil, fmt.Errorf("failed to execute trigger: %w", err)
+			}
+		}
 	}
 
 	return w, nil

@@ -25,7 +25,7 @@ import {
   isSameDay as dfIsSameDay,
 } from "date-fns";
 import { useFormContext, useWatch } from "react-hook-form";
-import { ScheduleFormValues } from "./utils/scheduleValidation";
+import { type ScheduleFormValues } from "./scheduleValidation";
 
 const HOUR_OPTIONS = Array.from({ length: 12 }, (_, i) =>
   (i + 1).toString().padStart(2, "0"),
