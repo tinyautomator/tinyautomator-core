@@ -179,6 +179,14 @@ func (s *WorkflowService) validateNode(node *models.WorkflowNodeDTO) error {
 		return fmt.Errorf("validation error: node config is not valid JSON: %w", err)
 	}
 
+	if node.Category == "trigger" {
+		if err := s.triggerRegistry.Validate(node.NodeType, triggers.TriggerNodeInput{
+			Config: node.Config,
+		}); err != nil {
+			return fmt.Errorf("trigger validation error: %w", err)
+		}
+	}
+
 	return nil
 }
 

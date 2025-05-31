@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { combineDateAndTime } from "./utils";
+import { combineDateAndTime, getRoundedDownDate } from "./utils";
 
 export enum ScheduleType {
   ONCE = "once",
@@ -29,11 +29,9 @@ export const scheduleFormSchema = z
       data.scheduledDate,
       data.scheduledTime,
     );
-    const dateOnly = new Date(data.scheduledDate);
-    dateOnly.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (dateOnly < today) {
+    if (
+      getRoundedDownDate(data.scheduledDate) < getRoundedDownDate(new Date())
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Date must be in the future",

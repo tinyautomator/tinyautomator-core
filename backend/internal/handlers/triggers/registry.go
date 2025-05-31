@@ -28,6 +28,19 @@ func (r *TriggerRegistry) Register(nodeType string, handler TriggerHandler) {
 	r.handlers[nodeType] = handler
 }
 
+func (r *TriggerRegistry) Validate(nodeType string, input TriggerNodeInput) error {
+	handler, exists := r.handlers[nodeType]
+	if !exists {
+		return fmt.Errorf("unknown trigger type: %s", nodeType)
+	}
+
+	if err := handler.Validate(input); err != nil {
+		return fmt.Errorf("failed to validate trigger: %w", err)
+	}
+
+	return nil
+}
+
 func (r *TriggerRegistry) Execute(nodeType string, input TriggerNodeInput) error {
 	handler, exists := r.handlers[nodeType]
 	if !exists {

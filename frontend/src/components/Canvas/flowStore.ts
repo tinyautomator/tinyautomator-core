@@ -365,7 +365,6 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   },
 
   onConnect: (params: Connection) => {
-    console.log("onConnect", params);
     if (!params.source || !params.target) {
       console.error("Invalid connection params:", params);
       return;

@@ -1,5 +1,17 @@
-import { addDays, addMonths, addWeeks, format } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  format,
+  addMinutes,
+  setMinutes,
+  setHours,
+  parse,
+  isValid,
+} from "date-fns";
 import { ScheduleType } from "./scheduleValidation";
+
+export const MINUTE_OPTIONS = ["00", "10", "20", "30", "40", "50"];
 
 export function getTimeZoneAbbreviation(date: Date): string | null {
   try {
@@ -107,4 +119,63 @@ export function getScheduleDescription(
     default:
       return "Invalid schedule configuration";
   }
+}
+
+export function getRoundedDownDate(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function dateTo12HourParts(date: Date) {
+  const h = date.getHours();
+  const m = date.getMinutes();
+  const period = h >= 12 ? "PM" : "AM";
+  let hour12 = h % 12;
+  if (hour12 === 0) hour12 = 12;
+  return {
+    hour: hour12.toString().padStart(2, "0"),
+    minute: m.toString().padStart(2, "0"),
+    period,
+  };
+}
+
+export function getTimePartsFromValue(value: string, offset: number = 0) {
+  if (!value) {
+    const now = addMinutes(new Date(), offset);
+    const m = now.getMinutes();
+    const minuteOption =
+      MINUTE_OPTIONS.find((opt) => parseInt(opt) >= m) || MINUTE_OPTIONS[0];
+    let rounded = setMinutes(now, parseInt(minuteOption));
+
+    if (parseInt(minuteOption) < m) {
+      rounded = setHours(rounded, rounded.getHours() + 1);
+    }
+    const parts = dateTo12HourParts(rounded);
+    return {
+      hour: parts.hour,
+      minute: minuteOption,
+      period: parts.period,
+    };
+  }
+
+  const parsed = parse(value, "HH:mm", new Date());
+
+  if (!isValid(parsed)) {
+    const now = addMinutes(new Date(), offset);
+    const m = now.getMinutes();
+    const minuteOption =
+      MINUTE_OPTIONS.find((opt) => parseInt(opt) >= m) || MINUTE_OPTIONS[0];
+    let rounded = setMinutes(now, parseInt(minuteOption));
+    if (parseInt(minuteOption) < m) {
+      rounded = setHours(rounded, rounded.getHours() + 1);
+    }
+    const parts = dateTo12HourParts(rounded);
+    return {
+      hour: parts.hour,
+      minute: minuteOption,
+      period: parts.period,
+    };
+  }
+  const parts = dateTo12HourParts(parsed);
+
+  return parts;
 }
