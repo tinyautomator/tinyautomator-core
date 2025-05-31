@@ -26,65 +26,15 @@ import {
 } from "date-fns";
 import { useFormContext, useWatch } from "react-hook-form";
 import { type ScheduleFormValues } from "./scheduleValidation";
+import { getTimePartsFromValue, MINUTE_OPTIONS } from "./utils";
 
 const HOUR_OPTIONS = Array.from({ length: 12 }, (_, i) =>
   (i + 1).toString().padStart(2, "0"),
 );
-const MINUTE_OPTIONS = ["00", "10", "20", "30", "40", "50"];
+
 const PERIOD_OPTIONS = ["AM", "PM"];
 
 const MINUTE_OFFSET = 10;
-
-function dateTo12HourParts(date: Date) {
-  const h = date.getHours();
-  const m = date.getMinutes();
-  const period = h >= 12 ? "PM" : "AM";
-  let hour12 = h % 12;
-  if (hour12 === 0) hour12 = 12;
-  return {
-    hour: hour12.toString().padStart(2, "0"),
-    minute: m.toString().padStart(2, "0"),
-    period,
-  };
-}
-
-function getTimePartsFromValue(value: string) {
-  if (!value) {
-    const now = dfAddMinutes(new Date(), MINUTE_OFFSET);
-    const m = now.getMinutes();
-    const minuteOption =
-      MINUTE_OPTIONS.find((opt) => parseInt(opt) >= m) || MINUTE_OPTIONS[0];
-    let rounded = dfSetMinutes(now, parseInt(minuteOption));
-    if (parseInt(minuteOption) < m) {
-      rounded = dfSetHours(rounded, rounded.getHours() + 1);
-    }
-    const parts = dateTo12HourParts(rounded);
-    return {
-      hour: parts.hour,
-      minute: minuteOption,
-      period: parts.period,
-    };
-  }
-  const parsed = dfParse(value, "HH:mm", new Date());
-  if (!dfIsValid(parsed)) {
-    const now = dfAddMinutes(new Date(), MINUTE_OFFSET);
-    const m = now.getMinutes();
-    const minuteOption =
-      MINUTE_OPTIONS.find((opt) => parseInt(opt) >= m) || MINUTE_OPTIONS[0];
-    let rounded = dfSetMinutes(now, parseInt(minuteOption));
-    if (parseInt(minuteOption) < m) {
-      rounded = dfSetHours(rounded, rounded.getHours() + 1);
-    }
-    const parts = dateTo12HourParts(rounded);
-    return {
-      hour: parts.hour,
-      minute: minuteOption,
-      period: parts.period,
-    };
-  }
-  const parts = dateTo12HourParts(parsed);
-  return parts;
-}
 
 function getDateFromField(dateField: unknown): Date | undefined {
   if (!dateField) return undefined;
@@ -130,7 +80,7 @@ export function CustomTimePicker({
   const todaySelected = isDateToday(selectedDate);
 
   const { hour, minute, period } = useMemo(
-    () => getTimePartsFromValue(value),
+    () => getTimePartsFromValue(value, MINUTE_OFFSET),
     [value],
   );
 
@@ -225,7 +175,7 @@ export function CustomTimePicker({
                   align="center"
                   className="min-w-[5.5rem] max-w-[5.5rem] p-0"
                 >
-                  {options.map((opt) => (
+                  {options.map((opt: string) => (
                     <SelectItem
                       key={opt}
                       value={opt}

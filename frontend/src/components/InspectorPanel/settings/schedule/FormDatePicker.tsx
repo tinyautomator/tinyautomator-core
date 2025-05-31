@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { FieldValues } from "react-hook-form";
 import { useState } from "react";
+import { getRoundedDownDate } from "./utils";
 
 interface ScheduleDatePickerFieldProps {
   field: FieldValues;
@@ -57,7 +58,7 @@ export function ScheduleDatePickerField({
               field.onChange(date);
               setOpen(false);
             }}
-            disabled={(date) => date < now}
+            disabled={(date) => date < getRoundedDownDate(now)}
             initialFocus
           />
         </PopoverContent>

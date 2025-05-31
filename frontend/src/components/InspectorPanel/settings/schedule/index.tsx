@@ -1,5 +1,6 @@
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import {
   scheduleFormSchema,
   type ScheduleFormValues,
@@ -13,18 +14,25 @@ import { combineDateAndTime, getNextHalfHour } from "./utils";
 import { ScheduleType } from "./scheduleValidation";
 
 export function ScheduleSettings() {
-  const now = new Date();
   const { getSelectedNode } = useFlowStore();
-  const config = getSelectedNode()?.data?.config || ({} as ScheduleFormValues);
-
-  const formDefaultValues = {
+  const now = new Date();
+  let formValues = {
     scheduleType: ScheduleType.ONCE,
     scheduledDate: now,
     scheduledTime: getNextHalfHour(now),
   };
 
-  const formValues =
-    Object.keys(config || {}).length === 0 ? formDefaultValues : config;
+  const config = getSelectedNode()?.data?.config as ScheduleFormValues;
+
+  if (Object.keys(config).length !== 0) {
+    // TODO: should we validate the config is valid?
+    const configDate = new Date(config.scheduledDate);
+    formValues = {
+      scheduleType: config.scheduleType as ScheduleType,
+      scheduledDate: configDate,
+      scheduledTime: format(configDate, "HH:mm"),
+    };
+  }
 
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleFormSchema),
@@ -58,7 +66,6 @@ export function ScheduleSettings() {
           ).toISOString(),
         };
       }
-      console.log("node", node?.data.config);
       toast.success("Schedule settings saved successfully");
     },
     (errors) => {
