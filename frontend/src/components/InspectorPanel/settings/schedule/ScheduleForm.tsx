@@ -1,6 +1,5 @@
-// frontend/src/components/ScheduleForm.tsx
 import { useFormContext } from "react-hook-form";
-import type { ScheduleFormValues } from "./utils/scheduleValidation"; //
+import { ScheduleType, type ScheduleFormValues } from "./scheduleValidation";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   FormControl,
@@ -16,20 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScheduleDatePickerField } from "./FormDatePicker"; //
-import { useMemo } from "react";
-import { CustomTimePicker } from "./FormTimePicker"; //
+import { ScheduleDatePickerField } from "./FormDatePicker";
+import { CustomTimePicker } from "./FormTimePicker";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getTimeZoneAbbreviation } from "./utils/getTimeZone";
+import { getTimeZoneAbbreviation } from "./utils";
 
-export function ScheduleForm() {
+export function ScheduleForm({ now }: { now: Date }) {
   const form = useFormContext<ScheduleFormValues>();
-
-  const timeZoneAbbr = useMemo(() => getTimeZoneAbbreviation(), []);
 
   return (
     <Card>
@@ -47,10 +43,10 @@ export function ScheduleForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="once">Run Once</SelectItem>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value={ScheduleType.ONCE}>Run Once</SelectItem>
+                  <SelectItem value={ScheduleType.DAILY}>Daily</SelectItem>
+                  <SelectItem value={ScheduleType.WEEKLY}>Weekly</SelectItem>
+                  <SelectItem value={ScheduleType.MONTHLY}>Monthly</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -60,7 +56,9 @@ export function ScheduleForm() {
         <FormField
           control={form.control}
           name="scheduledDate"
-          render={({ field }) => <ScheduleDatePickerField field={field} />}
+          render={({ field }) => (
+            <ScheduleDatePickerField field={field} now={now} />
+          )}
         />
         <FormField
           control={form.control}
@@ -69,7 +67,7 @@ export function ScheduleForm() {
             <FormItem>
               <FormLabel className="flex items-center gap-2">Time</FormLabel>
               <FormControl>
-                <div className="flex items-center h-12 gap-2 w-[200px] rounded-md">
+                <div className="flex items-center gap-2 w-[200px] rounded-md">
                   <div className="flex-1 h-full">
                     <CustomTimePicker
                       value={field.value}
@@ -80,11 +78,11 @@ export function ScheduleForm() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="text-muted-foreground text-sm mr-1 pb-1.75 whitespace-nowrap">
-                          {timeZoneAbbr}
+                          {getTimeZoneAbbreviation(now)}
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="alignOffset={-40}">
-                        We've detected this timezone.
+                        Local timezone
                       </TooltipContent>
                     </Tooltip>
                   </span>

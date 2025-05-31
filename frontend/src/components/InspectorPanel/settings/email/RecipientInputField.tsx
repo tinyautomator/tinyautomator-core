@@ -43,7 +43,9 @@ export function RecipientInputField({
   };
 
   const handleBlur = () => {
-    inputValue !== "" && handleAdd(inputValue);
+    if (inputValue !== "") {
+      handleAdd(inputValue);
+    }
   };
 
   return (

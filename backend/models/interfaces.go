@@ -68,7 +68,7 @@ type WorkflowRepository interface {
 		status string,
 		nodes []*WorkflowNodeDTO,
 		edges []*WorkflowEdgeDTO,
-	) (*Workflow, error)
+	) (*WorkflowGraph, error)
 	UpdateWorkflow(
 		ctx context.Context,
 		workflowID int32,
@@ -167,7 +167,7 @@ type WorkflowService interface {
 		status string,
 		nodes []*WorkflowNodeDTO,
 		edges []*WorkflowEdgeDTO,
-	) (*Workflow, error)
+	) (*WorkflowGraph, error)
 	UpdateWorkflow(
 		ctx context.Context,
 		workflowID int32,

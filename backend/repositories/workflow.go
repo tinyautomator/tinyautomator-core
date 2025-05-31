@@ -99,7 +99,7 @@ func (r *workflowRepo) CreateWorkflow(
 	status string,
 	nodes []*models.WorkflowNodeDTO,
 	edges []*models.WorkflowEdgeDTO,
-) (*models.Workflow, error) {
+) (*models.WorkflowGraph, error) {
 	if userID == "" || name == "" || description == "" || status == "" {
 		return nil, fmt.Errorf("workflow metadata is missing")
 	}
@@ -136,6 +136,11 @@ func (r *workflowRepo) CreateWorkflow(
 	}
 
 	createdNodeIDMap := make(map[string]int32)
+	wg := &models.WorkflowGraph{
+		ID:    w.ID,
+		Nodes: make([]*models.WorkflowNode, 0, len(nodes)),
+		Edges: make([]*models.WorkflowEdge, 0, len(edges)),
+	}
 
 	for _, node := range nodes {
 		if node.Category == "" {
@@ -166,6 +171,15 @@ func (r *workflowRepo) CreateWorkflow(
 		}
 
 		createdNodeIDMap[node.ID] = n.ID
+		wg.Nodes = append(wg.Nodes, &models.WorkflowNode{
+			WorkflowNodeCore: models.WorkflowNodeCore{
+				ID:       n.ID,
+				Category: node.Category,
+				NodeType: node.NodeType,
+				Config:   node.Config,
+			},
+			WorkflowID: w.ID,
+		})
 
 		_, err = qtx.CreateWorkflowNodeUi(ctx, &dao.CreateWorkflowNodeUiParams{
 			ID:        n.ID,
@@ -182,7 +196,7 @@ func (r *workflowRepo) CreateWorkflow(
 			return nil, fmt.Errorf("edge source or target node ID is missing for edge %s", edge.ID)
 		}
 
-		_, err = qtx.CreateWorkflowEdge(ctx, &dao.CreateWorkflowEdgeParams{
+		e, err := qtx.CreateWorkflowEdge(ctx, &dao.CreateWorkflowEdgeParams{
 			WorkflowID:   w.ID,
 			SourceNodeID: createdNodeIDMap[edge.SourceNodeID],
 			TargetNodeID: createdNodeIDMap[edge.TargetNodeID],
@@ -190,23 +204,19 @@ func (r *workflowRepo) CreateWorkflow(
 		if err != nil {
 			return nil, fmt.Errorf("db error create workflow edges: %w", err)
 		}
+
+		wg.Edges = append(wg.Edges, &models.WorkflowEdge{
+			SourceNodeID: e.SourceNodeID,
+			TargetNodeID: e.TargetNodeID,
+			WorkflowID:   w.ID,
+		})
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("failed to commit transaction in create workflow: %w", err)
 	}
 
-	return &models.Workflow{
-		WorkflowCore: models.WorkflowCore{
-			ID:          w.ID,
-			Name:        w.Name,
-			Description: w.Description,
-			Status:      w.Status,
-			CreatedAt:   w.CreatedAt,
-			UpdatedAt:   w.UpdatedAt,
-		},
-		UserID: w.UserID,
-	}, nil
+	return wg, nil
 }
 
 func (r workflowRepo) UpdateWorkflow(
