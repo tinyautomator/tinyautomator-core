@@ -62,7 +62,7 @@ func (h *ScheduleTriggerHandler) Validate(input TriggerNodeInput) error {
 		return fmt.Errorf("schedule type is required")
 	}
 
-	if err := validateScheduleType(scheduleType.(models.ScheduleType)); err != nil {
+	if err := validateScheduleType(models.ScheduleType(scheduleType.(string))); err != nil {
 		h.logger.WithFields(logrus.Fields{
 			"config": input.Config,
 		}).Error("invalid schedule type")

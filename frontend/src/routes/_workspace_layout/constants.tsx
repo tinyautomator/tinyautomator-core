@@ -43,7 +43,6 @@ export const INTEGRATION_ITEMS: {
   label: string;
   icon: JSX.Element;
   path: string;
-  path: string;
 }[] = [
   {
     label: "Email",
@@ -53,27 +52,27 @@ export const INTEGRATION_ITEMS: {
   {
     label: "Calendar",
     icon: <Calendar className="h-4 w-4" />,
-    path: "/dashboard",
+    path: "/calendar",
   },
   {
     label: "Slack",
     icon: <MessageSquare className="h-4 w-4" />,
-    path: "/dashboard",
+    path: "/slack",
   },
   {
     label: "Spreadsheets",
     icon: <Database className="h-4 w-4" />,
-    path: "/dashboard",
+    path: "/spreadsheets",
   },
   {
     label: "Forms",
     icon: <FileText className="h-4 w-4" />,
-    path: "/dashboard",
+    path: "/forms",
   },
   {
     label: "Custom Code",
     icon: <Code className="h-4 w-4" />,
-    path: "/dashboard",
+    path: "/custom-code",
   },
 ];
 

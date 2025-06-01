@@ -27,12 +27,17 @@ type ExecutorService struct {
 func NewExecutorService(cfg models.AppConfig) models.ExecutorService {
 	logger := cfg.GetLogger()
 	actionRegistry := handlers.NewActionRegistry(logger)
-	actionRegistry.Register("send_email", handlers.NewSendEmailHandler(logger))
+	redisClient := cfg.GetRedisClient()
+	// TODO: Remove this once we have a proper way to store the token
+	actionRegistry.Register(
+		"send_email",
+		handlers.NewSendEmailHandler(logger, redisClient, cfg.GetGmailOAuthConfig()),
+	)
 
 	return &ExecutorService{
 		logger:          logger,
 		rabbitMQClient:  cfg.GetRabbitMQClient(),
-		redisClient:     cfg.GetRedisClient(),
+		redisClient:     redisClient,
 		workflowRepo:    cfg.GetWorkflowRepository(),
 		workflowRunRepo: cfg.GetWorkflowRunRepository(),
 		actionRegistry:  actionRegistry,

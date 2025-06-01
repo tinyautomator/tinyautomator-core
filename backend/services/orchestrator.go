@@ -102,21 +102,35 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 	}).Info("executing workflow")
 
 	for _, parent := range rootNodes {
-		err = internal.EnqueueChildNodes(
-			ctx,
-			s.logger,
-			s.workflowRunRepo,
-			s.rabbitMQClient,
-			workflowID,
-			parent.ID,
-			run.ID,
-		)
-		if err != nil {
-			return -1, fmt.Errorf("orchestrate workflow failed to enqueue child nodes: %w", err)
-		}
+		// trigger nodes are orchestrated on workflow creation so we just enqueue their child nodes here
+		if parent.Category == "trigger" {
+			if err := internal.EnqueueChildNodes(
+				ctx,
+				s.logger,
+				s.workflowRunRepo,
+				s.rabbitMQClient,
+				workflowID,
+				parent.ID,
+				run.ID,
+			); err != nil {
+				return -1, fmt.Errorf("orchestrate workflow failed to enqueue child nodes: %w", err)
+			}
 
-		if err := s.redisClient.PublishNodeStatusUpdate(ctx, run.ID, parent.ID, "success", nil); err != nil {
-			s.logger.WithError(err).Warn("failed to publish root node status update to redis")
+			if err := s.redisClient.PublishNodeStatusUpdate(ctx, run.ID, parent.ID, "success", nil); err != nil {
+				s.logger.WithError(err).Warn("failed to publish root node status update to redis")
+			}
+		} else {
+			if err := internal.EnqueueNode(
+				ctx,
+				s.logger,
+				s.workflowRunRepo,
+				s.rabbitMQClient,
+				workflowID,
+				run.ID,
+				parent.ID,
+			); err != nil {
+				return -1, fmt.Errorf("orchestrate workflow failed to enqueue node: %w", err)
+			}
 		}
 	}
 

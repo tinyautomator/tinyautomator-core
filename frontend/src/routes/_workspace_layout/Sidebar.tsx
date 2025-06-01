@@ -61,23 +61,21 @@ export default function () {
             <SidebarMenu>
               {INTEGRATION_ITEMS.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton tooltip={item.label}>
-                    <NavLink to={item.path}>
-                      {({ isActive }) => (
-                        <SidebarMenuButton
-                          tooltip={item.label}
-                          asChild
-                          isActive={isActive}
-                          className="active:scale-[0.99] !cursor-default"
-                        >
-                          <div className="flex items-center gap-2">
-                            {item.icon}
-                            <span>{item.label}</span>
-                          </div>
-                        </SidebarMenuButton>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
+                  <NavLink to={item.path}>
+                    {({ isActive }) => (
+                      <SidebarMenuButton
+                        tooltip={item.label}
+                        asChild
+                        isActive={isActive}
+                        className="active:scale-[0.99] !cursor-default"
+                      >
+                        <div className="flex items-center gap-2">
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </div>
+                      </SidebarMenuButton>
+                    )}
+                  </NavLink>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
