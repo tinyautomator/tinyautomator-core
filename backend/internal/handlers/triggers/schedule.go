@@ -13,7 +13,10 @@ type ScheduleTriggerHandler struct {
 	schedulerSvc models.SchedulerService
 }
 
-func NewScheduleTriggerHandler(logger logrus.FieldLogger, schedulerSvc models.SchedulerService) TriggerHandler {
+func NewScheduleTriggerHandler(
+	logger logrus.FieldLogger,
+	schedulerSvc models.SchedulerService,
+) TriggerHandler {
 	return &ScheduleTriggerHandler{
 		logger:       logger,
 		schedulerSvc: schedulerSvc,
@@ -63,6 +66,7 @@ func (h *ScheduleTriggerHandler) Validate(input TriggerNodeInput) error {
 		h.logger.WithFields(logrus.Fields{
 			"config": input.Config,
 		}).Error("invalid schedule type")
+
 		return err
 	}
 

@@ -30,7 +30,10 @@ type WorkflowService struct {
 func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 	logger := cfg.GetLogger()
 	t := triggers.NewTriggerRegistry()
-	t.Register("schedule", triggers.NewScheduleTriggerHandler(cfg.GetLogger(), cfg.GetSchedulerService()))
+	t.Register(
+		"schedule",
+		triggers.NewScheduleTriggerHandler(cfg.GetLogger(), cfg.GetSchedulerService()),
+	)
 
 	return &WorkflowService{
 		logger:               logger,
