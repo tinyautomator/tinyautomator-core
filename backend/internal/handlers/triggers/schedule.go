@@ -3,6 +3,7 @@ package triggers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
@@ -31,43 +32,14 @@ func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeI
 	return nil
 }
 
-func validateScheduleType(scheduleType models.ScheduleType) error {
-	scheduleTypes := []models.ScheduleType{
-		models.ScheduleTypeOnce,
-		models.ScheduleTypeDaily,
-		models.ScheduleTypeWeekly,
-		models.ScheduleTypeMonthly,
-	}
-
-	for _, st := range scheduleTypes {
-		if st == scheduleType {
-			return nil
-		}
-	}
-
-	return fmt.Errorf("invalid schedule type: %s", scheduleType)
-}
-
 func (h *ScheduleTriggerHandler) Validate(input TriggerNodeInput) error {
 	h.logger.WithFields(logrus.Fields{
 		"config": input.Config,
 	}).Info("validating schedule trigger")
 
-	h.logger.WithFields(logrus.Fields{
-		"config": input.Config,
-	}).Info("validating schedule type")
-
 	scheduleType, ok := (*input.Config)["scheduleType"]
 	if !ok {
 		return fmt.Errorf("schedule type is required")
-	}
-
-	if err := validateScheduleType(models.ScheduleType(scheduleType.(string))); err != nil {
-		h.logger.WithFields(logrus.Fields{
-			"config": input.Config,
-		}).Error("invalid schedule type")
-
-		return err
 	}
 
 	scheduledDate, ok := (*input.Config)["scheduledDate"]
@@ -75,11 +47,13 @@ func (h *ScheduleTriggerHandler) Validate(input TriggerNodeInput) error {
 		return fmt.Errorf("schedule is required")
 	}
 
-	h.logger.WithFields(logrus.Fields{
-		"scheduledDate": scheduledDate,
-	}).Info("scheduled date")
+	if err := h.schedulerSvc.ValidateSchedule(scheduleType.(string), scheduledDate.(time.Time)); err != nil {
+		h.logger.WithFields(logrus.Fields{
+			"config": input.Config,
+		}).Error("invalid schedule type")
 
-	h.logger.Info("schedule date is valid")
+		return fmt.Errorf("invalid schedule type: %w", err)
+	}
 
 	return nil
 }

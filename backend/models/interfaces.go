@@ -158,10 +158,17 @@ const (
 	ScheduleTypeMonthly ScheduleType = "monthly"
 )
 
+var ScheduleTypes = map[string]ScheduleType{
+	"once":    ScheduleTypeOnce,
+	"daily":   ScheduleTypeDaily,
+	"weekly":  ScheduleTypeWeekly,
+	"monthly": ScheduleTypeMonthly,
+}
+
 type SchedulerService interface {
 	GetDueWorkflows(ctx context.Context) ([]*WorkflowSchedule, error)
 	RunScheduledWorkflow(ctx context.Context, ws *WorkflowSchedule) error
-	ValidateSchedule(ws *WorkflowSchedule) error
+	ValidateSchedule(st string, nextRunAt time.Time) error
 	ScheduleWorkflow(ctx context.Context, workflowID int32) error
 	EnsureInFlightEnqueued()
 }

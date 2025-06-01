@@ -2,11 +2,11 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/golang-module/carbon/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
@@ -55,7 +55,7 @@ func (s *SchedulerService) RunScheduledWorkflow(
 		return nil
 	}
 
-	err := s.ValidateSchedule(ws)
+	err := s.ValidateSchedule(ws.ScheduleType, ws.NextRunAt.Time)
 	if err != nil {
 		return fmt.Errorf("failed to validate schedule: %w", err)
 	}
@@ -92,16 +92,16 @@ func (s *SchedulerService) RunScheduledWorkflow(
 	return nil
 }
 
-func (s *SchedulerService) ValidateSchedule(ws *models.WorkflowSchedule) error {
-	switch ws.ScheduleType {
-	case "once", "daily", "weekly", "monthly":
-		// TODO: change this
-	default:
-		return fmt.Errorf("invalid schedule type: %s", ws.ScheduleType)
+func (s *SchedulerService) ValidateSchedule(st string, nextRunAt time.Time) error {
+	_, ok := models.ScheduleTypes[st]
+	if !ok {
+		return fmt.Errorf("invalid schedule type: %s", st)
 	}
 
-	if !ws.NextRunAt.Valid || ws.NextRunAt.Time.UnixMilli() <= 0 {
-		return errors.New("next_run_at must be a valid positive timestamp")
+	dt := carbon.Parse(nextRunAt.Format(time.RFC3339)).SetTimezone("UTC")
+
+	if !dt.IsFuture() {
+		return fmt.Errorf("next_run_at must be in the future")
 	}
 
 	return nil
