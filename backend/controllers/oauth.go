@@ -5,32 +5,44 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/google"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"golang.org/x/oauth2"
 )
 
-type GmailController interface {
-	GetGmailAuthURL(ctx *gin.Context)
+type GoogleAuthController interface {
+	GetGoogleAuthURL(ctx *gin.Context)
 	HandleCallBack(ctx *gin.Context)
 }
 
-type gmailController struct {
-	gmailOAuthConfig *oauth2.Config
-	redisClient      redis.RedisClient
+type googleAuthController struct {
+	logger            logrus.FieldLogger
+	googleOAuthConfig *oauth2.Config
+	redisClient       redis.RedisClient
 }
 
-func NewGmailController(cfg models.AppConfig) GmailController {
-	return &gmailController{
-		gmailOAuthConfig: cfg.GetGmailOAuthConfig(),
-		redisClient:      cfg.GetRedisClient(),
+func NewGoogleAuthController(cfg models.AppConfig) GoogleAuthController {
+	return &googleAuthController{
+		logger:            cfg.GetLogger(),
+		googleOAuthConfig: cfg.GetGoogleOAuthConfig(),
+		redisClient:       cfg.GetRedisClient(),
 	}
 }
 
-func (c *gmailController) GetGmailAuthURL(ctx *gin.Context) {
+func (c *googleAuthController) GetGoogleAuthURL(ctx *gin.Context) {
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
+	c.logger.WithField("userID", userID).Info("Getting Google Auth URL")
+
 	// TODO : Introduce a random state for each request for security purposes
-	authURL := c.gmailOAuthConfig.AuthCodeURL(
+	authURL := c.googleOAuthConfig.AuthCodeURL(
 		"devtest",
 		oauth2.AccessTypeOffline,
 		oauth2.SetAuthURLParam("prompt", "consent"),
@@ -40,7 +52,7 @@ func (c *gmailController) GetGmailAuthURL(ctx *gin.Context) {
 	})
 }
 
-func (c *gmailController) HandleCallBack(ctx *gin.Context) {
+func (c *googleAuthController) HandleCallBack(ctx *gin.Context) {
 	code := ctx.Query("code")
 
 	if code == "" {
@@ -48,7 +60,7 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 		return
 	}
 
-	token, err := c.gmailOAuthConfig.Exchange(ctx, code)
+	token, err := c.googleOAuthConfig.Exchange(ctx, code)
 	if err != nil {
 		ctx.JSON(
 			http.StatusInternalServerError,
@@ -82,4 +94,4 @@ func (c *gmailController) HandleCallBack(ctx *gin.Context) {
 	`)
 }
 
-var _ GmailController = (*gmailController)(nil)
+var _ GoogleAuthController = (*googleAuthController)(nil)

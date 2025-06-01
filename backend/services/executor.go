@@ -31,7 +31,7 @@ func NewExecutorService(cfg models.AppConfig) models.ExecutorService {
 	// TODO: Remove this once we have a proper way to store the token
 	actionRegistry.Register(
 		"send_email",
-		handlers.NewSendEmailHandler(logger, redisClient, cfg.GetGmailOAuthConfig()),
+		handlers.NewSendEmailHandler(logger, redisClient, cfg.GetGoogleOAuthConfig()),
 	)
 
 	return &ExecutorService{

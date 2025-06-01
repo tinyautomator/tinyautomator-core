@@ -13,20 +13,20 @@ import (
 )
 
 type SendEmailHandler struct {
-	logger           logrus.FieldLogger
-	redisClient      redis.RedisClient
-	gmailOAuthConfig *oauth2.Config
+	logger            logrus.FieldLogger
+	redisClient       redis.RedisClient
+	googleOAuthConfig *oauth2.Config
 }
 
 func NewSendEmailHandler(
 	logger logrus.FieldLogger,
 	redisClient redis.RedisClient,
-	gmailOAuthConfig *oauth2.Config,
+	googleOAuthConfig *oauth2.Config,
 ) ActionHandler {
 	return &SendEmailHandler{
-		logger:           logger,
-		redisClient:      redisClient,
-		gmailOAuthConfig: gmailOAuthConfig,
+		logger:            logger,
+		redisClient:       redisClient,
+		googleOAuthConfig: googleOAuthConfig,
 	}
 }
 
@@ -65,7 +65,7 @@ func (h *SendEmailHandler) Execute(ctx context.Context, input ActionNodeInput) e
 	}
 
 	if expiryTime.Before(time.Now()) {
-		oauthToken, err = h.gmailOAuthConfig.TokenSource(ctx, oauthToken).Token()
+		oauthToken, err = h.googleOAuthConfig.TokenSource(ctx, oauthToken).Token()
 		if err != nil {
 			return fmt.Errorf("failed to refresh gmail token: %w", err)
 		}
@@ -79,7 +79,7 @@ func (h *SendEmailHandler) Execute(ctx context.Context, input ActionNodeInput) e
 		}
 	}
 
-	email, err := google.GetUserEmail(ctx, oauthToken, h.gmailOAuthConfig)
+	email, err := google.GetUserEmail(ctx, oauthToken, h.googleOAuthConfig)
 	if err != nil {
 		return fmt.Errorf("failed to get user email: %w", err)
 	}
@@ -94,7 +94,7 @@ func (h *SendEmailHandler) Execute(ctx context.Context, input ActionNodeInput) e
 		return fmt.Errorf("failed to encode email: %w", err)
 	}
 
-	err = google.SendRawEmail(ctx, oauthToken, h.gmailOAuthConfig, encoded)
+	err = google.SendRawEmail(ctx, oauthToken, h.googleOAuthConfig, encoded)
 	if err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}

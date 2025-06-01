@@ -102,6 +102,26 @@ func (cfg *appConfig) initLogger() error {
 	return nil
 }
 
+func (cfg *appConfig) initGoogleOAuthConfig() {
+	cfg.googleOAuthConfig = models.GoogleOAuthConfig{
+		Config: oauth2.Config{
+			ClientID:     "720103258164-islfsu2b9b8dsm6btt1trrtf1epropkf.apps.googleusercontent.com",
+			ClientSecret: cfg.envVars.GoogleClientSecret,
+			RedirectURL:  "http://localhost:9000/api/integrations/google/callback",
+			Scopes: []string{
+				"https://www.googleapis.com/auth/gmail.readonly",
+				"https://www.googleapis.com/auth/gmail.send",
+				"https://www.googleapis.com/auth/adwords",
+				"https://www.googleapis.com/auth/spreadsheets",
+				"https://www.googleapis.com/auth/drive",
+				"https://www.googleapis.com/auth/calendar.events.owned",
+				"https://www.googleapis.com/auth/docs",
+			},
+			Endpoint: google.Endpoint,
+		},
+	}
+}
+
 func (cfg *appConfig) initRepositories() {
 	q := dao.New(cfg.pgPool)
 	cfg.workflowRepo = repositories.NewWorkflowRepository(q, cfg.pgPool)
@@ -112,14 +132,6 @@ func (cfg *appConfig) initRepositories() {
 
 func (cfg *appConfig) initExternalServices(ctx context.Context) error {
 	clerk.SetKey(cfg.envVars.ClerkSecretKey)
-
-	cfg.envVars.GmailOAuthConfig = &oauth2.Config{
-		ClientID:     cfg.envVars.GmailClientID,
-		ClientSecret: cfg.envVars.GmailClientSecret,
-		RedirectURL:  cfg.envVars.GmailRedirectURL,
-		Scopes:       cfg.envVars.GmailScopes,
-		Endpoint:     google.Endpoint,
-	}
 
 	pool, err := pgxpool.New(ctx, cfg.envVars.PostgresUrl)
 	if err != nil {

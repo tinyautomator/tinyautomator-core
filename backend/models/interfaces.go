@@ -17,12 +17,8 @@ type EnvironmentVariables struct {
 	WorkerPollInterval time.Duration `envconfig:"WORKER_POLLING_INTERVAL" default:"10m"`
 	Env                string        `envconfig:"APPLICATION_ENV"         default:"development"`
 
-	// Gmail Variables
-	GmailClientID     string   `envconfig:"GMAIL_CLIENT_ID"`
-	GmailClientSecret string   `envconfig:"GMAIL_CLIENT_SECRET"`
-	GmailRedirectURL  string   `envconfig:"GMAIL_REDIRECT_URL"`
-	GmailScopes       []string `envconfig:"GMAIL_SCOPES"`
-	GmailOAuthConfig  *oauth2.Config
+	// Google
+	GoogleClientSecret string `envconfig:"GOOGLE_CLIENT_SECRET"`
 
 	// Redis
 	RedisUrl string `envconfig:"REDIS_URL"`
@@ -33,6 +29,10 @@ type EnvironmentVariables struct {
 	// RabbitMQ
 	RabbitMQUrl         string `envconfig:"RABBITMQ_URL"`
 	RabbitMQQueuePrefix string `envconfig:"RABBITMQ_QUEUE_PREFIX"`
+}
+
+type GoogleOAuthConfig struct {
+	oauth2.Config
 }
 
 type AppConfig interface {
@@ -48,8 +48,9 @@ type AppConfig interface {
 	GetExecutorService() ExecutorService
 	GetSchedulerService() SchedulerService
 	GetWorkflowService() WorkflowService
+	GetOauthIntegrationService() OauthIntegrationService
 
-	GetGmailOAuthConfig() *oauth2.Config
+	GetGoogleOAuthConfig() *oauth2.Config
 	GetRedisClient() redis.RedisClient
 	GetRabbitMQClient() rabbitmq.RabbitMQClient
 
@@ -194,4 +195,25 @@ type WorkflowService interface {
 		edges []*WorkflowEdgeDTO,
 	) error
 	ArchiveWorkflow(ctx context.Context, workflowID int32) error
+}
+
+type OauthIntegrationService interface {
+	ExchangeCodeForToken(
+		ctx context.Context,
+		oauthConfig *oauth2.Config,
+		code string,
+	) (*oauth2.Token, error)
+	GetToken(
+		ctx context.Context,
+		userID string,
+		provider string,
+		oauthConfig *oauth2.Config,
+	) (*oauth2.Token, error)
+	StoreToken(
+		ctx context.Context,
+		userID string,
+		provider string,
+		oauthConfig *oauth2.Config,
+		token *oauth2.Token,
+	) error
 }
