@@ -138,6 +138,7 @@ export default function CanvasBody() {
         selectNodesOnDrag={false}
         nodesFocusable={false}
         edgesFocusable={false}
+        attributionPosition="top-right"
       >
         <Background />
         <Controls />
