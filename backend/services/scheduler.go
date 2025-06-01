@@ -125,21 +125,21 @@ func (s *SchedulerService) ScheduleWorkflow(
 	return nil
 }
 
-// TODO: change this to be part of the UpdateNextRun service logic
+// TODO: change this to use carbon
 func (s *SchedulerService) CalculateNextRun(scheduleType string, now time.Time) time.Time {
 	var t time.Time
 
-	switch scheduleType {
-	case "daily":
+	switch models.ScheduleTypes[scheduleType] {
+	case models.ScheduleTypeDaily:
 		t = now.Add(24 * time.Hour)
 		return t
-	case "weekly":
+	case models.ScheduleTypeWeekly:
 		t = now.Add(7 * 24 * time.Hour)
 		return t
-	case "monthly":
+	case models.ScheduleTypeMonthly:
 		t = now.Add(30 * 24 * time.Hour)
 		return t
-	default: // once or invalid
+	default: // once or invalid schedule type
 		return now
 	}
 }
