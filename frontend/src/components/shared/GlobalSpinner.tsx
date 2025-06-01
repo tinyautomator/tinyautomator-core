@@ -1,17 +1,16 @@
 import { Settings } from "lucide-react";
 
-function GlobalSpinner({ size = "normal" }) {
-  const scale = size === "large" ? 2 : 1;
-
+function GlobalSpinner() {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm¬ z-[9999]">
-      <div className="relative" style={{ transform: `scale(${scale})` }}>
-        <div className="relative animate-[spin_3s_linear_infinite]">
-          <Settings className="w-8 h-8 text-purple-600 fill-fuchsia-200" />
-        </div>
-        <div className="absolute top-2 left-2 animate-[spin_2s_linear_infinite_reverse]">
-          <Settings className="w-4 h-4 text-amber-600 fill-orange-200" />
-        </div>
+    <div className="fixed inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm z-[9999]">
+      <div className="relative bottom-8 left-3.5 animate-[spin_3s_linear_infinite]">
+        <Settings className="w-8 h-8 text-gray-600 fill-white" />
+      </div>
+      <div className="animate-[spin_3s_linear_infinite_reverse]">
+        <Settings className="w-16 h-16 text-gray-600 fill-white" />
+      </div>
+      <div className="relative top-8 right-3.5 animate-[spin_3s_linear_infinite]">
+        <Settings className="w-8 h-8 text-gray-600 fill-white" />
       </div>
     </div>
   );

@@ -152,7 +152,7 @@ export default function InspectorPanel({
       className={cn(
         "relative h-full select-none",
         !isResizing && "transition-all duration-500",
-        "w-[var(--my-width)]",
+        `w-[var(--my-width)] max-w-[${maxWidth}px]`,
       )}
     >
       {/* Collapse button - only visible when expanded, outside sidebar */}

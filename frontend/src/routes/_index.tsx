@@ -1,5 +1,5 @@
-import App from "../../App";
-import { Route } from "./+types/route";
+import App from "../App";
+import { Route } from "./_index/+types/route";
 import { getAuth } from "@clerk/react-router/ssr.server";
 import { redirect } from "react-router";
 

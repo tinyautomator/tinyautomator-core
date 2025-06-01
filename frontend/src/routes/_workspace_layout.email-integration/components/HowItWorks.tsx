@@ -8,7 +8,12 @@ import {
 
 export const HowItWorks = () => {
   const steps = [
-    ["1", "Click the Connect Button", "AND CLICK ACCEPT LIL BITCH"],
+    [
+      "1",
+      "Click the Connect Button",
+      "You will be prompted to sign in to your email account",
+    ],
+    ["2", "We'll handle the rest", "Enjoy"],
   ];
 
   return (
