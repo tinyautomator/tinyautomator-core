@@ -221,9 +221,7 @@ func (s *WorkflowService) CreateWorkflow(
 	rootNodes := internal.GetRootNodes(w)
 	for _, node := range rootNodes {
 		if node.Category == "trigger" {
-			if err := s.triggerRegistry.Execute(node.NodeType, triggers.TriggerNodeInput{
-				Config: node.Config,
-			}); err != nil {
+			if err := s.triggerRegistry.Execute(node.NodeType, triggers.TriggerNodeInput{Config: node.Config}); err != nil {
 				return nil, fmt.Errorf("failed to execute trigger: %w", err)
 			}
 		}
