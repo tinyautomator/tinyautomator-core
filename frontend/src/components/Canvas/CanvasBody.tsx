@@ -138,6 +138,9 @@ export default function CanvasBody() {
         selectNodesOnDrag={false}
         nodesFocusable={false}
         edgesFocusable={false}
+        proOptions={{
+          hideAttribution: true,
+        }}
       >
         <Background />
         <Controls />
