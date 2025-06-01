@@ -147,6 +147,8 @@ func (c *workflowController) CreateWorkflow(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{"id": workflow.ID})
 }
 
+// TODO: create an updateWorkflowNode func that only updates the one node
+// will look at all nodes and edges and update it
 func (c *workflowController) UpdateWorkflow(ctx *gin.Context) {
 	idStr := ctx.Param("workflowID")
 
