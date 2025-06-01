@@ -2,11 +2,11 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/golang-module/carbon/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
@@ -55,7 +55,7 @@ func (s *SchedulerService) RunScheduledWorkflow(
 		return nil
 	}
 
-	err := s.ValidateSchedule(ws)
+	err := s.ValidateSchedule(ws.ScheduleType, ws.NextRunAt.Time)
 	if err != nil {
 		return fmt.Errorf("failed to validate schedule: %w", err)
 	}
@@ -79,10 +79,11 @@ func (s *SchedulerService) RunScheduledWorkflow(
 			}).Info("workflow execution started")
 		}
 
-		now := time.Now().UnixMilli()
+		now := time.Now()
 		nextRun := s.CalculateNextRun(ws.ScheduleType, now)
 
-		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, nextRun, now); err != nil {
+		nr := nextRun.UnixMilli()
+		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, &nr, now.UnixMilli()); err != nil {
 			s.logger.WithError(err).
 				WithField("workflow_id", ws.WorkflowID).
 				Error("failed to update next_run_at")
@@ -92,17 +93,26 @@ func (s *SchedulerService) RunScheduledWorkflow(
 	return nil
 }
 
-func (s *SchedulerService) ValidateSchedule(ws *models.WorkflowSchedule) error {
-	switch ws.ScheduleType {
-	case "once", "daily", "weekly", "monthly":
-		// TODO: change this
-	default:
-		return fmt.Errorf("invalid schedule type: %s", ws.ScheduleType)
+func (s *SchedulerService) ValidateSchedule(st string, nextRunAt time.Time) error {
+	_, ok := models.ScheduleTypes[st]
+	if !ok {
+		return fmt.Errorf("invalid schedule type: %s", st)
 	}
 
-	if !ws.NextRunAt.Valid || ws.NextRunAt.Time.UnixMilli() <= 0 {
-		return errors.New("next_run_at must be a valid positive timestamp")
+	dt := carbon.Parse(nextRunAt.Format(time.RFC3339)).SetTimezone("UTC")
+
+	if dt.IsInvalid() {
+		return fmt.Errorf("invalid date: %s", dt.ToDateTimeString())
 	}
+
+	if !dt.IsFuture() {
+		return fmt.Errorf("next_run_at must be in the future: %s", dt.ToDateTimeString())
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"next_run_at": dt.ToDateTimeString(),
+		"est_time":    dt.SetTimezone("America/New_York").ToDateTimeString(),
+	}).Info("time of next run")
 
 	return nil
 }
@@ -115,22 +125,22 @@ func (s *SchedulerService) ScheduleWorkflow(
 	return nil
 }
 
-// TODO: change this to be part of the UpdateNextRun service logic
-func (s *SchedulerService) CalculateNextRun(scheduleType string, now int64) *int64 {
-	var t int64
+// TODO: change this to use carbon
+func (s *SchedulerService) CalculateNextRun(scheduleType string, now time.Time) time.Time {
+	var t time.Time
 
-	switch scheduleType {
-	case "daily":
-		t = now + int64(24*time.Hour/time.Millisecond)
-		return &t
-	case "weekly":
-		t = now + int64(7*24*time.Hour/time.Millisecond)
-		return &t
-	case "monthly":
-		t = now + int64(30*24*time.Hour/time.Millisecond)
-		return &t
-	default: // once or invalid
-		return nil
+	switch models.ScheduleTypes[scheduleType] {
+	case models.ScheduleTypeDaily:
+		t = now.Add(24 * time.Hour)
+		return t
+	case models.ScheduleTypeWeekly:
+		t = now.Add(7 * 24 * time.Hour)
+		return t
+	case models.ScheduleTypeMonthly:
+		t = now.Add(30 * 24 * time.Hour)
+		return t
+	default: // once or invalid schedule type
+		return now
 	}
 }
 

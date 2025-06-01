@@ -5,10 +5,10 @@ go 1.24.2
 require (
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/clerk/clerk-sdk-go/v2 v2.2.0
-	github.com/dromara/carbon/v2 v2.6.7
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-contrib/timeout v1.0.2
 	github.com/gin-gonic/gin v1.10.0
+	github.com/golang-module/carbon/v2 v2.6.7
 	github.com/google/uuid v1.6.0
 	github.com/guregu/null/v6 v6.0.0
 	github.com/jackc/pgx/v5 v5.7.4
@@ -32,6 +32,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/dromara/carbon/v2 v2.6.7 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect

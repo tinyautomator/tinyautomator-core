@@ -3,6 +3,7 @@ package triggers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
@@ -31,55 +32,33 @@ func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeI
 	return nil
 }
 
-func validateScheduleType(scheduleType models.ScheduleType) error {
-	scheduleTypes := []models.ScheduleType{
-		models.ScheduleTypeOnce,
-		models.ScheduleTypeDaily,
-		models.ScheduleTypeWeekly,
-		models.ScheduleTypeMonthly,
-	}
-
-	for _, st := range scheduleTypes {
-		if st == scheduleType {
-			return nil
-		}
-	}
-
-	return fmt.Errorf("invalid schedule type: %s", scheduleType)
-}
-
 func (h *ScheduleTriggerHandler) Validate(input TriggerNodeInput) error {
 	h.logger.WithFields(logrus.Fields{
 		"config": input.Config,
-	}).Info("validating schedule trigger")
+	}).Debug("validating schedule trigger")
 
-	h.logger.WithFields(logrus.Fields{
-		"config": input.Config,
-	}).Info("validating schedule type")
-
-	scheduleType, ok := (*input.Config)["scheduleType"]
+	scheduleType, ok := (*input.Config)["scheduleType"].(string)
 	if !ok {
 		return fmt.Errorf("schedule type is required")
 	}
 
-	if err := validateScheduleType(models.ScheduleType(scheduleType.(string))); err != nil {
-		h.logger.WithFields(logrus.Fields{
-			"config": input.Config,
-		}).Error("invalid schedule type")
-
-		return err
-	}
-
-	scheduledDate, ok := (*input.Config)["scheduledDate"]
+	rawScheduledDate, ok := (*input.Config)["scheduledDate"].(string)
 	if !ok {
 		return fmt.Errorf("schedule is required")
 	}
 
-	h.logger.WithFields(logrus.Fields{
+	scheduledDate, err := time.Parse(time.RFC3339, rawScheduledDate)
+	if err != nil {
+		return fmt.Errorf("invalid schedule date: %w", err)
+	}
+
+	logrus.WithFields(logrus.Fields{
 		"scheduledDate": scheduledDate,
 	}).Info("scheduled date")
 
-	h.logger.Info("schedule date is valid")
+	if err := h.schedulerSvc.ValidateSchedule(scheduleType, scheduledDate); err != nil {
+		return fmt.Errorf("invalid schedule type: %w", err)
+	}
 
 	return nil
 }
