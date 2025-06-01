@@ -4,17 +4,19 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dromara/carbon/v2"
 	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
 type ScheduleTriggerHandler struct {
-	logger logrus.FieldLogger
+	logger       logrus.FieldLogger
+	schedulerSvc models.SchedulerService
 }
 
-func NewScheduleTriggerHandler(logger logrus.FieldLogger) TriggerHandler {
+func NewScheduleTriggerHandler(logger logrus.FieldLogger, schedulerSvc models.SchedulerService) TriggerHandler {
 	return &ScheduleTriggerHandler{
-		logger: logger,
+		logger:       logger,
+		schedulerSvc: schedulerSvc,
 	}
 }
 
@@ -26,28 +28,52 @@ func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeI
 	return nil
 }
 
+func validateScheduleType(scheduleType models.ScheduleType) error {
+	scheduleTypes := []models.ScheduleType{
+		models.ScheduleTypeOnce,
+		models.ScheduleTypeDaily,
+		models.ScheduleTypeWeekly,
+		models.ScheduleTypeMonthly,
+	}
+
+	for _, st := range scheduleTypes {
+		if st == scheduleType {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("invalid schedule type: %s", scheduleType)
+}
+
 func (h *ScheduleTriggerHandler) Validate(input TriggerNodeInput) error {
 	h.logger.WithFields(logrus.Fields{
 		"config": input.Config,
 	}).Info("validating schedule trigger")
 
-	schedule, ok := (*input.Config)["scheduledDate"]
+	h.logger.WithFields(logrus.Fields{
+		"config": input.Config,
+	}).Info("validating schedule type")
+
+	scheduleType, ok := (*input.Config)["scheduleType"]
+	if !ok {
+		return fmt.Errorf("schedule type is required")
+	}
+
+	if err := validateScheduleType(scheduleType.(models.ScheduleType)); err != nil {
+		h.logger.WithFields(logrus.Fields{
+			"config": input.Config,
+		}).Error("invalid schedule type")
+		return err
+	}
+
+	scheduledDate, ok := (*input.Config)["scheduledDate"]
 	if !ok {
 		return fmt.Errorf("schedule is required")
 	}
 
-	dt := carbon.Parse(schedule.(string))
 	h.logger.WithFields(logrus.Fields{
-		"schedule": dt.ToDateTimeString(),
-	}).Info("CARBON schedule date")
-
-	if dt.IsZero() {
-		return fmt.Errorf("invalid schedule date")
-	}
-
-	if dt.IsPast() {
-		return fmt.Errorf("schedule date is in the past")
-	}
+		"scheduledDate": scheduledDate,
+	}).Info("scheduled date")
 
 	h.logger.Info("schedule date is valid")
 

@@ -149,9 +149,19 @@ type ExecutorService interface {
 	ExecuteWorkflowNode(ctx context.Context, msg []byte) error
 }
 
+type ScheduleType string
+
+const (
+	ScheduleTypeOnce    ScheduleType = "once"
+	ScheduleTypeDaily   ScheduleType = "daily"
+	ScheduleTypeWeekly  ScheduleType = "weekly"
+	ScheduleTypeMonthly ScheduleType = "monthly"
+)
+
 type SchedulerService interface {
 	GetDueWorkflows(ctx context.Context) ([]*WorkflowSchedule, error)
 	RunScheduledWorkflow(ctx context.Context, ws *WorkflowSchedule) error
+	ValidateSchedule(ws *WorkflowSchedule) error
 	ScheduleWorkflow(ctx context.Context, workflowID int32) error
 	EnsureInFlightEnqueued()
 }

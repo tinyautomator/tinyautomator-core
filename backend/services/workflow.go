@@ -24,12 +24,13 @@ type WorkflowService struct {
 	workflowScheduleRepo models.WorkflowScheduleRepository
 	orchestrator         models.OrchestratorService
 	triggerRegistry      *triggers.TriggerRegistry
+	schedulerSvc         models.SchedulerService
 }
 
 func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 	logger := cfg.GetLogger()
 	t := triggers.NewTriggerRegistry()
-	t.Register("schedule", triggers.NewScheduleTriggerHandler(cfg.GetLogger()))
+	t.Register("schedule", triggers.NewScheduleTriggerHandler(cfg.GetLogger(), cfg.GetSchedulerService()))
 
 	return &WorkflowService{
 		logger:               logger,
@@ -37,6 +38,7 @@ func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
 		orchestrator:         cfg.GetOrchestratorService(),
 		triggerRegistry:      t,
+		schedulerSvc:         cfg.GetSchedulerService(),
 	}
 }
 
@@ -210,9 +212,7 @@ func (s *WorkflowService) CreateWorkflow(
 	rootNodes := internal.GetRootNodes(w)
 	for _, node := range rootNodes {
 		if node.Category == "trigger" {
-			if err := s.triggerRegistry.Execute(node.NodeType, triggers.TriggerNodeInput{
-				Config: node.Config,
-			}); err != nil {
+			if err := s.triggerRegistry.Execute(node.NodeType, triggers.TriggerNodeInput{Config: node.Config}); err != nil {
 				return nil, fmt.Errorf("failed to execute trigger: %w", err)
 			}
 		}
