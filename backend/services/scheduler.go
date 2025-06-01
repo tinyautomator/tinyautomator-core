@@ -55,12 +55,7 @@ func (s *SchedulerService) RunScheduledWorkflow(
 		return nil
 	}
 
-	nextRunAt := ws.NextRunAt.Time
-	if nextRunAt.IsZero() {
-		nextRunAt = time.Now()
-	}
-
-	err := s.ValidateSchedule(ws.ScheduleType, nextRunAt)
+	err := s.ValidateSchedule(ws.ScheduleType, ws.NextRunAt.Time)
 	if err != nil {
 		return fmt.Errorf("failed to validate schedule: %w", err)
 	}
