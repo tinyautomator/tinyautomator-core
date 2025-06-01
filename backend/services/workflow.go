@@ -24,12 +24,14 @@ type WorkflowService struct {
 	workflowScheduleRepo models.WorkflowScheduleRepository
 	orchestrator         models.OrchestratorService
 	triggerRegistry      *triggers.TriggerRegistry
+	schedulerSvc         models.SchedulerService
 }
 
 func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 	logger := cfg.GetLogger()
+	schedulerSvc := cfg.GetSchedulerService()
 	t := triggers.NewTriggerRegistry()
-	t.Register("schedule", triggers.NewScheduleTriggerHandler(cfg.GetLogger()))
+	t.Register("schedule", triggers.NewScheduleTriggerHandler(logger, schedulerSvc))
 
 	return &WorkflowService{
 		logger:               logger,
@@ -37,6 +39,7 @@ func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 		workflowScheduleRepo: cfg.GetWorkflowScheduleRepository(),
 		orchestrator:         cfg.GetOrchestratorService(),
 		triggerRegistry:      t,
+		schedulerSvc:         schedulerSvc,
 	}
 }
 
