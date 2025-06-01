@@ -55,7 +55,12 @@ func (s *SchedulerService) RunScheduledWorkflow(
 		return nil
 	}
 
-	err := s.ValidateSchedule(ws.ScheduleType, ws.NextRunAt.Time)
+	nextRunAt := ws.NextRunAt.Time
+	if nextRunAt.IsZero() {
+		nextRunAt = time.Now()
+	}
+
+	err := s.ValidateSchedule(ws.ScheduleType, nextRunAt)
 	if err != nil {
 		return fmt.Errorf("failed to validate schedule: %w", err)
 	}
@@ -79,10 +84,11 @@ func (s *SchedulerService) RunScheduledWorkflow(
 			}).Info("workflow execution started")
 		}
 
-		now := time.Now().UnixMilli()
+		now := time.Now()
 		nextRun := s.CalculateNextRun(ws.ScheduleType, now)
 
-		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, nextRun, now); err != nil {
+		nr := nextRun.UnixMilli()
+		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, &nr, now.UnixMilli()); err != nil {
 			s.logger.WithError(err).
 				WithField("workflow_id", ws.WorkflowID).
 				Error("failed to update next_run_at")
@@ -100,9 +106,18 @@ func (s *SchedulerService) ValidateSchedule(st string, nextRunAt time.Time) erro
 
 	dt := carbon.Parse(nextRunAt.Format(time.RFC3339)).SetTimezone("UTC")
 
-	if !dt.IsFuture() {
-		return fmt.Errorf("next_run_at must be in the future")
+	if dt.IsInvalid() {
+		return fmt.Errorf("invalid date: %s", dt.ToDateTimeString())
 	}
+
+	if !dt.IsFuture() {
+		return fmt.Errorf("next_run_at must be in the future: %s", dt.ToDateTimeString())
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"next_run_at": dt.ToDateTimeString(),
+		"est_time":    dt.SetTimezone("America/New_York").ToDateTimeString(),
+	}).Info("time of next run")
 
 	return nil
 }
@@ -116,21 +131,21 @@ func (s *SchedulerService) ScheduleWorkflow(
 }
 
 // TODO: change this to be part of the UpdateNextRun service logic
-func (s *SchedulerService) CalculateNextRun(scheduleType string, now int64) *int64 {
-	var t int64
+func (s *SchedulerService) CalculateNextRun(scheduleType string, now time.Time) time.Time {
+	var t time.Time
 
 	switch scheduleType {
 	case "daily":
-		t = now + int64(24*time.Hour/time.Millisecond)
-		return &t
+		t = now.Add(24 * time.Hour)
+		return t
 	case "weekly":
-		t = now + int64(7*24*time.Hour/time.Millisecond)
-		return &t
+		t = now.Add(7 * 24 * time.Hour)
+		return t
 	case "monthly":
-		t = now + int64(30*24*time.Hour/time.Millisecond)
-		return &t
+		t = now.Add(30 * 24 * time.Hour)
+		return t
 	default: // once or invalid
-		return nil
+		return now
 	}
 }
 

@@ -183,6 +183,8 @@ func (s *WorkflowService) validateNode(node *models.WorkflowNodeDTO) error {
 	}
 
 	if node.Category == "trigger" {
+		logrus.Debugln("validating trigger", node.NodeType)
+
 		if err := s.triggerRegistry.Validate(node.NodeType, triggers.TriggerNodeInput{
 			Config: node.Config,
 		}); err != nil {
