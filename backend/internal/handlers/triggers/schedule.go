@@ -2,6 +2,7 @@ package triggers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -31,12 +32,12 @@ func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeI
 
 	_, ok := (*input.Config)["scheduleType"].(string)
 	if !ok {
-		return fmt.Errorf("schedule type is required")
+		return errors.New("schedule type is required")
 	}
 
 	rawScheduledDate, ok := (*input.Config)["scheduledDate"].(string)
 	if !ok {
-		return fmt.Errorf("schedule is required")
+		return errors.New("schedule is required")
 	}
 
 	_, err := time.Parse(time.RFC3339, rawScheduledDate)
@@ -44,9 +45,6 @@ func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeI
 		return fmt.Errorf("invalid schedule date: %w", err)
 	}
 
-	// if err := h.schedulerSvc.ScheduleWorkflow(ctx, scheduleType, scheduledDate); err != nil {
-	// 	return fmt.Errorf("failed to schedule workflow: %w", err)
-	// }
 	return nil
 }
 
