@@ -29,6 +29,24 @@ func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeI
 		"config": input.Config,
 	}).Info("executing schedule trigger")
 
+	_, ok := (*input.Config)["scheduleType"].(string)
+	if !ok {
+		return fmt.Errorf("schedule type is required")
+	}
+
+	rawScheduledDate, ok := (*input.Config)["scheduledDate"].(string)
+	if !ok {
+		return fmt.Errorf("schedule is required")
+	}
+
+	_, err := time.Parse(time.RFC3339, rawScheduledDate)
+	if err != nil {
+		return fmt.Errorf("invalid schedule date: %w", err)
+	}
+
+	// if err := h.schedulerSvc.ScheduleWorkflow(ctx, scheduleType, scheduledDate); err != nil {
+	// 	return fmt.Errorf("failed to schedule workflow: %w", err)
+	// }
 	return nil
 }
 
