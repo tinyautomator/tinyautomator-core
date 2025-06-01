@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
 
-const minWidth = 400;
-const maxWidth = 1000;
+const minWidth = 300;
+const maxWidth = 800;
 
 export default function InspectorPanel({
   toggleInspectorPanel,
@@ -141,6 +141,7 @@ export default function InspectorPanel({
       style={
         {
           "--my-width": `${width}px`,
+          // maxWidth: `${maxWidth}px`,
           minWidth: z
             ? toggleInspectorPanel
               ? `${minWidth}px`
@@ -190,19 +191,17 @@ export default function InspectorPanel({
       </div>
 
       {/* Panel container - always rendered */}
-      <div
-        className={cn("h-full border-l bg-white", "w-full whitespace-nowrap")}
-      >
+      <div className={"h-full border-l bg-white w-full whitespace-nowrap"}>
         {/* Panel content - always rendered, animate only opacity */}
         <div
           className={cn(
-            "h-full w-full",
+            "h-full",
             showPanel ? "pointer-events-auto" : "pointer-events-none",
           )}
         >
-          <div className="h-1/15 pl-5 flex flex-col justify-between">
-            <h2 className="pt-2 font-semibold">Inspector</h2>
-            <p className="pb-2 text-xs text-muted-foreground">
+          <div className="h-13 pl-5 flex flex-col justify-between">
+            <h2 className="font-semibold pt-1">Inspector</h2>
+            <p className="text-xs text-muted-foreground pb-1">
               Configure the selected block
             </p>
           </div>

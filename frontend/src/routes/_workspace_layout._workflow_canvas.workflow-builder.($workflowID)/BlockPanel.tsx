@@ -35,7 +35,7 @@ function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
       <Button
         size="sm"
         variant="ghost"
-        className={`px-2 py-1 text-xs rounded ${viewMode === "default" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 pointer-events-none hover:bg-transparent" : ""}`}
+        className={`px-2 py-1 text-xs h-7 rounded ${viewMode === "default" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 pointer-events-none hover:bg-transparent" : ""}`}
         onClick={() => onViewModeChange("default")}
       >
         Default
@@ -43,7 +43,7 @@ function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
       <Button
         size="sm"
         variant="ghost"
-        className={`px-2 py-1 text-xs rounded ${viewMode === "compact" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 pointer-events-none hover:bg-transparent" : ""}`}
+        className={`px-2 py-1 text-xs h-7 rounded ${viewMode === "compact" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 pointer-events-none hover:bg-transparent" : ""}`}
         onClick={() => onViewModeChange("compact")}
       >
         Compact
@@ -270,7 +270,7 @@ function BlockPanelHeader({
 }) {
   return (
     <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-      <h2 className="text-lg font-semibold mb-4">Blocks</h2>
+      <h2 className="text-lg font-semibold mb-2">Blocks</h2>
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
@@ -361,7 +361,7 @@ export default function BlockPanel({
   };
 
   return (
-    <div className="h-full w-72 flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
+    <div className="h-full w-64 flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
       <BlockPanelHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

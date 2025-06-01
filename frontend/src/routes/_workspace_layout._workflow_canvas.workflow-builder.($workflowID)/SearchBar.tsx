@@ -37,7 +37,7 @@ export function SearchBar({
   }, [searchFocused, blockPanelOpen]);
 
   return (
-    <div className="relative">
+    <div className="relative h-7 mb-5">
       <Label className="relative block">
         <Search className="absolute left-3 top-[11px] text-gray-400 h-4 w-4 cursor-text" />
         <Input
