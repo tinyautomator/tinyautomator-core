@@ -2,6 +2,7 @@ package triggers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -28,6 +29,21 @@ func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeI
 	h.logger.WithFields(logrus.Fields{
 		"config": input.Config,
 	}).Info("executing schedule trigger")
+
+	_, ok := (*input.Config)["scheduleType"].(string)
+	if !ok {
+		return errors.New("schedule type is required")
+	}
+
+	rawScheduledDate, ok := (*input.Config)["scheduledDate"].(string)
+	if !ok {
+		return errors.New("schedule is required")
+	}
+
+	_, err := time.Parse(time.RFC3339, rawScheduledDate)
+	if err != nil {
+		return fmt.Errorf("invalid schedule date: %w", err)
+	}
 
 	return nil
 }

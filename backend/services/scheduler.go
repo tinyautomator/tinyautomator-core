@@ -80,7 +80,13 @@ func (s *SchedulerService) RunScheduledWorkflow(
 		}
 
 		now := time.Now()
-		nextRun := s.CalculateNextRun(ws.ScheduleType, now)
+
+		nextRun, err := s.CalculateNextRun(ws.ScheduleType, now)
+		if err != nil {
+			s.logger.WithError(err).
+				WithField("workflow_id", ws.WorkflowID).
+				Error("failed to calculate next run")
+		}
 
 		nr := nextRun.UnixMilli()
 		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, &nr, now.UnixMilli()); err != nil {
@@ -125,23 +131,33 @@ func (s *SchedulerService) ScheduleWorkflow(
 	return nil
 }
 
-// TODO: change this to use carbon
-func (s *SchedulerService) CalculateNextRun(scheduleType string, now time.Time) time.Time {
+func (s *SchedulerService) CalculateNextRun(
+	scheduleType string,
+	now time.Time,
+) (*time.Time, error) {
+	stype, ok := models.ScheduleTypes[scheduleType]
+	if !ok {
+		return nil, fmt.Errorf("invalid schedule type: %s", scheduleType)
+	}
+
+	dt := carbon.Parse(now.Format(time.RFC3339)).SetTimezone("UTC")
+
 	var t time.Time
 
-	switch models.ScheduleTypes[scheduleType] {
+	switch stype {
+	case models.ScheduleTypeOnce:
+		return nil, nil
 	case models.ScheduleTypeDaily:
-		t = now.Add(24 * time.Hour)
-		return t
+		t = dt.AddDay().StdTime()
 	case models.ScheduleTypeWeekly:
-		t = now.Add(7 * 24 * time.Hour)
-		return t
+		t = dt.AddWeek().StdTime()
 	case models.ScheduleTypeMonthly:
-		t = now.Add(30 * 24 * time.Hour)
-		return t
-	default: // once or invalid schedule type
-		return now
+		t = dt.AddMonth().StdTime()
+	default:
+		return nil, fmt.Errorf("invalid schedule type: %s", scheduleType)
 	}
+
+	return &t, nil
 }
 
 var _ models.SchedulerService = (*SchedulerService)(nil)
