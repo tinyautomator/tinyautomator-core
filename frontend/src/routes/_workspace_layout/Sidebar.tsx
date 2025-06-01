@@ -27,7 +27,7 @@ export default function () {
         </SidebarGroupLabel>
       </SidebarHeader>
       <SidebarContent className="scrollbar-hidden">
-        <SidebarGroup>
+        <SidebarGroup className="h-30">
           <SidebarGroupContent>
             <SidebarMenu>
               {WORKSPACE_ITEMS.map((item) => (

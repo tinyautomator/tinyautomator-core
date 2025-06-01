@@ -72,7 +72,7 @@ export default function WorkflowBuilder({
         className={cn(
           "transition-all duration-300 overflow-hidden bg-white dark:bg-gray-900 flex flex-col h-full max-w-72",
           toggleBlockPanel
-            ? "w-72 pointer-events-auto"
+            ? "w-64 pointer-events-auto"
             : "w-0 pointer-events-none",
         )}
       >
