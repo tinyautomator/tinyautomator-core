@@ -4,7 +4,7 @@ import { GmailIcon } from "@/components/icons/EmailIcons";
 import { useEmailIntegrationContext } from "@/routes/_workspace_layout.email-integration/EmailIntegrationContext";
 
 export const EmailProviders = () => {
-  const { connectGmail, isLoading, isConnected } = useEmailIntegrationContext();
+  const { connectGmail, isLoading } = useEmailIntegrationContext();
 
   return (
     <div className="max-w-5xl mx-auto ">
@@ -19,7 +19,7 @@ export const EmailProviders = () => {
           description="Connect your Gmail account to automate email workflows"
           onConnect={connectGmail}
           isLoading={isLoading}
-          isConnected={isConnected}
+          isConnected={false}
         />
       </div>
     </div>

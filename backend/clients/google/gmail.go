@@ -9,19 +9,10 @@ import (
 	"google.golang.org/api/option"
 )
 
-func RefreshToken(
-	ctx context.Context,
-	refreshToken string,
-	oauthConfig oauth2.Config,
-) (*oauth2.Token, error) {
-	ts := oauthConfig.TokenSource(ctx, &oauth2.Token{RefreshToken: refreshToken})
-
-	token, err := ts.Token()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get token: %w", err)
-	}
-
-	return token, nil
+type GmailToken struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	Expiry       string `json:"expiry"`
 }
 
 func GetUserEmail(

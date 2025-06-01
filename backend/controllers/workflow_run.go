@@ -211,7 +211,7 @@ func (c *workflowRunController) RunWorkflow(ctx *gin.Context) {
 
 	// TODO: ratelimit
 	runID, err := c.orchestrator.OrchestrateWorkflow(ctx, int32(workflowID))
-	if err != nil {
+	if err != nil || runID == -1 {
 		// TODO: don't return the error to the client
 		c.logger.WithError(err).Error("failed to execute workflow")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})

@@ -63,6 +63,5 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 	{
 		gmailGroup.GET("/auth-url", gmailController.GetGmailAuthURL)
 		gmailGroup.GET("/callback", gmailController.HandleCallBack)
-		gmailGroup.POST("/send-email", gmailController.SendEmail)
 	}
 }
