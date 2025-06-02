@@ -43,7 +43,7 @@ func NewAppConfig(ctx context.Context) (models.AppConfig, error) {
 		return cfg, nil
 	}
 
-	cfg := &appConfig{}
+	cfg = &appConfig{}
 
 	if err := cfg.loadEnvironmentVariables(); err != nil {
 		return nil, err
@@ -60,10 +60,10 @@ func NewAppConfig(ctx context.Context) (models.AppConfig, error) {
 	cfg.initGoogleOAuthConfig()
 	cfg.initRepositories()
 
+	cfg.workflowSvc = services.NewWorkflowService(cfg)
 	cfg.orchestrator = services.NewOrchestratorService(cfg)
 	cfg.executor = services.NewExecutorService(cfg)
 	cfg.scheduler = services.NewSchedulerService(cfg)
-	cfg.workflowSvc = services.NewWorkflowService(cfg)
 	cfg.oauthIntegrationSvc = services.NewOauthIntegrationService(cfg)
 
 	return cfg, nil

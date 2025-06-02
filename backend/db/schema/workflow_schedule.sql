@@ -7,7 +7,7 @@ CREATE TABLE workflow_schedule (
     next_run_at BIGINT,
     last_run_at BIGINT,
     execution_state TEXT NOT NULL CHECK (
-        execution_state IN ('queued', 'paused', 'running', 'failed')
+        execution_state IN ('queued', 'paused', 'running', 'completed', 'failed')
     ),
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL

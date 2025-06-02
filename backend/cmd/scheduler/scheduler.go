@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/guregu/null/v6"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/tinyautomator/tinyautomator-core/backend/services"
@@ -61,8 +62,8 @@ func (s *Scheduler) PollAndRunScheduledWorkflows(ctx context.Context) error {
 					"workflow_id":    ws.WorkflowID,
 					"schedule_type":  ws.ScheduleType,
 					"executionState": ws.ExecutionState,
-					"next_run_at":    ws.NextRunAt.Time.Format(time.DateTime),
-					"last_run_at":    ws.LastRunAt.Time.Format(time.DateTime),
+					"next_run_at":    null.TimeFrom(ws.NextRunAt.Time).Time.Format(time.DateTime),
+					"last_run_at":    null.TimeFrom(ws.LastRunAt.Time).Time.Format(time.DateTime),
 				}).Info("workflow ran successfully")
 			}
 		}

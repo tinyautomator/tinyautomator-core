@@ -55,7 +55,12 @@ func (s *SchedulerService) RunScheduledWorkflow(
 		return nil
 	}
 
-	err := s.ValidateSchedule(ws.ScheduleType, ws.NextRunAt.Time)
+	st, ok := models.ScheduleTypes[ws.ScheduleType]
+	if !ok {
+		return fmt.Errorf("invalid schedule type: %s", ws.ScheduleType)
+	}
+
+	err := s.ValidateSchedule(st, ws.NextRunAt.Time, ws.ExecutionState == "running")
 	if err != nil {
 		return fmt.Errorf("failed to validate schedule: %w", err)
 	}
@@ -79,17 +84,23 @@ func (s *SchedulerService) RunScheduledWorkflow(
 			}).Info("workflow execution started")
 		}
 
-		now := time.Now()
+		now := time.Now().UTC()
 
-		nextRun, err := s.CalculateNextRun(ws.ScheduleType, now)
+		nextRun, err := s.CalculateNextRun(st, now)
 		if err != nil {
 			s.logger.WithError(err).
 				WithField("workflow_id", ws.WorkflowID).
 				Error("failed to calculate next run")
 		}
 
-		nr := nextRun.UnixMilli()
-		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, &nr, now.UnixMilli()); err != nil {
+		var nr *int64
+
+		if nextRun != nil {
+			_nr := nextRun.UnixMilli()
+			nr = &_nr
+		}
+
+		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, nr, now.UnixMilli()); err != nil {
 			s.logger.WithError(err).
 				WithField("workflow_id", ws.WorkflowID).
 				Error("failed to update next_run_at")
@@ -99,19 +110,18 @@ func (s *SchedulerService) RunScheduledWorkflow(
 	return nil
 }
 
-func (s *SchedulerService) ValidateSchedule(st string, nextRunAt time.Time) error {
-	_, ok := models.ScheduleTypes[st]
-	if !ok {
-		return fmt.Errorf("invalid schedule type: %s", st)
-	}
-
+func (s *SchedulerService) ValidateSchedule(
+	st models.ScheduleType,
+	nextRunAt time.Time,
+	isRunning bool,
+) error {
 	dt := carbon.Parse(nextRunAt.Format(time.RFC3339)).SetTimezone("UTC")
 
 	if dt.IsInvalid() {
 		return fmt.Errorf("invalid date: %s", dt.ToDateTimeString())
 	}
 
-	if !dt.IsFuture() {
+	if !dt.IsFuture() && !isRunning {
 		return fmt.Errorf("next_run_at must be in the future: %s", dt.ToDateTimeString())
 	}
 
@@ -126,25 +136,38 @@ func (s *SchedulerService) ValidateSchedule(st string, nextRunAt time.Time) erro
 func (s *SchedulerService) ScheduleWorkflow(
 	ctx context.Context,
 	workflowID int32,
+	scheduleType models.ScheduleType,
+	scheduledDate time.Time,
 ) error {
-	// TODO: implement
+	s.logger.WithFields(logrus.Fields{
+		"workflow_id":    workflowID,
+		"schedule_type":  scheduleType,
+		"scheduled_date": scheduledDate,
+	}).Info("scheduling workflow")
+
+	_, err := s.workflowScheduleRepo.Create(
+		ctx,
+		workflowID,
+		string(scheduleType),
+		scheduledDate.UnixMilli(),
+		"queued",
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create workflow schedule: %w", err)
+	}
+
 	return nil
 }
 
 func (s *SchedulerService) CalculateNextRun(
-	scheduleType string,
+	st models.ScheduleType,
 	now time.Time,
 ) (*time.Time, error) {
-	stype, ok := models.ScheduleTypes[scheduleType]
-	if !ok {
-		return nil, fmt.Errorf("invalid schedule type: %s", scheduleType)
-	}
+	var t time.Time
 
 	dt := carbon.Parse(now.Format(time.RFC3339)).SetTimezone("UTC")
 
-	var t time.Time
-
-	switch stype {
+	switch st {
 	case models.ScheduleTypeOnce:
 		return nil, nil
 	case models.ScheduleTypeDaily:
@@ -154,7 +177,7 @@ func (s *SchedulerService) CalculateNextRun(
 	case models.ScheduleTypeMonthly:
 		t = dt.AddMonth().StdTime()
 	default:
-		return nil, fmt.Errorf("invalid schedule type: %s", scheduleType)
+		return nil, fmt.Errorf("invalid schedule type: %s", st)
 	}
 
 	return &t, nil

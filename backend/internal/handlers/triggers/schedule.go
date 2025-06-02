@@ -15,8 +15,8 @@ type ScheduleTriggerHandler struct {
 }
 
 type ScheduleTriggerConfig struct {
-	WorkflowID    int32
-	ScheduleType  string
+	WorkflowID    *int32
+	ScheduleType  models.ScheduleType
 	ScheduledDate time.Time
 }
 
@@ -33,14 +33,14 @@ func NewScheduleTriggerHandler(
 func (h *ScheduleTriggerHandler) buildScheduleConfig(
 	input TriggerNodeInput,
 ) (*ScheduleTriggerConfig, error) {
-	workflowID, ok := (*input.Config)["workflow_id"].(int32)
-	if !ok {
-		return nil, fmt.Errorf("workflow id is required")
-	}
-
-	scheduleType, ok := (*input.Config)["scheduleType"].(string)
+	scheduleTypeStr, ok := (*input.Config)["scheduleType"].(string)
 	if !ok {
 		return nil, fmt.Errorf("schedule type is required")
+	}
+
+	scheduleType, ok := models.ScheduleTypes[scheduleTypeStr]
+	if !ok {
+		return nil, fmt.Errorf("invalid schedule type: %s", scheduleTypeStr)
 	}
 
 	rawScheduledDate, ok := (*input.Config)["scheduledDate"].(string)
@@ -54,9 +54,8 @@ func (h *ScheduleTriggerHandler) buildScheduleConfig(
 	}
 
 	return &ScheduleTriggerConfig{
-		WorkflowID:    workflowID,
 		ScheduleType:  scheduleType,
-		ScheduledDate: scheduledDate,
+		ScheduledDate: scheduledDate.UTC(),
 	}, nil
 }
 
@@ -70,7 +69,14 @@ func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeI
 		return fmt.Errorf("failed to build schedule config: %w", err)
 	}
 
-	if err := h.schedulerSvc.ScheduleWorkflow(ctx, scheduleConfig.WorkflowID); err != nil {
+	workflowID, ok := (*input.Config)["workflow_id"].(int32)
+	if !ok {
+		return fmt.Errorf("workflow id is required")
+	}
+
+	scheduleConfig.WorkflowID = &workflowID
+
+	if err := h.schedulerSvc.ScheduleWorkflow(ctx, *scheduleConfig.WorkflowID, scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate); err != nil {
 		return fmt.Errorf("failed to schedule workflow: %w", err)
 	}
 
@@ -87,7 +93,7 @@ func (h *ScheduleTriggerHandler) Validate(input TriggerNodeInput) error {
 		return fmt.Errorf("failed to build schedule config: %w", err)
 	}
 
-	if err := h.schedulerSvc.ValidateSchedule(scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate); err != nil {
+	if err := h.schedulerSvc.ValidateSchedule(scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate, false); err != nil {
 		return fmt.Errorf("invalid schedule type: %w", err)
 	}
 
