@@ -221,6 +221,7 @@ func (s *WorkflowService) CreateWorkflow(
 	rootNodes := internal.GetRootNodes(w)
 	for _, node := range rootNodes {
 		if node.Category == "trigger" {
+			(*node.Config)["workflow_id"] = w.ID
 			if err := s.triggerRegistry.Execute(node.NodeType, triggers.TriggerNodeInput{
 				Config: node.Config,
 			}); err != nil {
