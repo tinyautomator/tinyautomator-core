@@ -73,6 +73,7 @@ type WorkflowGraphDTO struct {
 
 type WorkflowSchedule struct {
 	ID             int32     `json:"id"`
+	UserID         string    `json:"user_id"`
 	WorkflowID     int32     `json:"workflow_id"`
 	ScheduleType   string    `json:"schedule_type"`
 	ExecutionState string    `json:"execution_state"`

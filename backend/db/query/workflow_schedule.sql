@@ -28,16 +28,19 @@ DELETE FROM workflow_schedule WHERE workflow_id = $1;
 
 -- name: GetDueSchedulesLocked :many
 WITH locked AS (
-  SELECT id
-  FROM workflow_schedule
-  WHERE execution_state = 'queued'
-    AND next_run_at IS NOT NULL
-    AND next_run_at <=  extract(epoch from now()) * 1000
-  FOR UPDATE SKIP LOCKED
+  SELECT
+    ws.id,
+    w.user_id
+  FROM workflow_schedule ws
+  INNER JOIN workflow w ON ws.workflow_id = w.id
+  WHERE ws.execution_state = 'queued'
+    AND ws.next_run_at IS NOT NULL
+    AND ws.next_run_at <= extract(epoch from now()) * 1000
+  FOR UPDATE OF ws SKIP LOCKED
   LIMIT $1
 )
 UPDATE workflow_schedule
-SET status = 'running'
+SET execution_state = 'running'
 FROM locked
 WHERE workflow_schedule.id = locked.id
-RETURNING *;
+RETURNING workflow_schedule.*, locked.user_id;
