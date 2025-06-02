@@ -171,8 +171,13 @@ var ScheduleTypes = map[string]ScheduleType{
 type SchedulerService interface {
 	GetDueWorkflows(ctx context.Context) ([]*WorkflowSchedule, error)
 	RunScheduledWorkflow(ctx context.Context, ws *WorkflowSchedule) error
-	ValidateSchedule(st string, nextRunAt time.Time) error
-	ScheduleWorkflow(ctx context.Context, workflowID int32) error
+	ValidateSchedule(st ScheduleType, nextRunAt time.Time, isRunning bool) error
+	ScheduleWorkflow(
+		ctx context.Context,
+		workflowID int32,
+		scheduleType ScheduleType,
+		scheduledDate time.Time,
+	) error
 	EnsureInFlightEnqueued()
 }
 

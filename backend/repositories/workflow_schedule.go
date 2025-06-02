@@ -60,7 +60,7 @@ func (r *workflowScheduleRepo) UpdateNextRun(
 
 	// TODO : POTENTIAL REFACTOR
 	if nextRunAt == nil {
-		executionState = "paused"
+		executionState = "completed"
 	}
 
 	if err := r.q.UpdateWorkflowSchedule(ctx, &dao.UpdateWorkflowScheduleParams{
@@ -79,17 +79,18 @@ func (r *workflowScheduleRepo) UpdateNextRun(
 func (r *workflowScheduleRepo) Create(
 	ctx context.Context,
 	workflowID int32,
-	executionState string,
-	next_run int64,
 	schedule_type string,
+	next_run int64,
+	executionState string,
 ) (*models.WorkflowSchedule, error) {
 	now := time.Now().UTC().UnixMilli()
 
 	s, err := r.q.CreateWorkflowSchedule(ctx, &dao.CreateWorkflowScheduleParams{
 		WorkflowID:     workflowID,
-		ExecutionState: executionState,
-		NextRunAt:      null.IntFrom(next_run),
 		ScheduleType:   schedule_type,
+		NextRunAt:      null.IntFrom(next_run),
+		LastRunAt:      null.Int{},
+		ExecutionState: executionState,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	})
