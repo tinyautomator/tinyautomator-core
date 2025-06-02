@@ -100,24 +100,26 @@ func (q *Queries) DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workfl
 
 const getDueSchedulesLocked = `-- name: GetDueSchedulesLocked :many
 WITH locked AS (
-  SELECT id
-  FROM workflow_schedule
-  WHERE execution_state = 'queued'
-    AND next_run_at IS NOT NULL
-    AND next_run_at <=  extract(epoch from now()) * 1000
-  FOR UPDATE SKIP LOCKED
+  SELECT
+    ws.id,
+    w.user_id
+  FROM workflow_schedule ws
+  INNER JOIN workflow w ON ws.workflow_id = w.id
+  WHERE ws.execution_state = 'queued'
+    AND ws.next_run_at IS NOT NULL
+    AND ws.next_run_at <= extract(epoch from now()) * 1000
+  FOR UPDATE OF ws SKIP LOCKED
   LIMIT $1
 )
 UPDATE workflow_schedule
-SET status = 'running'
+SET execution_state = 'running'
 FROM locked
 WHERE workflow_schedule.id = locked.id
-RETURNING locked.id, workflow_schedule.id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
+RETURNING workflow_schedule.id, workflow_schedule.workflow_id, workflow_schedule.schedule_type, workflow_schedule.next_run_at, workflow_schedule.last_run_at, workflow_schedule.execution_state, workflow_schedule.created_at, workflow_schedule.updated_at, locked.user_id
 `
 
 type GetDueSchedulesLockedRow struct {
 	ID             int32    `json:"id"`
-	ID_2           int32    `json:"id_2"`
 	WorkflowID     int32    `json:"workflow_id"`
 	ScheduleType   string   `json:"schedule_type"`
 	NextRunAt      null.Int `json:"next_run_at"`
@@ -125,24 +127,28 @@ type GetDueSchedulesLockedRow struct {
 	ExecutionState string   `json:"execution_state"`
 	CreatedAt      int64    `json:"created_at"`
 	UpdatedAt      int64    `json:"updated_at"`
+	UserID         string   `json:"user_id"`
 }
 
 // GetDueSchedulesLocked
 //
 //	WITH locked AS (
-//	  SELECT id
-//	  FROM workflow_schedule
-//	  WHERE execution_state = 'queued'
-//	    AND next_run_at IS NOT NULL
-//	    AND next_run_at <=  extract(epoch from now()) * 1000
-//	  FOR UPDATE SKIP LOCKED
+//	  SELECT
+//	    ws.id,
+//	    w.user_id
+//	  FROM workflow_schedule ws
+//	  INNER JOIN workflow w ON ws.workflow_id = w.id
+//	  WHERE ws.execution_state = 'queued'
+//	    AND ws.next_run_at IS NOT NULL
+//	    AND ws.next_run_at <= extract(epoch from now()) * 1000
+//	  FOR UPDATE OF ws SKIP LOCKED
 //	  LIMIT $1
 //	)
 //	UPDATE workflow_schedule
-//	SET status = 'running'
+//	SET execution_state = 'running'
 //	FROM locked
 //	WHERE workflow_schedule.id = locked.id
-//	RETURNING locked.id, workflow_schedule.id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
+//	RETURNING workflow_schedule.id, workflow_schedule.workflow_id, workflow_schedule.schedule_type, workflow_schedule.next_run_at, workflow_schedule.last_run_at, workflow_schedule.execution_state, workflow_schedule.created_at, workflow_schedule.updated_at, locked.user_id
 func (q *Queries) GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*GetDueSchedulesLockedRow, error) {
 	rows, err := q.db.Query(ctx, getDueSchedulesLocked, limit)
 	if err != nil {
@@ -154,7 +160,6 @@ func (q *Queries) GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*Ge
 		var i GetDueSchedulesLockedRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.ID_2,
 			&i.WorkflowID,
 			&i.ScheduleType,
 			&i.NextRunAt,
@@ -162,6 +167,7 @@ func (q *Queries) GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*Ge
 			&i.ExecutionState,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}

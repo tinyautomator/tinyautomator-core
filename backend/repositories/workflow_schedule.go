@@ -36,6 +36,7 @@ func (r *workflowScheduleRepo) GetDueSchedulesLocked(
 	for _, r := range rows {
 		s = append(s, &models.WorkflowSchedule{
 			ID:             r.ID,
+			UserID:         r.UserID,
 			WorkflowID:     r.WorkflowID,
 			ScheduleType:   r.ScheduleType,
 			ExecutionState: r.ExecutionState,
