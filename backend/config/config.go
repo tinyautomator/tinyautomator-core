@@ -20,6 +20,7 @@ const (
 type appConfig struct {
 	envVars              models.EnvironmentVariables
 	logger               *logrus.Logger
+	googleOAuthConfig    models.GoogleOAuthConfig
 	pgPool               *pgxpool.Pool
 	redisClient          redis.RedisClient
 	rabbitMQClient       rabbitmq.RabbitMQClient
@@ -31,6 +32,7 @@ type appConfig struct {
 	executor             models.ExecutorService
 	scheduler            models.SchedulerService
 	workflowSvc          models.WorkflowService
+	oauthIntegrationSvc  models.OauthIntegrationService
 }
 
 var cfg *appConfig
@@ -55,11 +57,14 @@ func NewAppConfig(ctx context.Context) (models.AppConfig, error) {
 		return nil, err
 	}
 
+	cfg.initGoogleOAuthConfig()
 	cfg.initRepositories()
+
 	cfg.orchestrator = services.NewOrchestratorService(cfg)
 	cfg.executor = services.NewExecutorService(cfg)
 	cfg.scheduler = services.NewSchedulerService(cfg)
 	cfg.workflowSvc = services.NewWorkflowService(cfg)
+	cfg.oauthIntegrationSvc = services.NewOauthIntegrationService(cfg)
 
 	return cfg, nil
 }
@@ -74,6 +79,10 @@ func (c *appConfig) GetEnvVars() models.EnvironmentVariables {
 
 func (c *appConfig) GetLogger() logrus.FieldLogger {
 	return c.logger
+}
+
+func (c *appConfig) GetGoogleOAuthConfig() *oauth2.Config {
+	return &c.googleOAuthConfig.Config
 }
 
 func (c *appConfig) GetPGPool() *pgxpool.Pool {
@@ -120,8 +129,8 @@ func (c *appConfig) GetWorkflowService() models.WorkflowService {
 	return c.workflowSvc
 }
 
-func (c *appConfig) GetGmailOAuthConfig() *oauth2.Config {
-	return c.envVars.GmailOAuthConfig
+func (c *appConfig) GetOauthIntegrationService() models.OauthIntegrationService {
+	return c.oauthIntegrationSvc
 }
 
 func (c *appConfig) CleanUp() {

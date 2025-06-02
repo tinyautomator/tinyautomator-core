@@ -65,7 +65,8 @@ func (s *SchedulerService) RunScheduledWorkflow(
 	go func() {
 		defer s.wg.Done()
 
-		if runID, err := s.orchestrator.OrchestrateWorkflow(ctx, ws.WorkflowID); err != nil ||
+		// TODO: change the GetDueWorkflows to include userID
+		if runID, err := s.orchestrator.OrchestrateWorkflow(ctx, "1", ws.WorkflowID); err != nil ||
 			runID == -1 {
 			s.logger.WithError(err).WithFields(logrus.Fields{
 				"schedule_id": ws.ID,

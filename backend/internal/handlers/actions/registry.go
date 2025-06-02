@@ -12,7 +12,7 @@ type ActionNodeInput struct {
 }
 
 type ActionHandler interface {
-	Execute(ctx context.Context, input ActionNodeInput) error
+	Execute(ctx context.Context, userID string, input ActionNodeInput) error
 	Validate(config ActionNodeInput) error
 }
 
@@ -30,14 +30,14 @@ func (r *ActionRegistry) Register(nodeType string, handler ActionHandler) {
 	r.handlers[nodeType] = handler
 }
 
-func (r *ActionRegistry) Execute(nodeType string, input ActionNodeInput) error {
+func (r *ActionRegistry) Execute(userID string, nodeType string, input ActionNodeInput) error {
 	handler, exists := r.handlers[nodeType]
 	if !exists {
 		// return fmt.Errorf("unknown action type: %s", nodeType)
 		return nil
 	}
 
-	err := handler.Execute(context.Background(), input)
+	err := handler.Execute(context.Background(), userID, input)
 	if err != nil {
 		return fmt.Errorf("failed to execute action: %w", err)
 	}

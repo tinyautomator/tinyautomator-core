@@ -10,7 +10,6 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
-	"github.com/tinyautomator/tinyautomator-core/backend/clients/google"
 )
 
 const (
@@ -26,8 +25,6 @@ type NodeStatusUpdate struct {
 }
 
 type RedisClient interface {
-	SetGmailToken(ctx context.Context, token google.GmailToken) error
-	GetGmailToken(ctx context.Context) (google.GmailToken, error)
 	InitializeRunningNodeSet(ctx context.Context, runID int32, nodeIDs []int32) error
 	GetRunningNodeIDs(ctx context.Context, runID int32) (map[int32]struct{}, error)
 	TryAcquireWorkflowRunFinalizationLock(ctx context.Context, runID int32) (bool, error)
@@ -75,39 +72,6 @@ func (c *redisClient) Close() error {
 	}
 
 	return nil
-}
-
-// TODO: Remove this once we have a proper way to store the token
-func (c *redisClient) SetGmailToken(ctx context.Context, token google.GmailToken) error {
-	key := "gmail_token"
-
-	payload, err := json.Marshal(token)
-	if err != nil {
-		return fmt.Errorf("failed to marshal gmail token: %w", err)
-	}
-
-	if err := c.client.Set(ctx, key, payload, 0).Err(); err != nil {
-		return fmt.Errorf("failed to set gmail token: %w", err)
-	}
-
-	return nil
-}
-
-// TODO: Remove this once we have a proper way to store the token
-func (c *redisClient) GetGmailToken(ctx context.Context) (google.GmailToken, error) {
-	key := "gmail_token"
-
-	payload, err := c.client.Get(ctx, key).Result()
-	if err != nil {
-		return google.GmailToken{}, fmt.Errorf("failed to get gmail token: %w", err)
-	}
-
-	var token google.GmailToken
-	if err := json.Unmarshal([]byte(payload), &token); err != nil {
-		return google.GmailToken{}, fmt.Errorf("failed to unmarshal gmail token: %w", err)
-	}
-
-	return token, nil
 }
 
 func (c *redisClient) generateRunningNodeSetKey(runID int32) string {

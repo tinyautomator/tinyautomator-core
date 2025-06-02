@@ -2,6 +2,8 @@ package models
 
 import (
 	"context"
+
+	"golang.org/x/oauth2"
 )
 
 type OauthIntegration struct {
@@ -27,4 +29,32 @@ type OauthIntegrationRepository interface {
 	) (*OauthIntegration, error)
 	GetByUserID(ctx context.Context, userID string) ([]*OauthIntegration, error)
 	Update(ctx context.Context, oauthIntegration *OauthIntegration) (*OauthIntegration, error)
+}
+
+type OauthIntegrationService interface {
+	ExchangeCodeForToken(
+		ctx context.Context,
+		oauthConfig *oauth2.Config,
+		code string,
+	) (*oauth2.Token, error)
+	GetToken(
+		ctx context.Context,
+		userID string,
+		provider string,
+		oauthConfig *oauth2.Config,
+	) (*oauth2.Token, error)
+	StoreToken(
+		ctx context.Context,
+		userID string,
+		provider string,
+		providerUserID string,
+		oauthConfig *oauth2.Config,
+		token *oauth2.Token,
+	) error
+	UpdateToken(
+		ctx context.Context,
+		id int32,
+		oauthConfig *oauth2.Config,
+		token *oauth2.Token,
+	) error
 }

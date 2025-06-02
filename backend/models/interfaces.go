@@ -17,12 +17,10 @@ type EnvironmentVariables struct {
 	WorkerPollInterval time.Duration `envconfig:"WORKER_POLLING_INTERVAL" default:"10m"`
 	Env                string        `envconfig:"APPLICATION_ENV"         default:"development"`
 
-	// Gmail Variables
-	GmailClientID     string   `envconfig:"GMAIL_CLIENT_ID"`
-	GmailClientSecret string   `envconfig:"GMAIL_CLIENT_SECRET"`
-	GmailRedirectURL  string   `envconfig:"GMAIL_REDIRECT_URL"`
-	GmailScopes       []string `envconfig:"GMAIL_SCOPES"`
-	GmailOAuthConfig  *oauth2.Config
+	// Oauth
+	JwtSecret          string `envconfig:"JWT_SECRET"           required:"true"`
+	TokenEncryptionKey string `envconfig:"TOKEN_ENCRYPTION_KEY" required:"true"`
+	GoogleClientSecret string `envconfig:"GOOGLE_CLIENT_SECRET" required:"true"`
 
 	// Redis
 	RedisUrl string `envconfig:"REDIS_URL"`
@@ -33,6 +31,10 @@ type EnvironmentVariables struct {
 	// RabbitMQ
 	RabbitMQUrl         string `envconfig:"RABBITMQ_URL"`
 	RabbitMQQueuePrefix string `envconfig:"RABBITMQ_QUEUE_PREFIX"`
+}
+
+type GoogleOAuthConfig struct {
+	oauth2.Config
 }
 
 type AppConfig interface {
@@ -48,8 +50,9 @@ type AppConfig interface {
 	GetExecutorService() ExecutorService
 	GetSchedulerService() SchedulerService
 	GetWorkflowService() WorkflowService
+	GetOauthIntegrationService() OauthIntegrationService
 
-	GetGmailOAuthConfig() *oauth2.Config
+	GetGoogleOAuthConfig() *oauth2.Config
 	GetRedisClient() redis.RedisClient
 	GetRabbitMQClient() rabbitmq.RabbitMQClient
 
@@ -142,7 +145,7 @@ type WorkflowScheduleRepository interface {
 }
 
 type OrchestratorService interface {
-	OrchestrateWorkflow(ctx context.Context, workflowID int32) (int32, error)
+	OrchestrateWorkflow(ctx context.Context, userID string, workflowID int32) (int32, error)
 }
 
 type ExecutorService interface {

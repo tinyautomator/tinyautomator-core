@@ -58,10 +58,10 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 		workflowRunsGroup.GET("/:workflowID", workflowRunController.GetWorkflowRuns)
 	}
 
-	gmailController := controllers.NewGmailController(cfg)
-	gmailGroup := r.Group("/api/integrations/gmail")
+	googleAuthController := controllers.NewGoogleAuthController(cfg)
+	googleAuthGroup := r.Group("/api/integrations/google")
 	{
-		gmailGroup.GET("/auth-url", gmailController.GetGmailAuthURL)
-		gmailGroup.GET("/callback", gmailController.HandleCallBack)
+		googleAuthGroup.GET("/auth-url", googleAuthController.GetGoogleAuthURL)
+		googleAuthGroup.GET("/callback", googleAuthController.HandleCallBack)
 	}
 }

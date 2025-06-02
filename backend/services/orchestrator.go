@@ -33,6 +33,7 @@ func NewOrchestratorService(cfg models.AppConfig) models.OrchestratorService {
 
 func (s *OrchestratorService) OrchestrateWorkflow(
 	ctx context.Context,
+	userID string,
 	workflowID int32,
 ) (int32, error) {
 	wg, err := s.workflowRepo.GetWorkflowGraph(ctx, workflowID)
@@ -109,6 +110,7 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 				s.logger,
 				s.workflowRunRepo,
 				s.rabbitMQClient,
+				userID,
 				workflowID,
 				parent.ID,
 				run.ID,
@@ -125,6 +127,7 @@ func (s *OrchestratorService) OrchestrateWorkflow(
 				s.logger,
 				s.workflowRunRepo,
 				s.rabbitMQClient,
+				userID,
 				workflowID,
 				run.ID,
 				parent.ID,
