@@ -52,7 +52,7 @@ export default function Navbar() {
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="left" sideOffset={5}>
+          <TooltipContent side="bottom" sideOffset={5}>
             Toggle Theme
           </TooltipContent>
         </Tooltip>
@@ -72,7 +72,7 @@ export default function Navbar() {
             </Button>
           </TooltipTrigger>
 
-          <TooltipContent side="left" sideOffset={5}>
+          <TooltipContent side="bottom" sideOffset={5}>
             Support
           </TooltipContent>
         </Tooltip>

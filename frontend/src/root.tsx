@@ -5,7 +5,7 @@ import { ClerkProvider } from "@clerk/react-router";
 import { useNavigation } from "react-router";
 import GlobalSpinner from "./components/shared/GlobalSpinner";
 import { useDebounce } from "use-debounce";
-import { ThemeProvider } from "./stores/themeProvider";
+import { useThemeStore } from "./stores/useThemeStore";
 
 export async function loader(args: Route.LoaderArgs) {
   return rootAuthLoader(args);
@@ -13,14 +13,14 @@ export async function loader(args: Route.LoaderArgs) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigation = useNavigation();
-
+  const theme = useThemeStore((state) => state.theme);
   const [debouncedIsNavigating] = useDebounce(
     Boolean(navigation.location),
     300,
   );
 
   return (
-    <html lang="en">
+    <html lang="en" className={theme}>
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -48,7 +48,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ThemeProvider />
         {debouncedIsNavigating && <GlobalSpinner />}
         {children}
         <ScrollRestoration />
