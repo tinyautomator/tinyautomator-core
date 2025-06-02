@@ -84,7 +84,7 @@ export default function CanvasHeader({
     }
   };
   return (
-    <div className="flex h-13 items-center justify-between bg-white px-4">
+    <div className="flex h-13 items-center justify-between bg-white dark:bg-background px-4">
       <div className="flex items-center gap-2">
         {onCollapseToggle && (
           <Button

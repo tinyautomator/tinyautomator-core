@@ -17,7 +17,7 @@ export default function Dashboard({
   loaderData: { userWorkflows },
 }: Route.ComponentProps) {
   return (
-    <div className="h-full overflow-auto p-6 scrollbar-hidden">
+    <div className="h-full overflow-auto p-6 scrollbar-hidden dark:bg-background">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-2xl font-semibold tracking-tight text-slate-900">

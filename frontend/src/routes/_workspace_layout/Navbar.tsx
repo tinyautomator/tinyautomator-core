@@ -1,4 +1,4 @@
-import { HelpCircle, Zap } from "lucide-react";
+import { HelpCircle, Moon, Sun, Zap } from "lucide-react";
 import { UserButton } from "@clerk/react-router";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useThemeStore } from "@/stores/useThemeStore";
 
 export default function Navbar() {
+  const { theme } = useThemeStore();
+
   return (
-    <header className="flex h-14 items-center border-b bg-white px-6 z-10">
+    <header className="flex h-14 items-center border-b bg-white dark:bg-background px-6 z-10">
       <SidebarTrigger className="mr-4 -ml-2" />
       <Link
         to="/dashboard"
@@ -38,6 +41,28 @@ export default function Navbar() {
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                useThemeStore.getState().toggleTheme();
+              }}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left" sideOffset={5}>
+            Toggle Theme
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
               onClick={() =>
                 window.open("https://docs.tinyautomator.com", "_blank")
               }
@@ -46,6 +71,7 @@ export default function Navbar() {
               <span className="sr-only">Support</span>
             </Button>
           </TooltipTrigger>
+
           <TooltipContent side="left" sideOffset={5}>
             Support
           </TooltipContent>

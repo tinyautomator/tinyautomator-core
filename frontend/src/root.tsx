@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/react-router";
 import { useNavigation } from "react-router";
 import GlobalSpinner from "./components/shared/GlobalSpinner";
 import { useDebounce } from "use-debounce";
+import { ThemeProvider } from "./stores/themeProvider";
 
 export async function loader(args: Route.LoaderArgs) {
   return rootAuthLoader(args);
@@ -47,6 +48,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <ThemeProvider />
         {debouncedIsNavigating && <GlobalSpinner />}
         {children}
         <ScrollRestoration />
