@@ -122,7 +122,7 @@ export default function CanvasBody() {
   );
 
   return (
-    <div className="h-14/15">
+    <div className="h-14/15 dark:bg-background">
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}

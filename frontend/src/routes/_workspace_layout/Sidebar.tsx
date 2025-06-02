@@ -19,7 +19,7 @@ export default function () {
   return (
     <Sidebar
       collapsible="icon"
-      className="relative flex h-full flex-col justify-between"
+      className="relative flex h-full flex-col justify-between dark:bg-background"
     >
       <SidebarHeader>
         <SidebarGroupLabel aria-label="Workspace Section">

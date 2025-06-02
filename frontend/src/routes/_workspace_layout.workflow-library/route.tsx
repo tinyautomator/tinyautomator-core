@@ -23,7 +23,7 @@ export default function WorkflowLibrary({ loaderData }: Route.ComponentProps) {
   return (
     <div
       className={cn(
-        "p-6 flex flex-col items-start h-full rounded-xl justify-between gap-4 ",
+        "p-6 flex flex-col items-start h-full rounded-xl justify-between gap-4 dark:bg-background",
       )}
     >
       <div

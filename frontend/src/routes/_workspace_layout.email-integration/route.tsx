@@ -6,8 +6,8 @@ import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function EmailIntegration() {
   return (
-    <div className="h-full flex flex-col bg-white">
-      <div className="bg-white border-b px-6 py-4">
+    <div className="h-full flex flex-col bg-white dark:bg-background">
+      <div className="bg-white dark:bg-background border-b px-6 py-4">
         <PageHeader title="Email Integration" />
       </div>
       <div className="flex-1 overflow-auto p-6">
