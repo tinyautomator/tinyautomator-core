@@ -128,6 +128,7 @@ type ValidateEdge struct {
 }
 
 type WorkflowNodeTask struct {
+	UserID     string `json:"user_id"`
 	WorkflowID int32  `json:"workflow_id"`
 	RunID      int32  `json:"run_id"`
 	NodeID     int32  `json:"node_id"`
@@ -136,8 +137,12 @@ type WorkflowNodeTask struct {
 	Status     string `json:"status,omitempty"`
 }
 
-func BuildWorkflowNodeTaskPayload(workflowID, runID, nodeID, nodeRunID int32) ([]byte, error) {
+func BuildWorkflowNodeTaskPayload(
+	userID string,
+	workflowID, runID, nodeID, nodeRunID int32,
+) ([]byte, error) {
 	task := WorkflowNodeTask{
+		UserID:     userID,
 		WorkflowID: workflowID,
 		RunID:      runID,
 		NodeID:     nodeID,

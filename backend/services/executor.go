@@ -27,17 +27,12 @@ type ExecutorService struct {
 func NewExecutorService(cfg models.AppConfig) models.ExecutorService {
 	logger := cfg.GetLogger()
 	actionRegistry := handlers.NewActionRegistry(logger)
-	redisClient := cfg.GetRedisClient()
-	// TODO: Remove this once we have a proper way to store the token
-	actionRegistry.Register(
-		"send_email",
-		handlers.NewSendEmailHandler(logger, redisClient, cfg.GetGoogleOAuthConfig()),
-	)
+	actionRegistry.Register("send_email", handlers.NewSendEmailHandler(cfg))
 
 	return &ExecutorService{
 		logger:          logger,
 		rabbitMQClient:  cfg.GetRabbitMQClient(),
-		redisClient:     redisClient,
+		redisClient:     cfg.GetRedisClient(),
 		workflowRepo:    cfg.GetWorkflowRepository(),
 		workflowRunRepo: cfg.GetWorkflowRunRepository(),
 		actionRegistry:  actionRegistry,
@@ -150,6 +145,7 @@ func (s *ExecutorService) runWorkflowNodeTask(
 		config = *workflowNode.Config
 	} else {
 		s.logger.WithFields(logrus.Fields{
+			"user_id":     task.UserID,
 			"workflow_id": task.WorkflowID,
 			"run_id":      task.RunID,
 			"node_id":     task.NodeID,
@@ -158,6 +154,7 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	}
 
 	kv := logrus.Fields{
+		"user_id":       task.UserID,
 		"workflow_id":   task.WorkflowID,
 		"run_id":        task.RunID,
 		"node_id":       task.NodeID,
@@ -181,7 +178,7 @@ func (s *ExecutorService) runWorkflowNodeTask(
 	}
 
 	doTask := func() error {
-		if err := s.actionRegistry.Execute(workflowNode.NodeType, handlers.ActionNodeInput{
+		if err := s.actionRegistry.Execute(task.UserID, workflowNode.NodeType, handlers.ActionNodeInput{
 			Config: config,
 		}); err != nil {
 			return fmt.Errorf("failed to execute %s action: %w", workflowNode.NodeType, err)
@@ -256,6 +253,7 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 	for _, parentNodeRun := range parentNodeRuns {
 		if parentNodeRun.Status != "success" {
 			s.logger.WithFields(logrus.Fields{
+				"user_id":        task.UserID,
 				"workflow_id":    task.WorkflowID,
 				"run_id":         task.RunID,
 				"node_id":        task.NodeID,
@@ -283,6 +281,7 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 		}
 	} else {
 		s.logger.WithFields(logrus.Fields{
+			"user_id":     task.UserID,
 			"workflow_id": task.WorkflowID,
 			"run_id":      task.RunID,
 			"node_id":     task.NodeID,
@@ -296,6 +295,7 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 		s.logger,
 		s.workflowRunRepo,
 		s.rabbitMQClient,
+		task.UserID,
 		task.WorkflowID,
 		task.NodeID,
 		task.RunID,
@@ -330,6 +330,7 @@ func (s *ExecutorService) ExecuteWorkflowNode(ctx context.Context, msg []byte) e
 		}
 
 		s.logger.WithFields(logrus.Fields{
+			"user_id":     task.UserID,
 			"run_id":      task.RunID,
 			"workflow_id": task.WorkflowID,
 			"status":      status,

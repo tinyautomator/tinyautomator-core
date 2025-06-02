@@ -4,33 +4,32 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/google"
-	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"golang.org/x/oauth2"
 )
 
 type SendEmailHandler struct {
-	logger            logrus.FieldLogger
-	redisClient       redis.RedisClient
-	googleOAuthConfig *oauth2.Config
+	logger              logrus.FieldLogger
+	googleOAuthConfig   *oauth2.Config
+	oauthIntegrationSvc models.OauthIntegrationService
 }
 
-func NewSendEmailHandler(
-	logger logrus.FieldLogger,
-	redisClient redis.RedisClient,
-	googleOAuthConfig *oauth2.Config,
-) ActionHandler {
+func NewSendEmailHandler(cfg models.AppConfig) ActionHandler {
 	return &SendEmailHandler{
-		logger:            logger,
-		redisClient:       redisClient,
-		googleOAuthConfig: googleOAuthConfig,
+		logger:              cfg.GetLogger(),
+		googleOAuthConfig:   cfg.GetGoogleOAuthConfig(),
+		oauthIntegrationSvc: cfg.GetOauthIntegrationService(),
 	}
 }
 
-func (h *SendEmailHandler) Execute(ctx context.Context, input ActionNodeInput) error {
+func (h *SendEmailHandler) Execute(
+	ctx context.Context,
+	userID string,
+	input ActionNodeInput,
+) error {
 	recipients := input.Config["recipients"].([]interface{})
 	recipientEmails := make([]string, len(recipients))
 
@@ -47,36 +46,9 @@ func (h *SendEmailHandler) Execute(ctx context.Context, input ActionNodeInput) e
 		"body":       body,
 	}).Info("sending email")
 
-	token, err := h.redisClient.GetGmailToken(ctx)
+	oauthToken, err := h.oauthIntegrationSvc.GetToken(ctx, userID, "google", h.googleOAuthConfig)
 	if err != nil {
-		return fmt.Errorf("failed to get gmail token: %w", err)
-	}
-
-	expiryTime, err := time.Parse(time.RFC3339, token.Expiry)
-	if err != nil {
-		return fmt.Errorf("failed to parse expiry time: %w", err)
-	}
-
-	oauthToken := &oauth2.Token{
-		AccessToken:  token.AccessToken,
-		RefreshToken: token.RefreshToken,
-		Expiry:       expiryTime,
-		TokenType:    "Bearer",
-	}
-
-	if expiryTime.Before(time.Now()) {
-		oauthToken, err = h.googleOAuthConfig.TokenSource(ctx, oauthToken).Token()
-		if err != nil {
-			return fmt.Errorf("failed to refresh gmail token: %w", err)
-		}
-
-		if err := h.redisClient.SetGmailToken(ctx, google.GmailToken{
-			AccessToken:  oauthToken.AccessToken,
-			RefreshToken: oauthToken.RefreshToken,
-			Expiry:       oauthToken.Expiry.Format(time.RFC3339),
-		}); err != nil {
-			return fmt.Errorf("failed to set gmail token: %w", err)
-		}
+		return fmt.Errorf("failed to get oauth token: %w", err)
 	}
 
 	email, err := google.GetUserEmail(ctx, oauthToken, h.googleOAuthConfig)

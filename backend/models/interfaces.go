@@ -17,8 +17,10 @@ type EnvironmentVariables struct {
 	WorkerPollInterval time.Duration `envconfig:"WORKER_POLLING_INTERVAL" default:"10m"`
 	Env                string        `envconfig:"APPLICATION_ENV"         default:"development"`
 
-	// Google
-	GoogleClientSecret string `envconfig:"GOOGLE_CLIENT_SECRET"`
+	// Oauth
+	JwtSecret          string `envconfig:"JWT_SECRET"           required:"true"`
+	TokenEncryptionKey string `envconfig:"TOKEN_ENCRYPTION_KEY" required:"true"`
+	GoogleClientSecret string `envconfig:"GOOGLE_CLIENT_SECRET" required:"true"`
 
 	// Redis
 	RedisUrl string `envconfig:"REDIS_URL"`
@@ -143,7 +145,7 @@ type WorkflowScheduleRepository interface {
 }
 
 type OrchestratorService interface {
-	OrchestrateWorkflow(ctx context.Context, workflowID int32) (int32, error)
+	OrchestrateWorkflow(ctx context.Context, userID string, workflowID int32) (int32, error)
 }
 
 type ExecutorService interface {
@@ -195,25 +197,4 @@ type WorkflowService interface {
 		edges []*WorkflowEdgeDTO,
 	) error
 	ArchiveWorkflow(ctx context.Context, workflowID int32) error
-}
-
-type OauthIntegrationService interface {
-	ExchangeCodeForToken(
-		ctx context.Context,
-		oauthConfig *oauth2.Config,
-		code string,
-	) (*oauth2.Token, error)
-	GetToken(
-		ctx context.Context,
-		userID string,
-		provider string,
-		oauthConfig *oauth2.Config,
-	) (*oauth2.Token, error)
-	StoreToken(
-		ctx context.Context,
-		userID string,
-		provider string,
-		oauthConfig *oauth2.Config,
-		token *oauth2.Token,
-	) error
 }

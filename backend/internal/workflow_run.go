@@ -22,6 +22,7 @@ func EnqueueNode(
 	logger logrus.FieldLogger,
 	workflowRunRepo models.WorkflowRunRepository,
 	rabbitMQClient rabbitmq.RabbitMQClient,
+	userID string,
 	workflowID int32,
 	workflowRunID int32,
 	nodeID int32,
@@ -33,6 +34,7 @@ func EnqueueNode(
 
 	if nodeRun.Status != "pending" {
 		logger.WithFields(logrus.Fields{
+			"user_id":         userID,
 			"workflow_id":     workflowID,
 			"workflow_run_id": workflowRunID,
 			"node_id":         nodeRun.WorkflowNodeID,
@@ -44,6 +46,7 @@ func EnqueueNode(
 	}
 
 	taskBytes, err := models.BuildWorkflowNodeTaskPayload(
+		userID,
 		workflowID,
 		workflowRunID,
 		nodeID,
@@ -59,6 +62,7 @@ func EnqueueNode(
 	}
 
 	logger.WithFields(logrus.Fields{
+		"user_id":         userID,
 		"workflow_id":     workflowID,
 		"workflow_run_id": workflowRunID,
 		"node_id":         nodeID,
@@ -73,6 +77,7 @@ func EnqueueChildNodes(
 	logger logrus.FieldLogger,
 	workflowRunRepo models.WorkflowRunRepository,
 	rabbitMQClient rabbitmq.RabbitMQClient,
+	userID string,
 	workflowID int32,
 	parentNodeID int32,
 	workflowRunID int32,
@@ -84,6 +89,7 @@ func EnqueueChildNodes(
 
 	if len(c) == 0 {
 		logger.WithFields(logrus.Fields{
+			"user_id":         userID,
 			"workflow_id":     workflowID,
 			"workflow_run_id": workflowRunID,
 			"node_id":         parentNodeID,
@@ -95,6 +101,7 @@ func EnqueueChildNodes(
 	nodesNotAlreadyQueued := []NodeToEnqueue{}
 
 	logger.WithFields(logrus.Fields{
+		"user_id":         userID,
 		"child_node_runs": c,
 		"n_nodes":         len(c),
 	}).Info("enqueuing child nodes")
@@ -102,6 +109,7 @@ func EnqueueChildNodes(
 	for _, nodeRun := range c {
 		if nodeRun.Status != "pending" {
 			logger.WithFields(logrus.Fields{
+				"user_id":         userID,
 				"workflow_id":     workflowID,
 				"workflow_run_id": workflowRunID,
 				"node_id":         nodeRun.WorkflowNodeID,
@@ -120,6 +128,7 @@ func EnqueueChildNodes(
 
 	for _, n := range nodesNotAlreadyQueued {
 		taskBytes, err := models.BuildWorkflowNodeTaskPayload(
+			userID,
 			workflowID,
 			workflowRunID,
 			n.NodeID,
@@ -135,6 +144,7 @@ func EnqueueChildNodes(
 		}
 
 		logger.WithFields(logrus.Fields{
+			"user_id":         userID,
 			"workflow_id":     workflowID,
 			"workflow_run_id": workflowRunID,
 			"node_id":         n.NodeID,

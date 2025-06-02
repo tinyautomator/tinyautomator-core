@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -27,10 +28,16 @@ import (
 func validateEnvVars(e *models.EnvironmentVariables) error {
 	switch strings.ToLower(e.LogLevel) {
 	case "debug", "info", "warn":
-		return nil
+		break
 	default:
 		return errors.New("invalid log level")
 	}
+
+	if _, err := hex.DecodeString(e.TokenEncryptionKey); err != nil {
+		return fmt.Errorf("failed to decode token encryption key: %w", err)
+	}
+
+	return nil
 }
 
 func (cfg *appConfig) loadEnvironmentVariables() error {
@@ -116,6 +123,9 @@ func (cfg *appConfig) initGoogleOAuthConfig() {
 				"https://www.googleapis.com/auth/drive",
 				"https://www.googleapis.com/auth/calendar.events.owned",
 				"https://www.googleapis.com/auth/docs",
+				"https://www.googleapis.com/auth/userinfo.email",
+				"https://www.googleapis.com/auth/userinfo.profile",
+				"openid",
 			},
 			Endpoint: google.Endpoint,
 		},
