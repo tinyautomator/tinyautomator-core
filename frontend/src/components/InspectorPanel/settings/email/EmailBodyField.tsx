@@ -18,7 +18,11 @@ export function EmailBodyField({
 
   return (
     <div className="space-y-1">
-      <Textarea {...field} aria-invalid={!!errors.message} />
+      <Textarea
+        {...field}
+        aria-invalid={!!errors.message}
+        className="break-all"
+      />
       <div className="flex justify-end">
         <span className="text-xs text-muted-foreground">
           {message.length}/{maxBodyLength} characters

@@ -20,7 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <html lang="en" className={theme}>
+    <html lang="en" className={`${theme} select-none`}>
       <head>
         <script src="/theme-init.js" />
         <meta charSet="UTF-8" />
