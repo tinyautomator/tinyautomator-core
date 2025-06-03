@@ -1,4 +1,3 @@
-// Get initial theme from cookie
 const getInitialTheme = () => {
   try {
     const theme =
