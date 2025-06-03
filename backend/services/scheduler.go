@@ -85,8 +85,13 @@ func (s *SchedulerService) RunScheduledWorkflow(
 		}
 
 		now := time.Now().UTC()
+		oldNextRun := ws.NextRunAt.Time
+		s.logger.WithFields(logrus.Fields{
+			"old_next_run": oldNextRun.Format(time.RFC3339),
+			"now":          now,
+		}).Info("calculating next run")
 
-		nextRun, err := s.CalculateNextRun(st, now)
+		nextRun, err := s.CalculateNextRun(st, oldNextRun, now)
 		if err != nil {
 			s.logger.WithError(err).
 				WithField("workflow_id", ws.WorkflowID).
@@ -161,11 +166,19 @@ func (s *SchedulerService) ScheduleWorkflow(
 
 func (s *SchedulerService) CalculateNextRun(
 	st models.ScheduleType,
+	oldNextRun time.Time,
 	now time.Time,
 ) (*time.Time, error) {
 	var t time.Time
 
-	dt := carbon.Parse(now.Format(time.RFC3339)).SetTimezone("UTC")
+	var basis time.Time
+	if oldNextRun.IsZero() {
+		basis = now
+	} else {
+		basis = oldNextRun
+	}
+
+	dt := carbon.Parse(basis.Format(time.RFC3339)).SetTimezone("UTC")
 
 	switch st {
 	case models.ScheduleTypeOnce:
