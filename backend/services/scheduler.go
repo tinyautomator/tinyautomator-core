@@ -86,10 +86,6 @@ func (s *SchedulerService) RunScheduledWorkflow(
 
 		now := time.Now().UTC()
 		oldNextRun := ws.NextRunAt.Time
-		s.logger.WithFields(logrus.Fields{
-			"old_next_run": oldNextRun.Format(time.RFC3339),
-			"now":          now,
-		}).Info("calculating next run")
 
 		nextRun, err := s.CalculateNextRun(st, oldNextRun, now)
 		if err != nil {
