@@ -49,14 +49,14 @@ export function EmailPreview() {
             This is a preview of the email that will be sent to your recipients.
           </DialogDescription>
         </DialogHeader>
-        <div className="p-4 bg-white border rounded-md space-y-2 text-sm">
+        <div className="p-4 bg-white border dark:bg-secondary rounded-md space-y-2 text-sm">
           <p>
             <strong>To:</strong> {formatPreviewRecipients()}
           </p>
           <p>
             <strong>Subject:</strong> {subject}
           </p>
-          <div className="mt-4 p-3 border rounded bg-slate-50 whitespace-pre-wrap">
+          <div className="mt-4 p-3 border rounded bg-slate-50 dark:bg-tertiary whitespace-pre-wrap">
             {body}
           </div>
         </div>
