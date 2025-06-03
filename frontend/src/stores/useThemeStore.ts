@@ -14,7 +14,6 @@ export const themeCookie = createCookie("theme", {
   maxAge: 31536000,
 });
 
-// Get initial theme from cookie
 const getInitialTheme = (): Theme => {
   if (typeof document === "undefined") return "light";
   const cookies = document.cookie.split(";");
