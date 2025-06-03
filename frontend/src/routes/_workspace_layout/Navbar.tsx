@@ -9,12 +9,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
-  const { theme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
+  const theme = useThemeStore((state) => state.theme);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <header className="flex h-14 items-center border-b bg-white dark:bg-background px-6 z-10">
+    <header className="flex h-14 items-center border-b bg-white dark:bg-secondary px-6 z-10">
       <SidebarTrigger className="mr-4 -ml-2" />
       <Link
         to="/dashboard"
@@ -45,7 +51,9 @@ export default function Navbar() {
                 useThemeStore.getState().toggleTheme();
               }}
             >
-              {theme === "dark" ? (
+              {!mounted ? (
+                <div className="h-5 w-5" />
+              ) : theme === "dark" ? (
                 <Sun className="h-5 w-5" />
               ) : (
                 <Moon className="h-5 w-5" />

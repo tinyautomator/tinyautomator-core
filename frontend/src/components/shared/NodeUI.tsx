@@ -114,20 +114,22 @@ export const NodeUI = memo(function NodeUI({
           </rect>
         </svg>
       )}
-      <div className="group relative bg-background border rounded-lg !shadow-md hover:!shadow-lg !transition-shadow w-48">
+      <div className="group relative bg-background dark:bg-tertiary border dark:border-accent rounded-lg !shadow-md hover:!shadow-lg !transition-shadow w-48">
         <div className="p-3">
           <div className="flex items-center">
             <div
               className={cn(
                 "flex items-center justify-center h-6 w-6 rounded-md mr-2",
                 type === "action"
-                  ? "bg-purple-100 text-purple-600"
-                  : "bg-amber-100 text-amber-600",
+                  ? "bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300"
+                  : "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300",
               )}
             >
               {getIcon()}
             </div>
-            <div className="font-medium text-sm">{data.label as string}</div>
+            <div className="font-medium text-sm dark:text-secondary-foreground">
+              {data.label as string}
+            </div>
             <StatusIcon
               className={cn(
                 "ml-auto h-4 w-4",
@@ -136,19 +138,19 @@ export const NodeUI = memo(function NodeUI({
               )}
             />
           </div>
-          <div className="mt-1 text-xs text-muted-foreground">
+          <div className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground/80">
             {data.description as string}
           </div>
         </div>
-        <div className="px-3 py-2 border-t border-border bg-muted/40 rounded-b-md">
+        <div className="px-3 py-2 border-t border-border dark:border-accent bg-muted/40 dark:bg-muted/20 rounded-b-md">
           <div className="flex justify-between items-center">
             <Badge
               variant="outline"
               className={cn(
                 "text-xs font-medium px-2.5 py-0.5 rounded-full",
                 type === "action"
-                  ? "bg-purple-100 text-purple-800"
-                  : "bg-amber-100 text-amber-800",
+                  ? "bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                  : "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800",
               )}
             >
               {type === "action" ? "Action" : "Trigger"}
@@ -156,9 +158,13 @@ export const NodeUI = memo(function NodeUI({
             <Button
               variant="outline"
               className={cn(
-                "text-xs font-medium text-gray-500 px-2.5 py-0.5",
+                "text-xs font-medium px-2.5 py-0.5",
                 "h-auto rounded-full transition-colors",
-                "!hover:text-gray-700 !hover:bg-gray-50",
+                "text-muted-foreground dark:text-white",
+                "dark:bg-white/10 dark:border-white/10",
+                "hover:text-foreground dark:hover:text-foreground",
+                "hover:bg-muted dark:hover:bg-muted/20 ",
+                "border-border dark:border-accent",
               )}
             >
               Configure
@@ -183,7 +189,7 @@ export const NodeUI = memo(function NodeUI({
         />
         <div
           className={cn(
-            "absolute inset-0 border-1 border-blue-400 rounded-md opacity-0 pointer-events-none",
+            "absolute inset-0 border-1 border-blue-500 dark:border-blue-500/70 rounded-md opacity-0 pointer-events-none",
             selected ? "opacity-100" : "",
           )}
         />

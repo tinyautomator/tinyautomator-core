@@ -19,14 +19,14 @@ export default function () {
   return (
     <Sidebar
       collapsible="icon"
-      className="relative flex h-full flex-col justify-between dark:bg-background"
+      className="relative flex h-full flex-col justify-between  dark:bg-secondary"
     >
-      <SidebarHeader>
+      <SidebarHeader className="dark:bg-secondary">
         <SidebarGroupLabel aria-label="Workspace Section">
           Workspace
         </SidebarGroupLabel>
       </SidebarHeader>
-      <SidebarContent className="scrollbar-hidden">
+      <SidebarContent className="scrollbar-hidden dark:bg-secondary">
         <SidebarGroup className="h-30">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -38,7 +38,7 @@ export default function () {
                         tooltip={item.label}
                         asChild
                         isActive={isActive}
-                        className="active:scale-[0.99] !cursor-default"
+                        className="active:scale-[0.99] !cursor-default dark"
                       >
                         <div className="flex items-center gap-2">
                           {item.icon}
@@ -83,7 +83,7 @@ export default function () {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="dark:bg-secondary">
         <SidebarMenu>
           {FOOTER_ITEMS.map((item) => (
             <SidebarMenuItem key={item.label}>

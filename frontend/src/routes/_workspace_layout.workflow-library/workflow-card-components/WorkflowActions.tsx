@@ -21,11 +21,19 @@ interface WorkflowActionsHoverProps {
   workflow: Workflow;
 }
 
+const CARD_ACTION_OVERLAY_STYLES = cn(
+  "absolute left-0 right-0 bottom-0 z-40 flex justify-center",
+  "bg-gradient-to-t from-white/95 dark:from-white/3 to-transparent",
+  "px-5 pt-10 pb-5 gap-2",
+  "opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto",
+  "transition-opacity duration-300",
+);
+
 export function WorkflowActionsHover({ workflow }: WorkflowActionsHoverProps) {
   const { handleEdit, handleRun } = useWorkflowActions(workflow);
 
   return (
-    <div className="absolute left-0 right-0 bottom-0 z-40 flex justify-center bg-gradient-to-t from-white/95 to-transparent px-5 pt-10 pb-5 gap-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300">
+    <div className={CARD_ACTION_OVERLAY_STYLES}>
       <Button
         size="sm"
         variant="outline"

@@ -12,8 +12,8 @@ export async function loader(args: Route.LoaderArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { theme } = useThemeStore();
   const navigation = useNavigation();
-  const theme = useThemeStore((state) => state.theme);
   const [debouncedIsNavigating] = useDebounce(
     Boolean(navigation.location),
     300,
@@ -46,6 +46,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link rel="manifest" href="/site.webmanifest" />
         <Meta />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = document.cookie
+                  .split('; ')
+                  .find(row => row.startsWith('theme='))
+                  ?.split('=')[1] || 'light';
+                document.documentElement.classList.add(theme);
+                document.documentElement.classList.remove(theme === 'dark' ? 'light' : 'dark');
+              } catch (e) {}
+            `,
+          }}
+        />
       </head>
       <body>
         {debouncedIsNavigating && <GlobalSpinner />}

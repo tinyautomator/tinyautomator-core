@@ -11,12 +11,10 @@ import {
 // Card Layout Styles
 export const CARD_BASE_STYLES = cn(
   "relative grid rounded-xl p-2 h-full",
-  "bg-white dark:bg-slate-900",
+  "bg-white dark:bg-tertiary",
   "border-2 border-slate-300 dark:border-slate-800",
-  "shadow-[0_2px_4px_rgba(0,0,0,0.05)]",
   "transition-all duration-300",
-  "hover:shadow-[0_8px_16px_rgba(0,0,0,0.1)]",
-  "hover:translate-y-[-2px]",
+  "hover:translate-y-[-2px] ",
   "hover:border-slate-300 dark:hover:border-slate-700",
   "group overflow-hidden",
 );

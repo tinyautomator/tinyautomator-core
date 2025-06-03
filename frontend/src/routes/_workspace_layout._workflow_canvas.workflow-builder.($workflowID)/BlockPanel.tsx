@@ -6,7 +6,7 @@ import {
   ChevronRight,
   Clock,
   LucideIcon,
-  Zap,
+  Rocket,
   Cog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
       <Button
         size="sm"
         variant="ghost"
-        className={`px-2 py-1 text-xs h-7 rounded ${viewMode === "default" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 pointer-events-none hover:bg-transparent" : ""}`}
+        className={`px-2 py-1 text-xs h-7 rounded ${viewMode === "default" ? "bg-blue-100 text-blue-800 pointer-events-none hover:bg-transparent" : ""}`}
         onClick={() => onViewModeChange("default")}
       >
         Default
@@ -43,7 +43,7 @@ function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
       <Button
         size="sm"
         variant="ghost"
-        className={`px-2 py-1 text-xs h-7 rounded ${viewMode === "compact" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 pointer-events-none hover:bg-transparent" : ""}`}
+        className={`px-2 py-1 text-xs h-7 rounded ${viewMode === "compact" ? "bg-blue-100 text-blue-800 pointer-events-none hover:bg-transparent" : ""}`}
         onClick={() => onViewModeChange("compact")}
       >
         Compact
@@ -84,7 +84,7 @@ function BlockItem({
   return (
     <div
       key={block.node_type}
-      className={`group flex items-start p-3 rounded-md cursor-grab active:cursor-grabbing transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${viewMode === "compact" ? "py-2" : "py-3"}`}
+      className={`group flex items-start p-3 rounded-md cursor-grab active:cursor-grabbing transition-all hover:bg-gray-100 dark:hover:bg-accent ${viewMode === "compact" ? "py-2" : "py-3"}`}
       draggable
       onDragStart={(event) => {
         event.dataTransfer.setData(
@@ -106,7 +106,7 @@ function BlockItem({
           <p className="font-medium text-sm">{block.label}</p>
         </div>
         {viewMode !== "compact" && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-gray-500  dark:text-gray-400 mt-0.5">
             {block.description}
           </p>
         )}
@@ -142,13 +142,16 @@ function BlockCategory({
   if (category.blocks.length === 0) return null;
 
   return (
-    <div key={category.category} className="mb-2">
+    <div
+      key={category.category}
+      className="mb-2 dark:text-secondary-foreground"
+    >
       <Button
         variant="ghost"
         className="w-full justify-between text-sm font-medium"
         onClick={() => onToggleCategory(category.category)}
       >
-        <span className="flex items-center text-sm font-medium text-gray-700">
+        <span className="flex items-center text-sm font-medium text-gray-700 dark:text-secondary-foreground">
           {category.expanded ? (
             <ChevronDown className="w-4 h-4 mr-2" />
           ) : (
@@ -157,7 +160,7 @@ function BlockCategory({
           {icon}
           {category.category}
         </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-gray-500 dark:text-gray-300">
           {category.blocks.length}
         </span>
       </Button>
@@ -195,7 +198,7 @@ function BlockSection({
 
   return (
     <div className="mb-4">
-      <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-secondary-foreground">
         {icon} {title}
         <div className="flex-1" />
         {onClear && (
@@ -228,17 +231,15 @@ function NoResults({ searchQuery }: NoResultsProps) {
   return (
     <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
       <Search className="h-8 w-8 text-gray-400 mb-2" />
-      <p className="text-gray-500 dark:text-gray-400">
-        No blocks found matching "{searchQuery}"
-      </p>
+      <p className="text-gray-500">No blocks found matching "{searchQuery}"</p>
     </div>
   );
 }
 
 function KeyboardShortcut() {
   return (
-    <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-      <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 mr-1">
+    <div className="text-xs text-gray-500 flex items-center">
+      <kbd className="px-1.5 py-0.5 bg-gray-100 rounded border border-gray-200 mr-1">
         /
       </kbd>
       to search
@@ -269,7 +270,7 @@ function BlockPanelHeader({
   blockPanelOpen: boolean;
 }) {
   return (
-    <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+    <div className="p-4 border-b border-gray-200 dark:border-accent">
       <h2 className="text-lg font-semibold mb-2">Blocks</h2>
       <SearchBar
         searchQuery={searchQuery}
@@ -361,7 +362,7 @@ export default function BlockPanel({
   };
 
   return (
-    <div className="h-full w-64 flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
+    <div className="h-full w-64 flex flex-col bg-white dark:bg-tertiary border-r border-gray-200 dark:border-accent">
       <BlockPanelHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -399,8 +400,10 @@ export default function BlockPanel({
         {filteredCategories.map((category) => {
           let icon = undefined;
           const cat = category.category.toLowerCase();
-          if (cat === "triggers") icon = <Zap className="w-4 h-4 mr-2" />;
-          else if (cat === "actions") icon = <Cog className="w-4 h-4 mr-2" />;
+          if (cat === "triggers")
+            icon = <Rocket className="w-4 h-4 mr-2 text-amber-600" />;
+          else if (cat === "actions")
+            icon = <Cog className="w-4 h-4 mr-2 text-purple-600" />;
 
           return (
             <BlockCategory

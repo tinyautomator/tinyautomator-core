@@ -23,7 +23,7 @@ export default function WorkflowLibrary({ loaderData }: Route.ComponentProps) {
   return (
     <div
       className={cn(
-        "p-6 flex flex-col items-start h-full rounded-xl justify-between gap-4 dark:bg-background",
+        "p-6 flex flex-col items-start h-full rounded-xl justify-between gap-4 dark:bg-background dark:rounded-none",
       )}
     >
       <div
@@ -34,7 +34,7 @@ export default function WorkflowLibrary({ loaderData }: Route.ComponentProps) {
         )}
       >
         <div className="flex flex-col gap-1 leading-tight">
-          <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h3 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
             Workflow Library
           </h3>
           <p className="text-muted-foreground">
