@@ -165,29 +165,31 @@ func (s *SchedulerService) CalculateNextRun(
 	oldNextRun time.Time,
 	now time.Time,
 ) (*time.Time, error) {
-	var t time.Time
+	if st == models.ScheduleTypeOnce {
+		return nil, nil
+	}
 
-	var basis time.Time
-	if oldNextRun.IsZero() {
+	basis := oldNextRun
+	if basis.IsZero() {
 		basis = now
-	} else {
-		basis = oldNextRun
 	}
 
 	dt := carbon.Parse(basis.Format(time.RFC3339)).SetTimezone("UTC")
 
-	switch st {
-	case models.ScheduleTypeOnce:
-		return nil, nil
-	case models.ScheduleTypeDaily:
-		t = dt.AddDay().StdTime()
-	case models.ScheduleTypeWeekly:
-		t = dt.AddWeek().StdTime()
-	case models.ScheduleTypeMonthly:
-		t = dt.AddMonth().StdTime()
-	default:
-		return nil, fmt.Errorf("invalid schedule type: %s", st)
+	for !dt.IsFuture() {
+		switch st {
+		case models.ScheduleTypeDaily:
+			dt = dt.AddDay()
+		case models.ScheduleTypeWeekly:
+			dt = dt.AddWeek()
+		case models.ScheduleTypeMonthly:
+			dt = dt.AddMonth()
+		default:
+			return nil, fmt.Errorf("invalid schedule type: %s", st)
+		}
 	}
+
+	t := dt.StdTime()
 
 	return &t, nil
 }
