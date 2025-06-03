@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createCookie } from "react-router";
 
-export type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark";
 
 interface ThemeState {
   theme: Theme;
@@ -9,18 +9,30 @@ interface ThemeState {
   setTheme: (theme: Theme) => void;
 }
 
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set) => ({
-      theme: "system",
-      toggleTheme: () =>
-        set((state) => ({
-          theme: state.theme === "light" ? "dark" : "light",
-        })),
-      setTheme: (theme) => set({ theme }),
+export const themeCookie = createCookie("theme", {
+  path: "/",
+  maxAge: 31536000,
+});
+
+const getInitialTheme = (): Theme => {
+  if (typeof document === "undefined") return "light";
+  const cookies = document.cookie.split(";");
+  const themeCookie = cookies.find((cookie) =>
+    cookie.trim().startsWith("theme="),
+  );
+  return themeCookie ? (themeCookie.split("=")[1] as Theme) : "light";
+};
+
+export const useThemeStore = create<ThemeState>()((set) => ({
+  theme: getInitialTheme(),
+  toggleTheme: () =>
+    set((state) => {
+      const newTheme = state.theme === "light" ? "dark" : "light";
+      document.cookie = `theme=${newTheme}; path=/; max-age=31536000`;
+      return { theme: newTheme };
     }),
-    {
-      name: "theme",
-    },
-  ),
-);
+  setTheme: (theme) => {
+    document.cookie = `theme=${theme}; path=/; max-age=31536000`;
+    set({ theme });
+  },
+}));

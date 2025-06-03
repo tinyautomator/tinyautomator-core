@@ -12,8 +12,8 @@ export async function loader(args: Route.LoaderArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { theme } = useThemeStore();
   const navigation = useNavigation();
-  const theme = useThemeStore((state) => state.theme);
   const [debouncedIsNavigating] = useDebounce(
     Boolean(navigation.location),
     300,
@@ -22,6 +22,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={theme}>
       <head>
+        <script src="/theme-init.js" />
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Tiny Automator</title>

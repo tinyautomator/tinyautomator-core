@@ -20,10 +20,10 @@ export default function Dashboard({
     <div className="h-full overflow-auto p-6 scrollbar-hidden dark:bg-background">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h3 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
             Dashboard
           </h3>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground dark:text-white">
             Welcome back! Here's an overview of your automation workflows.
           </p>
         </div>

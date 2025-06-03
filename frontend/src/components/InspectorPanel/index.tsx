@@ -193,7 +193,7 @@ export default function InspectorPanel({
       {/* Panel container - always rendered */}
       <div
         className={
-          "h-full border-l bg-white dark:bg-background w-full whitespace-nowrap"
+          "h-full border-l bg-white dark:bg-tertiary w-full whitespace-nowrap"
         }
       >
         {/* Panel content - always rendered, animate only opacity */}

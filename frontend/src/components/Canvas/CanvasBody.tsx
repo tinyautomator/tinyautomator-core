@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useOutletContext } from "react-router";
 import { LayoutActions } from "@/routes/_workspace_layout._workflow_canvas/route";
 import { Config } from "@/api/workflow/types";
+import { useThemeStore } from "@/stores/useThemeStore";
 
 export const NodeBuilder = (
   id: string,
@@ -37,6 +38,7 @@ export const NodeBuilder = (
 };
 
 export default function CanvasBody() {
+  const theme = useThemeStore((s) => s.theme);
   const nodes = useFlowStore((s) => s.getNodes());
   const edges = useFlowStore((s) => s.getEdges());
   const onNodesChange = useFlowStore((s) => s.onNodesChange);
@@ -139,10 +141,17 @@ export default function CanvasBody() {
         nodesFocusable={false}
         edgesFocusable={false}
         attributionPosition="top-right"
+        colorMode={theme === "dark" ? "dark" : "light"}
       >
         <Background />
         <Controls />
-        <MiniMap nodeColor="#ddd" />
+
+        <MiniMap
+          nodeColor="#ddd"
+          style={{
+            backgroundColor: "transparent",
+          }}
+        />
       </ReactFlow>
     </div>
   );

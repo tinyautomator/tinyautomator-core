@@ -82,7 +82,7 @@ export default function WorkflowBuilder({
           blockPanelOpen={toggleBlockPanel}
         />
       </div>
-      <div className="flex-1 bg-slate-50 flex flex-col">
+      <div className="flex-1 bg-slate-50 dark:bg-tertiary flex flex-col">
         <CanvasHeader
           workflow={workflowToEdit}
           onCollapseToggle={() => setToggleBlockPanel((open) => !open)}
