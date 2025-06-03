@@ -22,6 +22,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={theme}>
       <head>
+        <script src="/theme-init.js" />
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Tiny Automator</title>
@@ -46,20 +47,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link rel="manifest" href="/site.webmanifest" />
         <Meta />
         <Links />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                const theme = document.cookie
-                  .split('; ')
-                  .find(row => row.startsWith('theme='))
-                  ?.split('=')[1] || 'light';
-                document.documentElement.classList.add(theme);
-                document.documentElement.classList.remove(theme === 'dark' ? 'light' : 'dark');
-              } catch (e) {}
-            `,
-          }}
-        />
       </head>
       <body>
         {debouncedIsNavigating && <GlobalSpinner />}
