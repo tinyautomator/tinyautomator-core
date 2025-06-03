@@ -165,7 +165,8 @@ func (s *SchedulerService) CalculateNextRun(
 	oldNextRun time.Time,
 	now time.Time,
 ) (*time.Time, error) {
-	if st == models.ScheduleTypeOnce {
+	switch st {
+	case models.ScheduleTypeOnce:
 		return nil, nil
 	}
 
