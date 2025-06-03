@@ -67,13 +67,13 @@ export const NodeUI = memo(function NodeUI({
   const rx = 8;
   const strokeWidth = 3;
   const dashLength =
-    0.3 * (2 * ((width as number) + (height as number) - 2 * rx)); // 30% of perimeter
+    0.3 * (2 * ((width as number) + (height as number) - 2 * rx));
   const gapLength =
-    0.7 * (2 * ((width as number) + (height as number) - 2 * rx)); // 70% of perimeter
+    0.7 * (2 * ((width as number) + (height as number) - 2 * rx));
   const perimeter = 2 * ((width as number) + (height as number) - 2 * rx);
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full max-w-[16rem] max-h-80 ">
       {nodeStatus === "running" && width && height && (
         <svg
           className="absolute z-20 pointer-events-none rounded-lg"
@@ -114,12 +114,12 @@ export const NodeUI = memo(function NodeUI({
           </rect>
         </svg>
       )}
-      <div className="group relative bg-background border rounded-lg !shadow-md hover:!shadow-lg !transition-shadow w-48">
-        <div className="p-3">
-          <div className="flex items-center">
+      <div className="group relative bg-background rounded-lg !shadow-md hover:!shadow-lg !transition-shadow">
+        <div className="p-3 rounded-t-lg">
+          <div className="flex items-center justify-between h-[2.75em]">
             <div
               className={cn(
-                "flex items-center justify-center h-6 w-6 rounded-md mr-2",
+                "flex items-center justify-center h-6 w-6 rounded-md mr-2 flex-shrink-0",
                 type === "action"
                   ? "bg-purple-100 text-purple-600"
                   : "bg-amber-100 text-amber-600",
@@ -127,20 +127,22 @@ export const NodeUI = memo(function NodeUI({
             >
               {getIcon()}
             </div>
-            <div className="font-medium text-sm">{data.label as string}</div>
+            <div className="text-sm font-medium w-full leading-tight h-[2.25em] overflow-visible whitespace-normal break-words text-left">
+              {data.label as string}
+            </div>
             <StatusIcon
               className={cn(
-                "ml-auto h-4 w-4",
+                "ml-auto h-6 w-6 rounded-md flex-shrink-0",
                 statusVariants[nodeStatus as keyof typeof statusVariants].color,
                 nodeStatus === "running" && "animate-spin-slow",
               )}
             />
           </div>
-          <div className="mt-1 text-xs text-muted-foreground">
+          <div className="mt-1 text-sm text-muted-foreground leading-tight h-[3.25em] overflow-visible whitespace-normal break-words">
             {data.description as string}
           </div>
         </div>
-        <div className="px-3 py-2 border-t border-border bg-muted/40 rounded-b-md">
+        <div className="px-3 py-2 border-t border-border h-[2.5em] bg-muted/40 ">
           <div className="flex justify-between items-center">
             <Badge
               variant="outline"
@@ -307,7 +309,6 @@ export const CustomHandle = ({
               "!bg-transparent !border-none !rounded-none",
               "pointer-events-auto",
             )}
-            // className="!transform-none !translate-x-0 !translate-y-0 !static !border-0 !bg-transparent"
           />
           {/* Outer ring - magnetic effect */}
           <div

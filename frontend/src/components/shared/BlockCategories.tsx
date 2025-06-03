@@ -33,7 +33,8 @@ export const blockCategories = [
         node_type: "schedule",
         label: "Schedule",
         icon: Calendar,
-        description: "Start a workflow at specified times or intervals",
+        description:
+          "Start a workflow at specified times or intervals so that the user can have a good time emailing",
         status: "success",
       },
       {
@@ -60,7 +61,7 @@ export const blockCategories = [
       {
         category: "action",
         node_type: "send_email",
-        label: "Send Email",
+        label: "Send Email To a Specific Client",
         icon: Mail,
         description: "Compose and send an email as part of the workflow",
         status: "pending",
@@ -126,9 +127,10 @@ export const blockCategories = [
       {
         category: "action",
         node_type: "api_call",
-        label: "API Call",
+        label: "API Call to Specific Database",
         icon: Globe,
-        description: "Make a call to a specific API endpoint",
+        description:
+          "Make a call to a specific API endpoint that will do the murderbot governor module",
       },
       {
         category: "action",
