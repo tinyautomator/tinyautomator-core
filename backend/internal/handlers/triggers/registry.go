@@ -12,6 +12,7 @@ type TriggerNodeInput struct {
 type TriggerHandler interface {
 	Execute(ctx context.Context, input TriggerNodeInput) error
 	Validate(input TriggerNodeInput) error
+	Update(ctx context.Context, input TriggerNodeInput) error
 }
 
 type TriggerRegistry struct {
@@ -53,6 +54,19 @@ func (r *TriggerRegistry) Execute(nodeType string, input TriggerNodeInput) error
 
 	if err := handler.Execute(context.Background(), input); err != nil {
 		return fmt.Errorf("failed to execute trigger: %w", err)
+	}
+
+	return nil
+}
+
+func (r *TriggerRegistry) Update(nodeType string, input TriggerNodeInput) error {
+	handler, exists := r.handlers[nodeType]
+	if !exists {
+		return fmt.Errorf("unknown trigger type: %s", nodeType)
+	}
+
+	if err := handler.Update(context.Background(), input); err != nil {
+		return fmt.Errorf("failed to update trigger: %w", err)
 	}
 
 	return nil

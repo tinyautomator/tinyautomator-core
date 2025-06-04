@@ -1,10 +1,11 @@
 -- name: UpdateWorkflowSchedule :exec
 UPDATE workflow_schedule
-SET next_run_at = $1,
-    last_run_at = $2,
-    updated_at = $3,
-    execution_state = $4
-WHERE id = $5;
+SET schedule_type = $1,
+    next_run_at = $2,
+    last_run_at = $3,
+    execution_state = $4,
+    updated_at = $5
+WHERE workflow_id = $6;
 
 -- name: CreateWorkflowSchedule :one
 INSERT INTO workflow_schedule (

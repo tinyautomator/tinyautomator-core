@@ -300,6 +300,15 @@ func (s *WorkflowService) UpdateWorkflow(
 				"newConfig": node.Config,
 			}).Info("node config changed")
 
+			(*node.Config)["workflow_id"] = workflowID
+			if node.Category == "trigger" {
+				if err := s.triggerRegistry.Update(node.NodeType, triggers.TriggerNodeInput{
+					Config: node.Config,
+				}); err != nil {
+					return fmt.Errorf("failed to update trigger: %w", err)
+				}
+			}
+
 			delta.NodesToUpdate = append(delta.NodesToUpdate, node)
 		}
 
