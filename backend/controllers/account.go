@@ -8,21 +8,17 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-type AccountController interface {
-	HandleAccountDeleted(ctx *gin.Context)
+type AccountController struct {
+	logger         logrus.FieldLogger
+	accountService models.AccountService
 }
 
-type accountController struct {
-	logger       logrus.FieldLogger
-	oauthRepo    models.OauthIntegrationRepository
-	workflowRepo models.WorkflowRepository
-}
-
-func NewAccountController(cfg models.AppConfig) AccountController {
-	return &accountController{
-		logger:       cfg.GetLogger(),
-		oauthRepo:    cfg.GetOauthIntegrationRepository(),
-		workflowRepo: cfg.GetWorkflowRepository(),
+func NewAccountController(
+	cfg models.AppConfig,
+) *AccountController {
+	return &AccountController{
+		logger:         cfg.GetLogger(),
+		accountService: cfg.GetAccountService(),
 	}
 }
 
@@ -36,12 +32,10 @@ type AccountWebhookEvent struct {
 	Type   string             `json:"type"`
 }
 
-func (c *accountController) HandleAccountDeleted(ctx *gin.Context) {
+func (c *AccountController) HandleAccountDeleted(ctx *gin.Context) {
 	var event AccountWebhookEvent
 	if err := ctx.ShouldBindJSON(&event); err != nil {
-		c.logger.WithError(err).Error("Failed to parse webhook payload")
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid webhook payload"})
-
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
@@ -54,42 +48,14 @@ func (c *accountController) HandleAccountDeleted(ctx *gin.Context) {
 
 	userID := event.Data.ID
 	if userID == "" {
-		c.logger.Error("User ID missing from webhook payload")
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "User ID missing"})
-
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User ID is required"})
 		return
 	}
 
-	workflows, err := c.workflowRepo.GetUserWorkflows(ctx, userID)
-	if err != nil {
-		c.logger.WithError(err).Error("Failed to fetch user workflows")
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user deletion"})
-
-		return
-	}
-
-	for _, workflow := range workflows {
-		if err := c.workflowRepo.ArchiveWorkflow(ctx, workflow.ID); err != nil {
-			c.logger.WithError(err).
-				WithField("workflow_id", workflow.ID).
-				Error("Failed to archive workflow")
-			ctx.JSON(
-				http.StatusInternalServerError,
-				gin.H{"error": "Failed to process user deletion"},
-			)
-
-			return
-		}
-	}
-
-	if err := c.oauthRepo.DeleteAllByUserID(ctx, userID); err != nil {
-		c.logger.WithError(err).Error("Failed to delete user OAuth integrations")
+	if err := c.accountService.DeleteUserData(ctx, userID); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user data"})
-
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "User data deleted successfully"})
 }
-
-var _ AccountController = (*accountController)(nil)

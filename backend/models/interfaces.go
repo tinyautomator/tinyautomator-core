@@ -51,7 +51,7 @@ type AppConfig interface {
 	GetSchedulerService() SchedulerService
 	GetWorkflowService() WorkflowService
 	GetOauthIntegrationService() OauthIntegrationService
-
+	GetAccountService() AccountService
 	GetGoogleOAuthConfig() *oauth2.Config
 	GetRedisClient() redis.RedisClient
 	GetRabbitMQClient() rabbitmq.RabbitMQClient
@@ -202,4 +202,8 @@ type WorkflowService interface {
 		edges []*WorkflowEdgeDTO,
 	) error
 	ArchiveWorkflow(ctx context.Context, workflowID int32) error
+}
+
+type AccountService interface {
+	DeleteUserData(ctx context.Context, userID string) error
 }

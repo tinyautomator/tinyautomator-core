@@ -33,6 +33,7 @@ type appConfig struct {
 	scheduler            models.SchedulerService
 	workflowSvc          models.WorkflowService
 	oauthIntegrationSvc  models.OauthIntegrationService
+	accountService       models.AccountService
 }
 
 var cfg *appConfig
@@ -65,6 +66,7 @@ func NewAppConfig(ctx context.Context) (models.AppConfig, error) {
 	cfg.executor = services.NewExecutorService(cfg)
 	cfg.scheduler = services.NewSchedulerService(cfg)
 	cfg.oauthIntegrationSvc = services.NewOauthIntegrationService(cfg)
+	cfg.accountService = services.NewAccountService(cfg)
 
 	return cfg, nil
 }
@@ -131,6 +133,10 @@ func (c *appConfig) GetWorkflowService() models.WorkflowService {
 
 func (c *appConfig) GetOauthIntegrationService() models.OauthIntegrationService {
 	return c.oauthIntegrationSvc
+}
+
+func (c *appConfig) GetAccountService() models.AccountService {
+	return c.accountService
 }
 
 func (c *appConfig) CleanUp() {
