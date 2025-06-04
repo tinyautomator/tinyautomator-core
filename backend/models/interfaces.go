@@ -140,7 +140,13 @@ type WorkflowScheduleRepository interface {
 		nextRunAt int64,
 		executionState string,
 	) (*WorkflowSchedule, error)
-	UpdateNextRun(ctx context.Context, id int32, nextRunAt *int64, lastRunAt int64) error
+	UpdateWorkflowSchedule(
+		ctx context.Context,
+		workflowID int32,
+		scheduleType string,
+		nextRunAt *int64,
+		lastRunAt *int64,
+	) error
 	DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error
 }
 
@@ -173,6 +179,12 @@ type SchedulerService interface {
 	RunScheduledWorkflow(ctx context.Context, ws *WorkflowSchedule) error
 	ValidateSchedule(st ScheduleType, nextRunAt time.Time, isRunning bool) error
 	ScheduleWorkflow(
+		ctx context.Context,
+		workflowID int32,
+		scheduleType ScheduleType,
+		scheduledDate time.Time,
+	) error
+	RescheduleWorkflow(
 		ctx context.Context,
 		workflowID int32,
 		scheduleType ScheduleType,

@@ -181,36 +181,40 @@ func (q *Queries) GetDueSchedulesLocked(ctx context.Context, limit int32) ([]*Ge
 
 const updateWorkflowSchedule = `-- name: UpdateWorkflowSchedule :exec
 UPDATE workflow_schedule
-SET next_run_at = $1,
-    last_run_at = $2,
-    updated_at = $3,
-    execution_state = $4
-WHERE id = $5
+SET schedule_type = $1,
+    next_run_at = $2,
+    last_run_at = $3,
+    execution_state = $4,
+    updated_at = $5
+WHERE workflow_id = $6
 `
 
 type UpdateWorkflowScheduleParams struct {
+	ScheduleType   string   `json:"schedule_type"`
 	NextRunAt      null.Int `json:"next_run_at"`
 	LastRunAt      null.Int `json:"last_run_at"`
-	UpdatedAt      int64    `json:"updated_at"`
 	ExecutionState string   `json:"execution_state"`
-	ID             int32    `json:"id"`
+	UpdatedAt      int64    `json:"updated_at"`
+	WorkflowID     int32    `json:"workflow_id"`
 }
 
 // UpdateWorkflowSchedule
 //
 //	UPDATE workflow_schedule
-//	SET next_run_at = $1,
-//	    last_run_at = $2,
-//	    updated_at = $3,
-//	    execution_state = $4
-//	WHERE id = $5
+//	SET schedule_type = $1,
+//	    next_run_at = $2,
+//	    last_run_at = $3,
+//	    execution_state = $4,
+//	    updated_at = $5
+//	WHERE workflow_id = $6
 func (q *Queries) UpdateWorkflowSchedule(ctx context.Context, arg *UpdateWorkflowScheduleParams) error {
 	_, err := q.db.Exec(ctx, updateWorkflowSchedule,
+		arg.ScheduleType,
 		arg.NextRunAt,
 		arg.LastRunAt,
-		arg.UpdatedAt,
 		arg.ExecutionState,
-		arg.ID,
+		arg.UpdatedAt,
+		arg.WorkflowID,
 	)
 	return err
 }

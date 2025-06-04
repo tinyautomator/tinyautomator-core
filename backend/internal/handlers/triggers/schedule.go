@@ -59,6 +59,23 @@ func (h *ScheduleTriggerHandler) buildScheduleConfig(
 	}, nil
 }
 
+func (h *ScheduleTriggerHandler) Validate(input TriggerNodeInput) error {
+	h.logger.WithFields(logrus.Fields{
+		"config": input.Config,
+	}).Debug("validating schedule trigger")
+
+	scheduleConfig, err := h.buildScheduleConfig(input)
+	if err != nil {
+		return fmt.Errorf("failed to build schedule config: %w", err)
+	}
+
+	if err := h.schedulerSvc.ValidateSchedule(scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate, false); err != nil {
+		return fmt.Errorf("invalid schedule type: %w", err)
+	}
+
+	return nil
+}
+
 func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeInput) error {
 	h.logger.WithFields(logrus.Fields{
 		"config": input.Config,
@@ -74,27 +91,30 @@ func (h *ScheduleTriggerHandler) Execute(ctx context.Context, input TriggerNodeI
 		return fmt.Errorf("workflow id is required")
 	}
 
-	scheduleConfig.WorkflowID = &workflowID
-
-	if err := h.schedulerSvc.ScheduleWorkflow(ctx, *scheduleConfig.WorkflowID, scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate); err != nil {
+	if err := h.schedulerSvc.ScheduleWorkflow(ctx, workflowID, scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate); err != nil {
 		return fmt.Errorf("failed to schedule workflow: %w", err)
 	}
 
 	return nil
 }
 
-func (h *ScheduleTriggerHandler) Validate(input TriggerNodeInput) error {
+func (h *ScheduleTriggerHandler) Update(ctx context.Context, input TriggerNodeInput) error {
 	h.logger.WithFields(logrus.Fields{
 		"config": input.Config,
-	}).Debug("validating schedule trigger")
+	}).Debug("updating schedule trigger")
 
 	scheduleConfig, err := h.buildScheduleConfig(input)
 	if err != nil {
 		return fmt.Errorf("failed to build schedule config: %w", err)
 	}
 
-	if err := h.schedulerSvc.ValidateSchedule(scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate, false); err != nil {
-		return fmt.Errorf("invalid schedule type: %w", err)
+	workflowID, ok := (*input.Config)["workflow_id"].(int32)
+	if !ok {
+		return fmt.Errorf("workflow id is required")
+	}
+
+	if err := h.schedulerSvc.RescheduleWorkflow(ctx, workflowID, scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate); err != nil {
+		return fmt.Errorf("failed to reschedule workflow: %w", err)
 	}
 
 	return nil

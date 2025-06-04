@@ -101,7 +101,8 @@ func (s *SchedulerService) RunScheduledWorkflow(
 			nr = &_nr
 		}
 
-		if err := s.workflowScheduleRepo.UpdateNextRun(context.WithoutCancel(ctx), ws.ID, nr, now.UnixMilli()); err != nil {
+		lastRun := now.UnixMilli()
+		if err := s.workflowScheduleRepo.UpdateWorkflowSchedule(context.WithoutCancel(ctx), ws.WorkflowID, string(st), nr, &lastRun); err != nil {
 			s.logger.WithError(err).
 				WithField("workflow_id", ws.WorkflowID).
 				Error("failed to update next_run_at")
@@ -155,6 +156,20 @@ func (s *SchedulerService) ScheduleWorkflow(
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create workflow schedule: %w", err)
+	}
+
+	return nil
+}
+
+func (s *SchedulerService) RescheduleWorkflow(
+	ctx context.Context,
+	workflowID int32,
+	scheduleType models.ScheduleType,
+	scheduledDate time.Time,
+) error {
+	scheduledDateUnix := scheduledDate.UnixMilli()
+	if err := s.workflowScheduleRepo.UpdateWorkflowSchedule(ctx, workflowID, string(scheduleType), &scheduledDateUnix, nil); err != nil {
+		return fmt.Errorf("failed to update workflow schedule: %w", err)
 	}
 
 	return nil

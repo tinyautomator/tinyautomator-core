@@ -50,12 +50,15 @@ func (r *workflowScheduleRepo) GetDueSchedulesLocked(
 	return s, nil
 }
 
-func (r *workflowScheduleRepo) UpdateNextRun(
+func (r *workflowScheduleRepo) UpdateWorkflowSchedule(
 	ctx context.Context,
-	id int32,
+	workflowID int32,
+	scheduleType string,
 	nextRunAt *int64,
-	lastRunAt int64,
+	lastRunAt *int64,
 ) error {
+	now := time.Now().UTC().UnixMilli()
+
 	executionState := "queued"
 
 	// TODO : POTENTIAL REFACTOR
@@ -64,11 +67,12 @@ func (r *workflowScheduleRepo) UpdateNextRun(
 	}
 
 	if err := r.q.UpdateWorkflowSchedule(ctx, &dao.UpdateWorkflowScheduleParams{
-		ID:             id,
+		WorkflowID:     workflowID,
+		ScheduleType:   scheduleType,
 		NextRunAt:      null.IntFromPtr(nextRunAt),
-		LastRunAt:      null.IntFrom(lastRunAt),
-		UpdatedAt:      time.Now().UTC().UnixMilli(),
+		LastRunAt:      null.IntFromPtr(lastRunAt),
 		ExecutionState: executionState,
+		UpdatedAt:      now,
 	}); err != nil {
 		return fmt.Errorf("db error update workflow schedule: %w", err)
 	}
