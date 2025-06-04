@@ -8,38 +8,36 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 )
 
-type ClerkWebhookController interface {
-	HandleUserDeleted(ctx *gin.Context)
+type AccountController interface {
+	HandleAccountDeleted(ctx *gin.Context)
 }
 
-type clerkWebhookController struct {
+type accountController struct {
 	logger       logrus.FieldLogger
-	cfg          models.AppConfig
 	oauthRepo    models.OauthIntegrationRepository
 	workflowRepo models.WorkflowRepository
 }
 
-func NewClerkWebhookController(cfg models.AppConfig) ClerkWebhookController {
-	return &clerkWebhookController{
+func NewAccountController(cfg models.AppConfig) AccountController {
+	return &accountController{
 		logger:       cfg.GetLogger(),
-		cfg:          cfg,
 		oauthRepo:    cfg.GetOauthIntegrationRepository(),
 		workflowRepo: cfg.GetWorkflowRepository(),
 	}
 }
 
-type ClerkWebhookData struct {
+type AccountWebhookData struct {
 	ID string `json:"id"`
 }
 
-type ClerkWebhookEvent struct {
-	Data   ClerkWebhookData `json:"data"`
-	Object string           `json:"object"`
-	Type   string           `json:"type"`
+type AccountWebhookEvent struct {
+	Data   AccountWebhookData `json:"data"`
+	Object string             `json:"object"`
+	Type   string             `json:"type"`
 }
 
-func (c *clerkWebhookController) HandleUserDeleted(ctx *gin.Context) {
-	var event ClerkWebhookEvent
+func (c *accountController) HandleAccountDeleted(ctx *gin.Context) {
+	var event AccountWebhookEvent
 	if err := ctx.ShouldBindJSON(&event); err != nil {
 		c.logger.WithError(err).Error("Failed to parse webhook payload")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid webhook payload"})
@@ -94,4 +92,4 @@ func (c *clerkWebhookController) HandleUserDeleted(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "User data deleted successfully"})
 }
 
-var _ ClerkWebhookController = (*clerkWebhookController)(nil)
+var _ AccountController = (*accountController)(nil)
