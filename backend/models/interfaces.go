@@ -184,7 +184,7 @@ type SchedulerService interface {
 		scheduleType ScheduleType,
 		scheduledDate time.Time,
 	) error
-	RescheduleWorkflow(
+	UpdateWorkflowSchedule(
 		ctx context.Context,
 		workflowID int32,
 		scheduleType ScheduleType,

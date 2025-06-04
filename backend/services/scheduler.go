@@ -161,7 +161,7 @@ func (s *SchedulerService) ScheduleWorkflow(
 	return nil
 }
 
-func (s *SchedulerService) RescheduleWorkflow(
+func (s *SchedulerService) UpdateWorkflowSchedule(
 	ctx context.Context,
 	workflowID int32,
 	scheduleType models.ScheduleType,

@@ -113,8 +113,8 @@ func (h *ScheduleTriggerHandler) Update(ctx context.Context, input TriggerNodeIn
 		return fmt.Errorf("workflow id is required")
 	}
 
-	if err := h.schedulerSvc.RescheduleWorkflow(ctx, workflowID, scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate); err != nil {
-		return fmt.Errorf("failed to reschedule workflow: %w", err)
+	if err := h.schedulerSvc.UpdateWorkflowSchedule(ctx, workflowID, scheduleConfig.ScheduleType, scheduleConfig.ScheduledDate); err != nil {
+		return fmt.Errorf("failed to update workflow schedule: %w", err)
 	}
 
 	return nil
