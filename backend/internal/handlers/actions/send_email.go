@@ -32,23 +32,23 @@ type EmailConfig struct {
 	Message    string
 }
 
-func extractEmailConfig(input ActionNodeInput) (EmailConfig, error) {
+func ExtractEmailConfig(input ActionNodeInput) (*EmailConfig, error) {
 	recipients, ok := input.Config["recipients"].([]string)
 	if !ok {
-		return EmailConfig{}, fmt.Errorf("recipients must be an array of strings")
+		return nil, fmt.Errorf("recipients must be an array of strings")
 	}
 
 	subject, ok := input.Config["subject"].(string)
 	if !ok {
-		return EmailConfig{}, fmt.Errorf("subject must be a string")
+		return nil, fmt.Errorf("subject must be a string")
 	}
 
 	message, ok := input.Config["message"].(string)
 	if !ok {
-		return EmailConfig{}, fmt.Errorf("message must be a string")
+		return nil, fmt.Errorf("message must be a string")
 	}
 
-	return EmailConfig{
+	return &EmailConfig{
 		Recipients: recipients,
 		Subject:    subject,
 		Message:    message,
@@ -60,15 +60,15 @@ func (h *SendEmailHandler) Execute(
 	userID string,
 	input ActionNodeInput,
 ) error {
-	config, err := extractEmailConfig(input)
+	c, err := ExtractEmailConfig(input)
 	if err != nil {
 		return fmt.Errorf("invalid email config: %w", err)
 	}
 
 	h.logger.WithFields(logrus.Fields{
-		"recipients": config.Recipients,
-		"subject":    config.Subject,
-		"body":       config.Message,
+		"recipients": c.Recipients,
+		"subject":    c.Subject,
+		"body":       c.Message,
 	}).Info("sending email")
 
 	oauthToken, err := h.oauthIntegrationSvc.GetToken(ctx, userID, "google", h.googleOAuthConfig)
@@ -82,10 +82,10 @@ func (h *SendEmailHandler) Execute(
 	}
 
 	encoded, err := google.EncodeSimpleText(
-		strings.Join(config.Recipients, ", "),
+		strings.Join(c.Recipients, ", "),
 		email,
-		config.Subject,
-		config.Message,
+		c.Subject,
+		c.Message,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to encode email: %w", err)
@@ -100,7 +100,7 @@ func (h *SendEmailHandler) Execute(
 }
 
 func (h *SendEmailHandler) Validate(config ActionNodeInput) error {
-	c, err := extractEmailConfig(config)
+	c, err := ExtractEmailConfig(config)
 	if err != nil {
 		return err
 	}
@@ -115,12 +115,12 @@ func (h *SendEmailHandler) Validate(config ActionNodeInput) error {
 		}
 	}
 
-	if len(c.Subject) > 256 || len(c.Subject) == 0 {
-		return fmt.Errorf("subject must be less than 256 characters and not empty")
+	if len(c.Subject) > 256 {
+		return fmt.Errorf("subject must be less than 256 characters")
 	}
 
-	if len(c.Message) > 10000 || len(c.Message) == 0 {
-		return fmt.Errorf("message must be less than 10000 characters and not empty")
+	if len(c.Message) > 10000 {
+		return fmt.Errorf("message must be less than 10000 characters")
 	}
 
 	return nil
