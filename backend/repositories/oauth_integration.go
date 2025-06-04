@@ -146,4 +146,12 @@ func (r *oauthIntegrationRepo) Update(
 	}, nil
 }
 
+func (r *oauthIntegrationRepo) DeleteAllByUserID(ctx context.Context, userID string) error {
+	if err := r.q.DeleteOauthIntegrationByUserID(ctx, userID); err != nil {
+		return fmt.Errorf("failed to delete oauth integration by user id: %w", err)
+	}
+
+	return nil
+}
+
 var _ models.OauthIntegrationRepository = &oauthIntegrationRepo{}

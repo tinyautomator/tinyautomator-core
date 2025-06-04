@@ -126,6 +126,11 @@ type Querier interface {
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
 	//  RETURNING id, workflow_id, schedule_type, next_run_at, last_run_at, execution_state, created_at, updated_at
 	CreateWorkflowSchedule(ctx context.Context, arg *CreateWorkflowScheduleParams) (*WorkflowSchedule, error)
+	//DeleteOauthIntegrationByUserID
+	//
+	//  DELETE FROM oauth_integration
+	//  WHERE user_id = $1
+	DeleteOauthIntegrationByUserID(ctx context.Context, userID string) error
 	//DeleteWorkflowEdge
 	//
 	//  DELETE FROM workflow_edge

@@ -64,4 +64,7 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 		googleAuthGroup.GET("/auth-url", googleAuthController.GetGoogleAuthURL)
 		googleAuthGroup.GET("/callback", googleAuthController.HandleCallBack)
 	}
+
+	clerkWebhookController := controllers.NewClerkWebhookController(cfg)
+	r.POST("/api/webhooks/clerk", clerkWebhookController.HandleUserDeleted)
 }
