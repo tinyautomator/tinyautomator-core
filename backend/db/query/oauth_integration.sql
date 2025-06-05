@@ -39,3 +39,7 @@ SET
     additional_parameters = $7
 WHERE id = $1
 RETURNING *;
+
+-- name: DeleteOauthIntegrationByUserID :exec
+DELETE FROM oauth_integration
+WHERE user_id = $1;

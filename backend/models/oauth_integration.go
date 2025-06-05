@@ -29,6 +29,7 @@ type OauthIntegrationRepository interface {
 	) (*OauthIntegration, error)
 	GetByUserID(ctx context.Context, userID string) ([]*OauthIntegration, error)
 	Update(ctx context.Context, oauthIntegration *OauthIntegration) (*OauthIntegration, error)
+	DeleteAllByUserID(ctx context.Context, userID string) error
 }
 
 type OauthIntegrationService interface {

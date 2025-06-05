@@ -64,4 +64,7 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 		googleAuthGroup.GET("/auth-url", googleAuthController.GetGoogleAuthURL)
 		googleAuthGroup.GET("/callback", googleAuthController.HandleCallBack)
 	}
+
+	accountController := controllers.NewAccountController(cfg)
+	r.POST("/api/webhooks/delete-account", accountController.HandleAccountDeleted)
 }

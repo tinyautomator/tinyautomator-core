@@ -85,6 +85,20 @@ func (q *Queries) CreateOauthIntegration(ctx context.Context, arg *CreateOauthIn
 	return &i, err
 }
 
+const deleteOauthIntegrationByUserID = `-- name: DeleteOauthIntegrationByUserID :exec
+DELETE FROM oauth_integration
+WHERE user_id = $1
+`
+
+// DeleteOauthIntegrationByUserID
+//
+//	DELETE FROM oauth_integration
+//	WHERE user_id = $1
+func (q *Queries) DeleteOauthIntegrationByUserID(ctx context.Context, userID string) error {
+	_, err := q.db.Exec(ctx, deleteOauthIntegrationByUserID, userID)
+	return err
+}
+
 const getOauthIntegrationByID = `-- name: GetOauthIntegrationByID :one
 SELECT id, user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scopes, created_at, updated_at, additional_parameters FROM oauth_integration
 WHERE id = $1

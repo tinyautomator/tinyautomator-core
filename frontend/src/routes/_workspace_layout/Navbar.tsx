@@ -1,4 +1,4 @@
-import { HelpCircle, Moon, Sun, Zap } from "lucide-react";
+import { HelpCircle, Moon, Sun, UserCog, Zap } from "lucide-react";
 import { UserButton } from "@clerk/react-router";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -84,7 +84,9 @@ export default function Navbar() {
             Support
           </TooltipContent>
         </Tooltip>
-        <UserButton />
+        <UserButton
+          fallback={<UserCog className="animate-pulse  dark:text-blue-300" />}
+        />
       </div>
     </header>
   );
