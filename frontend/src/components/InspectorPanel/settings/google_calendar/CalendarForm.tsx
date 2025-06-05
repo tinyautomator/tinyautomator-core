@@ -25,6 +25,7 @@ export function CalendarForm() {
   const onSubmit = handleSubmit(
     (data) => {
       if (!selectedNode) return;
+      console.log(data);
       selectedNode.data.config = data;
       toast.success("Calendar event settings saved successfully");
     },

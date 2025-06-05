@@ -6,9 +6,9 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO, setHours, setMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 
 interface DateTimePickerProps {
@@ -22,9 +22,25 @@ interface DateTimePickerProps {
 export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
   const [isAllDay, setIsAllDay] = useState(!value.dateTime);
 
+  useEffect(() => {
+    if (value.dateTime && isAllDay) {
+      onChange({
+        date: format(parseISO(value.dateTime), "yyyy-MM-dd"),
+      });
+    } else if (value.date && !isAllDay) {
+      const now = new Date();
+      const date = setMinutes(
+        setHours(parseISO(value.date), now.getHours()),
+        now.getMinutes(),
+      );
+      onChange({
+        dateTime: format(date, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+      });
+    }
+  }, [isAllDay]);
+
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
-
     if (isAllDay) {
       onChange({
         date: format(date, "yyyy-MM-dd"),
@@ -38,21 +54,20 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
 
   const handleTimeChange = (time: string) => {
     if (!value.dateTime) return;
-
     const [hours, minutes] = time.split(":");
-    const date = new Date(value.dateTime);
-    date.setHours(parseInt(hours, 10));
-    date.setMinutes(parseInt(minutes, 10));
-
+    const date = setMinutes(
+      setHours(parseISO(value.dateTime), parseInt(hours)),
+      parseInt(minutes),
+    );
     onChange({
       dateTime: format(date, "yyyy-MM-dd'T'HH:mm:ssXXX"),
     });
   };
 
   const displayValue = value.dateTime
-    ? format(new Date(value.dateTime), "PPP p")
+    ? format(parseISO(value.dateTime), "PPP p")
     : value.date
-      ? format(new Date(value.date), "PPP")
+      ? format(parseISO(value.date), "PPP")
       : "";
 
   return (
@@ -64,7 +79,7 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
             setIsAllDay(!checked);
             if (value.dateTime) {
               onChange({
-                date: format(new Date(value.dateTime), "yyyy-MM-dd"),
+                date: format(parseISO(value.dateTime), "yyyy-MM-dd"),
               });
             }
           }}
@@ -82,6 +97,20 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
               "w-full justify-start text-left font-normal",
               !value && "text-muted-foreground",
             )}
+            onClick={() => {
+              if (!value.date && !value.dateTime) {
+                const today = new Date();
+                if (isAllDay) {
+                  onChange({
+                    date: format(today, "yyyy-MM-dd"),
+                  });
+                } else {
+                  onChange({
+                    dateTime: format(today, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+                  });
+                }
+              }
+            }}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {displayValue || "Pick a date"}
@@ -92,9 +121,9 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
             mode="single"
             selected={
               value.dateTime
-                ? new Date(value.dateTime)
+                ? parseISO(value.dateTime)
                 : value.date
-                  ? new Date(value.date)
+                  ? parseISO(value.date)
                   : undefined
             }
             onSelect={handleDateSelect}
@@ -104,8 +133,14 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
             <div className="p-3 border-t">
               <input
                 type="time"
-                className="w-full p-2 border rounded"
-                value={format(new Date(value.dateTime), "HH:mm")}
+                className={cn(
+                  "w-full p-2 border rounded",
+                  "bg-background text-foreground border-input",
+                  "[&::-webkit-calendar-picker-indicator]:opacity-50",
+                  "[&::-webkit-calendar-picker-indicator]:hover:opacity-100",
+                  "dark:[&::-webkit-calendar-picker-indicator]:invert",
+                )}
+                value={format(parseISO(value.dateTime), "HH:mm")}
                 onChange={(e) => handleTimeChange(e.target.value)}
               />
             </div>
