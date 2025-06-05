@@ -22,8 +22,8 @@ func NewCalendarClient(
 	ctx context.Context,
 	token *oauth2.Token,
 	oauthConfig *oauth2.Config,
-	userID string,
 	logger logrus.FieldLogger,
+	userID string,
 	calendarID string,
 ) (*CalendarClient, error) {
 	tokenSource := oauthConfig.TokenSource(ctx, token)
@@ -63,7 +63,14 @@ type EventConfig struct {
 	Attendees   []*calendar.EventAttendee
 }
 
-func (c *CalendarClient) MakeGoogleCalendarEvent(eventCfg *EventConfig) *calendar.Event {
+type CalendarConfig struct {
+	Summary     *string
+	Description *string
+	Location    *string
+	TimeZone    *string
+}
+
+func (c *CalendarClient) BuildEvent(eventCfg *EventConfig) *calendar.Event {
 	if eventCfg == nil {
 		return &calendar.Event{}
 	}
@@ -122,34 +129,6 @@ func (c *CalendarClient) MakeGoogleCalendarEvent(eventCfg *EventConfig) *calenda
 	return event
 }
 
-type CalendarConfig struct {
-	Summary     *string
-	Description *string
-	Location    *string
-	TimeZone    *string
-}
-
-func (c *CalendarClient) MakeGoogleCalendar(calendarCfg *CalendarConfig) *calendar.Calendar {
-	calendar := &calendar.Calendar{}
-	if calendarCfg.Summary != nil {
-		calendar.Summary = *calendarCfg.Summary
-	}
-
-	if calendarCfg.Description != nil {
-		calendar.Description = *calendarCfg.Description
-	}
-
-	if calendarCfg.Location != nil {
-		calendar.Location = *calendarCfg.Location
-	}
-
-	if calendarCfg.TimeZone != nil {
-		calendar.TimeZone = *calendarCfg.TimeZone
-	}
-
-	return calendar
-}
-
 func (c *CalendarClient) GetCalendarList(ctx context.Context) (*calendar.CalendarList, error) {
 	calendarList, err := c.service.CalendarList.List().Context(ctx).Do()
 	if err != nil {
@@ -169,51 +148,4 @@ func (c *CalendarClient) CreateEvent(
 	}
 
 	return event, nil
-}
-
-func (c *CalendarClient) UpdateEvent(
-	ctx context.Context,
-	eventID string,
-	event *calendar.Event,
-) (*calendar.Event, error) {
-	updatedEvent, err := c.service.Events.Patch(c.calendarID, eventID, event).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("unable to update event: %w", err)
-	}
-
-	return updatedEvent, nil
-}
-
-func (c *CalendarClient) DeleteEvent(ctx context.Context, eventID string) error {
-	err := c.service.Events.Delete(c.calendarID, eventID).Context(ctx).Do()
-	if err != nil {
-		return fmt.Errorf("unable to delete event: %w", err)
-	}
-
-	return nil
-}
-
-func (c *CalendarClient) GetEvent(ctx context.Context, eventID string) (*calendar.Event, error) {
-	event, err := c.service.Events.Get(c.calendarID, eventID).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get event: %w", err)
-	}
-
-	return event, nil
-}
-
-func (c *CalendarClient) ListEvents(
-	ctx context.Context,
-	maxResults int64,
-) (*calendar.Events, error) {
-	events, err := c.service.Events.List(c.calendarID).
-		MaxResults(maxResults).
-		SingleEvents(true).
-		OrderBy("startTime").
-		Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("unable to list events: %w", err)
-	}
-
-	return events, nil
 }
