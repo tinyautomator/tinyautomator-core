@@ -121,11 +121,14 @@ func (cfg *appConfig) initGoogleOAuthConfig() {
 				"https://www.googleapis.com/auth/adwords",
 				"https://www.googleapis.com/auth/spreadsheets",
 				"https://www.googleapis.com/auth/drive",
-				"https://www.googleapis.com/auth/calendar.events.owned",
 				"https://www.googleapis.com/auth/docs",
 				"https://www.googleapis.com/auth/userinfo.email",
 				"https://www.googleapis.com/auth/userinfo.profile",
 				"openid",
+
+				// calendar
+				"https://www.googleapis.com/auth/calendar.events",
+				"https://www.googleapis.com/auth/calendar.settings.readonly",
 			},
 			Endpoint: google.Endpoint,
 		},
