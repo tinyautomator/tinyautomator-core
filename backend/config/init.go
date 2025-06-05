@@ -127,8 +127,8 @@ func (cfg *appConfig) initGoogleOAuthConfig() {
 				"openid",
 
 				// calendar
-				"https://www.googleapis.com/auth/calendar.events",
-				"https://www.googleapis.com/auth/calendar.settings.readonly",
+				// Note: for development, we just get all scropes
+				"https://www.googleapis.com/auth/calendar",
 			},
 			Endpoint: google.Endpoint,
 		},

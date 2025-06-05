@@ -2,9 +2,12 @@ package google
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
@@ -51,87 +54,105 @@ const (
 	defaultTimeZone   = "UTC"
 )
 
-type EventConfig struct {
-	Description *string
-	Summary     *string
-	Location    *string
-	StartDate   *string
-	EndDate     *string
-	AllDay      *bool
-	TimeZone    *string
-	Reminders   *bool
-	Attendees   []*calendar.EventAttendee
-}
+func (c *CalendarClient) BuildEvent(eventCfg *models.EventConfig) (*calendar.Event, error) {
+	if eventCfg == nil || eventCfg.StartDate == nil || eventCfg.EndDate == nil {
+		return nil, errors.New("event config with start and end dates required")
+	}
 
-type CalendarConfig struct {
-	Summary     *string
-	Description *string
-	Location    *string
-	TimeZone    *string
-}
+	if (eventCfg.StartDate.Date == nil && eventCfg.StartDate.DateTime == nil) ||
+		(eventCfg.EndDate.Date == nil && eventCfg.EndDate.DateTime == nil) {
+		return nil, errors.New("start and end must have either date or datetime")
+	}
 
-func (c *CalendarClient) BuildEvent(eventCfg *EventConfig) *calendar.Event {
-	if eventCfg == nil {
-		return &calendar.Event{}
+	if eventCfg.StartDate.DateTime != nil && eventCfg.EndDate.DateTime != nil {
+		start, err := time.Parse(time.RFC3339, *eventCfg.StartDate.DateTime)
+		if err != nil {
+			return nil, fmt.Errorf("invalid start datetime: %w", err)
+		}
+
+		end, err := time.Parse(time.RFC3339, *eventCfg.EndDate.DateTime)
+		if err != nil {
+			return nil, fmt.Errorf("invalid end datetime: %w", err)
+		}
+
+		if !end.After(start) {
+			return nil, errors.New("end time must be after start time")
+		}
+	}
+
+	if eventCfg.StartDate.Date != nil && eventCfg.EndDate.Date != nil {
+		start, err := time.Parse("2006-01-02", *eventCfg.StartDate.Date)
+		if err != nil {
+			return nil, fmt.Errorf("invalid start date: %w", err)
+		}
+
+		end, err := time.Parse("2006-01-02", *eventCfg.EndDate.Date)
+		if err != nil {
+			return nil, fmt.Errorf("invalid end date: %w", err)
+		}
+
+		if !end.After(start) {
+			return nil, errors.New("end date must be after start date")
+		}
 	}
 
 	event := &calendar.Event{}
-	if eventCfg.Description != nil {
-		event.Description = *eventCfg.Description
+
+	if eventCfg.StartDate.Date != nil {
+		event.Start = &calendar.EventDateTime{
+			Date: *eventCfg.StartDate.Date,
+		}
+	} else {
+		event.Start = &calendar.EventDateTime{
+			DateTime: *eventCfg.StartDate.DateTime,
+		}
 	}
 
+	if eventCfg.EndDate.Date != nil {
+		event.End = &calendar.EventDateTime{
+			Date: *eventCfg.EndDate.Date,
+		}
+	} else {
+		event.End = &calendar.EventDateTime{
+			DateTime: *eventCfg.EndDate.DateTime,
+		}
+	}
+
+	// Optional fields
 	if eventCfg.Summary != nil {
 		event.Summary = *eventCfg.Summary
+	}
+
+	if eventCfg.Description != nil {
+		event.Description = *eventCfg.Description
 	}
 
 	if eventCfg.Location != nil {
 		event.Location = *eventCfg.Location
 	}
 
-	if eventCfg.AllDay != nil && *eventCfg.AllDay {
-		if eventCfg.StartDate != nil && eventCfg.TimeZone != nil {
-			event.Start = &calendar.EventDateTime{
-				Date:     *eventCfg.StartDate,
-				TimeZone: *eventCfg.TimeZone,
-			}
-		}
-
-		if eventCfg.EndDate != nil && eventCfg.TimeZone != nil {
-			event.End = &calendar.EventDateTime{
-				Date:     *eventCfg.EndDate,
-				TimeZone: *eventCfg.TimeZone,
-			}
-		}
-	} else {
-		if eventCfg.StartDate != nil && eventCfg.TimeZone != nil {
-			event.Start = &calendar.EventDateTime{
-				DateTime: *eventCfg.StartDate,
-				TimeZone: *eventCfg.TimeZone,
-			}
-		}
-
-		if eventCfg.EndDate != nil && eventCfg.TimeZone != nil {
-			event.End = &calendar.EventDateTime{
-				DateTime: *eventCfg.EndDate,
-				TimeZone: *eventCfg.TimeZone,
-			}
-		}
+	if eventCfg.Reminders != nil {
+		event.Reminders = &calendar.EventReminders{UseDefault: *eventCfg.Reminders}
 	}
 
-	if len(eventCfg.Attendees) > 0 {
-		event.Attendees = eventCfg.Attendees
-	}
+	// TODO: add attendees
 
-	if eventCfg.Reminders != nil && *eventCfg.Reminders {
-		event.Reminders = &calendar.EventReminders{UseDefault: true}
-	}
+	// Hardcoded fields
 
-	return event
+	// All automator events are pink :3
+	event.ColorId = "4"
+
+	return event, nil
 }
 
 func (c *CalendarClient) GetCalendarList(ctx context.Context) (*calendar.CalendarList, error) {
 	calendarList, err := c.service.CalendarList.List().Context(ctx).Do()
 	if err != nil {
+		c.logger.WithError(err).
+			WithField("user_id", c.userID).
+			WithField("token", c.token).
+			Error("Failed to get calendar list")
+
 		return nil, fmt.Errorf("unable to get calendar list: %w", err)
 	}
 
