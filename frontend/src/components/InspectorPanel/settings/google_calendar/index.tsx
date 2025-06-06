@@ -7,19 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarForm } from "./CalendarForm";
 import { CalendarPreview } from "./CalendarPreview";
 import { useFlowStore } from "@/components/Canvas/flowStore";
-
+import { formDefaultValues } from "./utils/calendarValidation";
 export function GoogleCalendarEventSettings() {
   const { getSelectedNode } = useFlowStore();
   const selectedNode = getSelectedNode();
-
-  const formDefaultValues = {
-    summary: "",
-    description: "",
-    location: "",
-    startDate: { dateTime: "" },
-    endDate: { dateTime: "" },
-    reminders: true,
-  };
 
   const defaultValues =
     Object.keys(selectedNode?.data.config || {}).length === 0
@@ -33,7 +24,7 @@ export function GoogleCalendarEventSettings() {
     reValidateMode: "onChange",
     delayError: 500,
     resetOptions: {
-      keepDirty: true,
+      keepDirty: false,
       keepErrors: false,
     },
     shouldFocusError: false,

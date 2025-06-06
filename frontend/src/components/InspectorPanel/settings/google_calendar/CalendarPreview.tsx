@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { CalendarFormValues } from "./utils/calendarValidation";
-import { format } from "date-fns";
+import { format, addDays, addMinutes } from "date-fns";
 import { CalendarIcon, MapPinIcon, BellIcon, Eye } from "lucide-react";
 import {
   Dialog,
@@ -16,14 +16,45 @@ export function CalendarPreview() {
   const { watch } = useFormContext<CalendarFormValues>();
   const values = watch();
 
-  const formatDateTime = (dateTime?: string, date?: string) => {
-    if (dateTime) {
-      return format(new Date(dateTime), "PPP p");
+  const calculateEventTimes = () => {
+    const now = new Date();
+    let startDate = new Date(now);
+    let endDate: Date | null = null;
+
+    // Add days if specified
+    if (values.eventSchedule?.start.days) {
+      startDate = addDays(now, values.eventSchedule.start.days);
     }
-    if (date) {
-      return format(new Date(date), "PPP");
+
+    // Set the time if specified
+    if (values.eventSchedule?.start.time) {
+      console.log(values.eventSchedule.start.time);
+      const [hours, minutes] = values.eventSchedule.start.time
+        .split(":")
+        .map(Number);
+      console.log(hours, minutes);
+      startDate.setHours(hours, minutes, 0, 0);
     }
-    return "";
+
+    // Calculate end time if not an all-day event
+    if (
+      !values.eventSchedule?.duration.isAllDay &&
+      values.eventSchedule?.duration.minutes
+    ) {
+      endDate = addMinutes(startDate, values.eventSchedule.duration.minutes);
+    }
+
+    return { startDate, endDate };
+  };
+
+  const { startDate, endDate } = calculateEventTimes();
+
+  console.log(startDate, endDate);
+  const formatDateTime = (date: Date) => {
+    if (values.eventSchedule?.duration.isAllDay) {
+      return format(date, "PPP");
+    }
+    return format(date, "PPP p");
   };
 
   return (
@@ -34,58 +65,50 @@ export function CalendarPreview() {
           Preview Event
         </Button>
       </DialogTrigger>
-      <DialogContent
-        aria-description="Preview what your calendar event will look like"
-        aria-describedby="calendar preview"
-      >
-        <DialogHeader>
-          <DialogTitle>Calendar Event Preview</DialogTitle>
-          <DialogDescription>
-            This is a preview of the calendar event that will be created.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          {values.summary && (
-            <div className="text-lg font-semibold">{values.summary}</div>
-          )}
-
-          <div className="flex items-center text-sm text-muted-foreground">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            <div>
+      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden">
+        <div className="bg-background">
+          <DialogHeader className="px-6 pt-5 pb-2 border-b">
+            <DialogTitle className="text-lg font-bold">
+              Calendar Event Preview
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              This is a preview of the calendar event that will be created the
+              next time the flow is run.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-4 space-y-3">
+            {values.summary && (
+              <div className="text-base font-semibold">{values.summary}</div>
+            )}
+            <div className="flex items-center gap-2 text-sm">
+              <CalendarIcon className="h-4 w-4 text-primary" />
               <div>
-                {formatDateTime(
-                  values.startDate?.dateTime,
-                  values.startDate?.date,
+                <div className="font-medium">{formatDateTime(startDate)}</div>
+                {endDate && (
+                  <div className="text-xs text-muted-foreground">
+                    until {formatDateTime(endDate)}
+                  </div>
                 )}
               </div>
-              {values.endDate && (
-                <div>
-                  to{" "}
-                  {formatDateTime(values.endDate.dateTime, values.endDate.date)}
-                </div>
-              )}
             </div>
+            {values.location && (
+              <div className="flex items-center gap-2 text-sm">
+                <MapPinIcon className="h-4 w-4 text-muted-foreground" />
+                <span>{values.location}</span>
+              </div>
+            )}
+            {values.reminders && (
+              <div className="flex items-center gap-2 text-sm">
+                <BellIcon className="h-4 w-4 text-muted-foreground" />
+                <span>Default reminders enabled</span>
+              </div>
+            )}
+            {values.description && (
+              <div className="text-xs text-muted-foreground border-t pt-3">
+                {values.description}
+              </div>
+            )}
           </div>
-
-          {values.location && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <MapPinIcon className="mr-2 h-4 w-4" />
-              {values.location}
-            </div>
-          )}
-
-          {values.reminders && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <BellIcon className="mr-2 h-4 w-4" />
-              Default reminders enabled
-            </div>
-          )}
-
-          {values.description && (
-            <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {values.description}
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
