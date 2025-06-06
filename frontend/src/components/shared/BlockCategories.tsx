@@ -67,6 +67,13 @@ export const blockCategories = [
       },
       {
         category: "action",
+        node_type: "google_calendar_create_event",
+        label: "Create Google Calendar Event",
+        icon: Calendar,
+        description: "Create a Google Calendar event as part of the workflow",
+      },
+      {
+        category: "action",
         node_type: "send_sms",
         label: "Send SMS",
         icon: MessageSquare,

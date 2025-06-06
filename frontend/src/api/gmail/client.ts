@@ -16,7 +16,7 @@ export class GmailApiClient extends BaseApiClient {
   async sendEmail(data: SendEmailDto): Promise<SendEmailResponse> {
     const response = await this.post<SendEmailResponse>(
       "/api/integrations/google/send-email",
-      data,
+      JSON.stringify(data),
     );
     return response;
   }
