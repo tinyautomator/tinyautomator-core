@@ -14,7 +14,7 @@ export function SettingsTab() {
       return <EmailSettings />;
     case "schedule":
       return <ScheduleSettings />;
-    case "google_calendar":
+    case "google_calendar_create_event":
       return <GoogleCalendarEventSettings />;
     default:
       return null;

@@ -67,8 +67,8 @@ export const blockCategories = [
       },
       {
         category: "action",
-        node_type: "google_calendar",
-        label: "Google Calendar Event",
+        node_type: "google_calendar_create_event",
+        label: "Create Google Calendar Event",
         icon: Calendar,
         description: "Create a Google Calendar event as part of the workflow",
       },
