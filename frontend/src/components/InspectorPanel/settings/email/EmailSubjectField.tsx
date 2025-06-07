@@ -1,8 +1,5 @@
 import { useFormContext } from "react-hook-form";
-import {
-  EmailFormValues,
-  MAX_SUBJECT_CHAR_COUNT,
-} from "./utils/emailValidation";
+import { EmailFormValues, MAX_SUBJECT_CHAR_COUNT } from "./emailValidation";
 import { Input } from "@/components/ui/input";
 import { ControllerRenderProps } from "react-hook-form";
 

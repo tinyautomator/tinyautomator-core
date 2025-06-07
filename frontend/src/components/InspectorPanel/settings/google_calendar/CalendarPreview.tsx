@@ -38,8 +38,9 @@ export function CalendarPreview() {
 
     // Calculate end time if not an all-day event
     if (
-      !values.eventSchedule?.duration.isAllDay &&
-      values.eventSchedule?.duration.minutes
+      values.eventSchedule?.duration &&
+      values.eventSchedule.duration.isAllDay === false &&
+      typeof values.eventSchedule.duration.minutes === "number"
     ) {
       endDate = addMinutes(startDate, values.eventSchedule.duration.minutes);
     }
@@ -49,7 +50,6 @@ export function CalendarPreview() {
 
   const { startDate, endDate } = calculateEventTimes();
 
-  console.log(startDate, endDate);
   const formatDateTime = (date: Date) => {
     if (values.eventSchedule?.duration.isAllDay) {
       return format(date, "PPP");

@@ -1,8 +1,8 @@
 import { useFormContext } from "react-hook-form";
-import { EmailFormValues } from "./utils/emailValidation";
+import { EmailFormValues } from "./emailValidation";
 import { EmailSubjectField } from "./EmailSubjectField";
 import { EmailBodyField } from "./EmailBodyField";
-import { RecipientInputSection } from "./RecipientSection";
+import { RecipientInputSection } from "@/components/shared/RecipientInput";
 import { toast } from "sonner";
 import {
   FormField,

@@ -34,7 +34,7 @@ export function CalendarSelector({ value, onChange }: CalendarSelectorProps) {
           setIsLoading(false);
         });
     }
-  }, [isOpen, isLoading]);
+  }, [isOpen, isLoading, calendars]);
 
   const selectedCalendar = calendars?.items?.find((c) => c.id === value);
   const displayValue =

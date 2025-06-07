@@ -33,6 +33,13 @@ const PRESET_LENGTH_DURATIONS = [
 ] as const;
 
 export function EventSchedule({ value, onChange }: EventScheduleProps) {
+  const isAllDay = value.duration.isAllDay;
+  const startType = value.start.type;
+  const isImmediate = startType === "immediate";
+  const isCustomDelay = startType === "custom";
+  const shouldShowTimeField = !isAllDay && !isImmediate;
+  const shouldShowDurationField = !isAllDay;
+
   const handleStartChange = useCallback(
     (updates: Partial<StartTiming>) => {
       onChange({
@@ -45,14 +52,25 @@ export function EventSchedule({ value, onChange }: EventScheduleProps) {
 
   const handleDurationChange = useCallback(
     (updates: Partial<Duration>) => {
-      onChange({
-        ...value,
-        duration: { ...value.duration, ...updates },
-      });
+      let duration: Duration;
+      if (updates.isAllDay === true) {
+        duration = { isAllDay: true };
+      } else if (updates.isAllDay === false) {
+        duration = {
+          isAllDay: false,
+          minutes:
+            typeof updates.minutes === "number"
+              ? updates.minutes
+              : (value.duration as { isAllDay: false; minutes: number })
+                  .minutes,
+        };
+      } else {
+        duration = value.duration;
+      }
+      onChange({ ...value, duration });
     },
     [value, onChange],
   );
-
   return (
     <div className="space-y-4">
       <Card>
@@ -61,7 +79,7 @@ export function EventSchedule({ value, onChange }: EventScheduleProps) {
             <div className="space-y-2">
               <Label>When to schedule</Label>
               <Select
-                value={value.start.type}
+                value={startType}
                 onValueChange={(type: StartTiming["type"]) =>
                   handleStartChange({ type })
                 }
@@ -71,13 +89,13 @@ export function EventSchedule({ value, onChange }: EventScheduleProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="immediate">Right away</SelectItem>
-                  <SelectItem value="next-day">Tomorrow</SelectItem>
+                  <SelectItem value="next-day">Next day</SelectItem>
                   <SelectItem value="custom">Custom delay</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {value.start.type === "custom" && (
+            {isCustomDelay && (
               <div className="space-y-2">
                 <Label>Days</Label>
                 <Input
@@ -97,8 +115,22 @@ export function EventSchedule({ value, onChange }: EventScheduleProps) {
             )}
           </div>
 
-          {value.start.type !== "immediate" && (
-            <div className="space-y-2">
+          <div className="space-y-2">
+            <div className="flex items-center gap-5">
+              <Switch
+                checked={isAllDay}
+                onCheckedChange={(isAllDay) =>
+                  handleDurationChange({ isAllDay })
+                }
+              />
+              <span className="text-sm text-muted-foreground">
+                {isAllDay ? "All day event" : "Timed event"}
+              </span>
+            </div>
+          </div>
+
+          {shouldShowTimeField && (
+            <div className="space-y-1">
               <Label>At what time?</Label>
               <Input
                 type="time"
@@ -113,54 +145,45 @@ export function EventSchedule({ value, onChange }: EventScheduleProps) {
             </div>
           )}
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-5">
-              <Switch
-                checked={value.duration.isAllDay}
-                onCheckedChange={(isAllDay) =>
-                  handleDurationChange({ isAllDay })
+          {shouldShowDurationField && (
+            <div className="space-y-2">
+              <Label>Event duration</Label>
+              <Select
+                value={
+                  value.duration.isAllDay
+                    ? undefined
+                    : value.duration.minutes?.toString() || "60"
                 }
-              />
-              <span className="text-sm text-muted-foreground">
-                {value.duration.isAllDay ? "All day event" : "Timed event"}
-              </span>
+                onValueChange={(minutesStr) => {
+                  const minutes = Number(minutesStr);
+                  const preset = PRESET_LENGTH_DURATIONS.find(
+                    (p) => p.minutes === minutes,
+                  );
+                  if (preset) {
+                    handleDurationChange({
+                      isAllDay: false,
+                      minutes: preset.minutes,
+                    });
+                  }
+                }}
+                disabled={value.duration.isAllDay}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRESET_LENGTH_DURATIONS.map((preset) => (
+                    <SelectItem
+                      key={preset.minutes}
+                      value={preset.minutes.toString()}
+                    >
+                      {preset.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
-            {!value.duration.isAllDay && (
-              <div className="space-y-2">
-                <Label>Event duration</Label>
-                <Select
-                  value={value.duration.minutes?.toString()}
-                  onValueChange={(minutesStr) => {
-                    const minutes = Number(minutesStr);
-                    const preset = PRESET_LENGTH_DURATIONS.find(
-                      (p) => p.minutes === minutes,
-                    );
-                    if (preset) {
-                      handleDurationChange({
-                        isAllDay: false,
-                        minutes: preset.minutes,
-                      });
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PRESET_LENGTH_DURATIONS.map((preset) => (
-                      <SelectItem
-                        key={preset.minutes}
-                        value={preset.minutes.toString()}
-                      >
-                        {preset.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { useFormContext } from "react-hook-form";
-import { EmailFormValues, parseEmail } from "./utils/emailValidation";
+import { EmailFormValues, parseEmail } from "./emailValidation";
 
 export function EmailPreview() {
   const { getValues } = useFormContext<EmailFormValues>();
