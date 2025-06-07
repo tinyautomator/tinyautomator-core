@@ -18,6 +18,7 @@ import { FormControls } from "@/components/shared/FormControls";
 import { EventSchedule } from "./EventSchedule";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarSelector } from "./CalendarSelector";
+import { RecipientInputSection } from "../../../shared/RecipientInput";
 import {
   Tooltip,
   TooltipContent,
@@ -38,16 +39,9 @@ export function CalendarForm() {
     (data) => {
       if (!selectedNode) return;
 
-      const configWithTimezone = {
-        ...data,
-        eventSchedule: {
-          ...data.eventSchedule,
-          timeZone,
-        },
-      };
-
-      console.log(configWithTimezone);
-      selectedNode.data.config = configWithTimezone;
+      data.eventSchedule.timeZone = timeZone;
+      console.log(data);
+      selectedNode.data.config = data;
       toast.success("Calendar event settings saved successfully");
     },
     (errors) => {
@@ -135,7 +129,7 @@ export function CalendarForm() {
             <div className="space-y-4">
               <FormField
                 control={control}
-                name="calendarId"
+                name="calendarID"
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center gap-2">
@@ -157,7 +151,7 @@ export function CalendarForm() {
                       </Tooltip>
                     </div>
                     <CalendarSelector
-                      value={field.value}
+                      value={field.value as string}
                       onChange={field.onChange}
                     />
                   </FormItem>
@@ -187,6 +181,18 @@ export function CalendarForm() {
                     <Textarea {...field} placeholder="Event description" />
                     <FormMessage />
                   </FormItem>
+                )}
+              />
+              <FormLabel className="text-sm font-medium">Attendees</FormLabel>
+              <FormField
+                control={control}
+                name="attendees"
+                render={({ field }) => (
+                  <Card>
+                    <CardContent>
+                      <RecipientInputSection {...field} />
+                    </CardContent>
+                  </Card>
                 )}
               />
 

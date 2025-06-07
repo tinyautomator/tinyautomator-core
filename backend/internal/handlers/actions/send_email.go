@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/mail"
 	"strings"
@@ -27,32 +28,23 @@ func NewSendEmailHandler(cfg models.AppConfig) ActionHandler {
 }
 
 type EmailConfig struct {
-	Recipients []string
-	Subject    string
-	Message    string
+	Recipients []string `json:"recipients"`
+	Subject    string   `json:"subject"`
+	Message    string   `json:"message"`
 }
 
 func ExtractEmailConfig(input ActionNodeInput) (*EmailConfig, error) {
-	recipients, ok := input.Config["recipients"].([]string)
-	if !ok {
-		return nil, fmt.Errorf("recipients must be an array of strings")
+	v, err := json.Marshal(input.Config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	subject, ok := input.Config["subject"].(string)
-	if !ok {
-		return nil, fmt.Errorf("subject must be a string")
+	var c EmailConfig
+	if err := json.Unmarshal(v, &c); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-	message, ok := input.Config["message"].(string)
-	if !ok {
-		return nil, fmt.Errorf("message must be a string")
-	}
-
-	return &EmailConfig{
-		Recipients: recipients,
-		Subject:    subject,
-		Message:    message,
-	}, nil
+	return &c, nil
 }
 
 func (h *SendEmailHandler) Execute(
@@ -64,12 +56,6 @@ func (h *SendEmailHandler) Execute(
 	if err != nil {
 		return fmt.Errorf("invalid email config: %w", err)
 	}
-
-	h.logger.WithFields(logrus.Fields{
-		"recipients": c.Recipients,
-		"subject":    c.Subject,
-		"body":       c.Message,
-	}).Info("sending email")
 
 	oauthToken, err := h.oauthIntegrationSvc.GetToken(ctx, userID, "google", h.googleOAuthConfig)
 	if err != nil {

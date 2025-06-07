@@ -1,22 +1,18 @@
 import { useState, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { useFormContext } from "react-hook-form";
-import { EmailFormValues } from "./utils/emailValidation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ControllerRenderProps } from "react-hook-form";
 
-export function RecipientInputField({
-  ...field
-}: ControllerRenderProps<EmailFormValues, "recipients">) {
+export function RecipientInputField({ ...field }) {
   const {
     formState: { errors },
-  } = useFormContext<EmailFormValues>();
+  } = useFormContext();
   const [inputValue, setInputValue] = useState("");
 
   const handleAdd = (email: string) => {
     if (!email) return;
-    field.onChange([...field.value.filter((e) => e !== email), email]);
+    field.onChange([...field.value.filter((e: string) => e !== email), email]);
     setInputValue("");
   };
 

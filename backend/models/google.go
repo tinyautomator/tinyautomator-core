@@ -9,7 +9,9 @@ type EventConfig struct {
 	Description *string
 	Summary     *string
 	Location    *string
-	StartDate   *EventDateTime
-	EndDate     *EventDateTime
-	Reminders   *bool
+	TimeZone    *string
+	Attendees   []string
+	StartDate   EventDateTime
+	EndDate     EventDateTime
+	Reminders   bool
 }

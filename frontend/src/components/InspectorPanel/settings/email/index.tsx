@@ -1,5 +1,5 @@
 import { useForm, FormProvider } from "react-hook-form";
-import { EmailFormValues, emailFormSchema } from "./utils/emailValidation";
+import { EmailFormValues, emailFormSchema } from "./emailValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EmailForm } from "./EmailForm";
 import { EmailPreview } from "./EmailPreview";

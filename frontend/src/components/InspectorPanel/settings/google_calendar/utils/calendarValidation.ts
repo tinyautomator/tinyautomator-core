@@ -5,47 +5,25 @@ const MAX_DESCRIPTION_CHAR_COUNT = 1000;
 const MAX_LOCATION_CHAR_COUNT = 200;
 
 const eventScheduleSchema = z.object({
-  start: z
-    .object({
-      type: z.enum(["immediate", "next-day", "custom"]),
-      days: z.number().optional(),
-      time: z.string().optional(),
-    })
-    .transform((data) => {
-      if (data.type === "immediate") {
-        return {
-          type: data.type,
-        };
-      }
-      if (data.type === "next-day") {
-        return {
-          type: data.type,
-          time: data.time,
-        };
-      }
-      return data;
+  start: z.object({
+    type: z.enum(["immediate", "next-day", "custom"]),
+    days: z.number().optional(),
+    time: z.string().optional(),
+  }),
+  duration: z.discriminatedUnion("isAllDay", [
+    z.object({
+      isAllDay: z.literal(true),
     }),
-  duration: z
-    .object({
-      isAllDay: z.boolean(),
-      minutes: z.number().optional(),
-    })
-    .transform((data) => {
-      if (data.isAllDay) {
-        return {
-          isAllDay: true,
-        };
-      }
-
-      return {
-        isAllDay: false,
-        minutes: data.minutes,
-      };
+    z.object({
+      isAllDay: z.literal(false),
+      minutes: z.number(),
     }),
+  ]),
+  timeZone: z.string().optional(),
 });
 
 export const calendarFormSchema = z.object({
-  calendarId: z.string().optional(),
+  calendarID: z.string().optional(),
   summary: z
     .string()
     .max(MAX_SUMMARY_CHAR_COUNT, {
@@ -58,6 +36,7 @@ export const calendarFormSchema = z.object({
       message: `Description must be under ${MAX_DESCRIPTION_CHAR_COUNT} characters`,
     })
     .optional(),
+  attendees: z.array(z.string()).optional(),
   location: z
     .string()
     .max(MAX_LOCATION_CHAR_COUNT, {
@@ -69,9 +48,10 @@ export const calendarFormSchema = z.object({
 });
 
 export const formDefaultValues = {
-  calendarId: undefined,
+  calendarID: "",
   summary: "",
   description: "",
+  attendees: [],
   location: "",
   eventSchedule: {
     start: {
@@ -81,6 +61,7 @@ export const formDefaultValues = {
       isAllDay: false,
       minutes: 60,
     },
+    timeZone: "UTC",
   },
   reminders: true,
 };

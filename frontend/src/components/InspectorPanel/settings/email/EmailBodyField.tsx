@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   EmailFormValues,
   MAX_MESSAGE_CHAR_COUNT as maxBodyLength,
-} from "./utils/emailValidation";
+} from "./emailValidation";
 import { ControllerRenderProps } from "react-hook-form";
 
 export function EmailBodyField({

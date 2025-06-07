@@ -1,12 +1,8 @@
 import { useState, useRef } from "react";
 import { Upload, Loader2, AlertCircle } from "lucide-react";
 import { parseEmailCsv } from "./utils/csvParser";
-import { ControllerRenderProps } from "react-hook-form";
-import { EmailFormValues } from "./utils/emailValidation";
 
-export function CsvUploader({
-  ...field
-}: ControllerRenderProps<EmailFormValues, "recipients">) {
+export function CsvUploader({ ...field }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);

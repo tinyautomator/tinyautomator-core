@@ -28,6 +28,7 @@ func NewExecutorService(cfg models.AppConfig) models.ExecutorService {
 	logger := cfg.GetLogger()
 	actionRegistry := handlers.NewActionRegistry(logger)
 	actionRegistry.Register("send_email", handlers.NewSendEmailHandler(cfg))
+	actionRegistry.Register("google_calendar_create_event", handlers.NewCreateEventHandler(cfg))
 
 	return &ExecutorService{
 		logger:          logger,

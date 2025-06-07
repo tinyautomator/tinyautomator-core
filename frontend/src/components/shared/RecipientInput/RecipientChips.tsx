@@ -2,9 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { useRef, useState } from "react";
 import { Pencil, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { parseEmail } from "./utils/emailValidation";
-import { ControllerRenderProps } from "react-hook-form";
-import { EmailFormValues } from "./utils/emailValidation";
+import { parseEmail } from "../../InspectorPanel/settings/email/emailValidation";
 
 function RecipientChip({
   recipient,
@@ -96,13 +94,14 @@ function RecipientChip({
   );
 }
 
-export function RecipientChips({
-  ...field
-}: ControllerRenderProps<EmailFormValues, "recipients">) {
+export function RecipientChips({ ...field }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { validRecipients, invalidRecipients } = field.value.reduce(
-    (acc, email) => {
+    (
+      acc: { validRecipients: string[]; invalidRecipients: string[] },
+      email: string,
+    ) => {
       const isValid = parseEmail(email) !== null;
       if (isValid) {
         acc.validRecipients.push(email);
@@ -115,14 +114,14 @@ export function RecipientChips({
   );
 
   const handleUpdate = (oldRecipient: string, newRecipient: string) => {
-    const newValue = field.value.map((recipient) =>
+    const newValue = field.value.map((recipient: string) =>
       recipient === oldRecipient ? newRecipient : recipient,
     );
     field.onChange(newValue);
   };
 
   const handleRemove = (recipient: string) => {
-    field.onChange(field.value.filter((r) => r !== recipient));
+    field.onChange(field.value.filter((r: string) => r !== recipient));
   };
 
   return field.value.length > 0 ? (
@@ -130,7 +129,7 @@ export function RecipientChips({
       ref={containerRef}
       className="recipient-scroll max-h-40 overflow-y-auto flex flex-wrap gap-2 p-1 border rounded-md"
     >
-      {validRecipients.map((recipient) => (
+      {validRecipients.map((recipient: string) => (
         <RecipientChip
           key={recipient}
           recipient={recipient}
@@ -139,7 +138,7 @@ export function RecipientChips({
           onRemove={handleRemove}
         />
       ))}
-      {invalidRecipients.map((recipient) => (
+      {invalidRecipients.map((recipient: string) => (
         <RecipientChip
           key={recipient}
           recipient={recipient}
