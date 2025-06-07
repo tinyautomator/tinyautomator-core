@@ -10,7 +10,8 @@ type EventConfig struct {
 	Summary     *string
 	Location    *string
 	TimeZone    *string
+	Attendees   []string
 	StartDate   EventDateTime
 	EndDate     EventDateTime
-	Reminders   *bool
+	Reminders   bool
 }

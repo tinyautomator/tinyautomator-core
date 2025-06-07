@@ -10,8 +10,8 @@ import (
 )
 
 func BuildEvent(eventCfg *models.EventConfig) (*calendar.Event, error) {
-	if eventCfg == nil || eventCfg.StartDate.Date == nil || eventCfg.EndDate.Date == nil {
-		return nil, errors.New("event config with start and end dates required")
+	if eventCfg == nil {
+		return nil, errors.New("event config is nil")
 	}
 
 	if (eventCfg.StartDate.Date == nil && eventCfg.StartDate.DateTime == nil) ||
@@ -41,6 +41,11 @@ func BuildEvent(eventCfg *models.EventConfig) (*calendar.Event, error) {
 		}
 	}
 
+	if eventCfg.TimeZone != nil {
+		event.Start.TimeZone = *eventCfg.TimeZone
+		event.End.TimeZone = *eventCfg.TimeZone
+	}
+
 	// Optional fields
 	if eventCfg.Summary != nil {
 		event.Summary = *eventCfg.Summary
@@ -50,18 +55,22 @@ func BuildEvent(eventCfg *models.EventConfig) (*calendar.Event, error) {
 		event.Description = *eventCfg.Description
 	}
 
+	if eventCfg.Attendees != nil {
+		event.Attendees = make([]*calendar.EventAttendee, len(eventCfg.Attendees))
+		for i, attendee := range eventCfg.Attendees {
+			event.Attendees[i] = &calendar.EventAttendee{Email: attendee}
+		}
+	}
+
 	if eventCfg.Location != nil {
 		event.Location = *eventCfg.Location
 	}
 
-	if eventCfg.Reminders != nil {
-		event.Reminders = &calendar.EventReminders{UseDefault: *eventCfg.Reminders}
+	event.Reminders = &calendar.EventReminders{
+		UseDefault: eventCfg.Reminders,
 	}
 
-	// TODO: add attendees
-
 	// Hardcoded fields
-
 	// All automator events are pink :3
 	event.ColorId = "4"
 

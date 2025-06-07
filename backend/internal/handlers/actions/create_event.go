@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -23,29 +24,30 @@ const (
 )
 
 type StartTiming struct {
-	Type StartTimingType
-	Days *int
-	Time *string
+	Type StartTimingType `json:"type"`
+	Days *int            `json:"days,omitempty"`
+	Time *string         `json:"time,omitempty"`
 }
 
 type Duration struct {
-	IsAllDay bool
-	Minutes  *int
+	IsAllDay bool `json:"isAllDay"`
+	Minutes  *int `json:"minutes,omitempty"`
 }
 
 type EventSchedule struct {
-	Start    StartTiming
-	Duration Duration
-	TimeZone string
+	Start    StartTiming `json:"start"`
+	Duration Duration    `json:"duration"`
+	TimeZone string      `json:"timeZone"`
 }
 
 type HandlerEventConfig struct {
-	CalendarID  *string
-	Description *string
-	Schedule    EventSchedule
-	Location    *string
-	Reminders   bool
-	Summary     *string
+	CalendarID  *string       `json:"calendarID,omitempty"`
+	Schedule    EventSchedule `json:"eventSchedule"`
+	Summary     *string       `json:"summary,omitempty"`
+	Description *string       `json:"description,omitempty"`
+	Attendees   []string      `json:"attendees,omitempty"`
+	Location    *string       `json:"location,omitempty"`
+	Reminders   bool          `json:"reminders"`
 }
 
 type CreateEventHandler struct {
@@ -55,57 +57,31 @@ type CreateEventHandler struct {
 }
 
 func NewCreateEventHandler(
-	logger logrus.FieldLogger,
-	oauthConfig *oauth2.Config,
-	oauthService models.OauthIntegrationService,
+	cfg models.AppConfig,
 ) ActionHandler {
-	return &CreateEventHandler{logger: logger, oauthConfig: oauthConfig, oauthService: oauthService}
+	return &CreateEventHandler{
+		logger:       cfg.GetLogger(),
+		oauthConfig:  cfg.GetGoogleOAuthConfig(),
+		oauthService: cfg.GetOauthIntegrationService(),
+	}
 }
 
 func ExtractEventConfig(input ActionNodeInput) (*HandlerEventConfig, error) {
-	calendarID, ok := input.Config["calendarID"].(*string)
-	if !ok {
-		return nil, errors.New("calendarID must be a string")
+	v, err := json.Marshal(input.Config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	description, ok := input.Config["description"].(*string)
-	if !ok {
-		return nil, errors.New("description must be a string")
+	var config HandlerEventConfig
+	if err := json.Unmarshal(v, &config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-	schedule, ok := input.Config["schedule"].(EventSchedule)
-	if !ok {
-		return nil, errors.New("schedule must be a EventSchedule")
-	}
-
-	location, ok := input.Config["location"].(*string)
-	if !ok {
-		return nil, errors.New("location must be a string")
-	}
-
-	reminders, ok := input.Config["reminders"].(bool)
-	if !ok {
-		return nil, errors.New("reminders must be a bool")
-	}
-
-	summary, ok := input.Config["summary"].(*string)
-	if !ok {
-		return nil, errors.New("summary must be a string")
-	}
-
-	return &HandlerEventConfig{
-		CalendarID:  calendarID,
-		Description: description,
-		Schedule:    schedule,
-		Location:    location,
-		Reminders:   reminders,
-		Summary:     summary,
-	}, nil
+	return &config, nil
 }
 
 const (
 	primaryCalendarID = "primary"
-	defaultTimeZone   = "UTC"
 )
 
 func (h *CreateEventHandler) Execute(
@@ -126,10 +102,11 @@ func (h *CreateEventHandler) Execute(
 	googleEventConfig := &models.EventConfig{
 		Description: eventConfig.Description,
 		Location:    eventConfig.Location,
+		Attendees:   eventConfig.Attendees,
 		TimeZone:    &eventConfig.Schedule.TimeZone,
 		StartDate:   *startDate,
 		EndDate:     *endDate,
-		Reminders:   &eventConfig.Reminders,
+		Reminders:   eventConfig.Reminders,
 		Summary:     eventConfig.Summary,
 	}
 
@@ -188,7 +165,7 @@ func (h *CreateEventHandler) Validate(config ActionNodeInput) error {
 		Location:    eventConfig.Location,
 		StartDate:   *startDate,
 		EndDate:     *endDate,
-		Reminders:   &eventConfig.Reminders,
+		Reminders:   eventConfig.Reminders,
 		Summary:     eventConfig.Summary,
 	}
 
@@ -246,9 +223,8 @@ func ParseAndValidateEventSchedule(
 		return nil, nil, errors.New("minutes is required for custom duration")
 	}
 
-	startDateTimeStr := start.ToDateTimeString(schedule.TimeZone)
-	endDateTimeStr := start.AddMinutes(*schedule.Duration.Minutes).
-		ToDateTimeString(schedule.TimeZone)
+	startDateTimeStr := start.ToRfc3339String()
+	endDateTimeStr := start.AddMinutes(*schedule.Duration.Minutes).ToRfc3339String()
 
 	startEventDateTime.DateTime = &startDateTimeStr
 	endEventDateTime.DateTime = &endDateTimeStr
