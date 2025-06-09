@@ -12,6 +12,7 @@ import {
   Zap,
   Shield,
   BarChart2,
+  CalendarClock,
 } from "lucide-react";
 
 export type Category = "trigger" | "action";
@@ -23,18 +24,25 @@ export const blockCategories = [
     blocks: [
       {
         category: "trigger",
-        node_type: "webhook",
-        label: "Webhook",
-        icon: Globe,
-        description: "Trigger a workflow when a webhook is received",
-      },
-      {
-        category: "trigger",
         node_type: "schedule",
         label: "Schedule",
         icon: Calendar,
         description: "Start a workflow at specified times or intervals",
         status: "success",
+      },
+      {
+        category: "trigger",
+        node_type: "calendar_event",
+        label: "Google Calendar Event",
+        icon: CalendarClock,
+        description: "Trigger a workflow when a calendar event occurs",
+      },
+      {
+        category: "trigger",
+        node_type: "webhook",
+        label: "Webhook",
+        icon: Globe,
+        description: "Trigger a workflow when a webhook is received",
       },
       {
         category: "trigger",

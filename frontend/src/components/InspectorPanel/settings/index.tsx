@@ -2,6 +2,7 @@ import { useFlowStore } from "@/components/Canvas/flowStore";
 import { EmailSettings } from "./email";
 import { ScheduleSettings } from "./schedule";
 import { GoogleCalendarEventSettings } from "./google_calendar";
+import CalendarTriggerSettings from "./calendar_trigger";
 
 export function SettingsTab() {
   const { getSelectedNode } = useFlowStore();
@@ -16,6 +17,8 @@ export function SettingsTab() {
       return <ScheduleSettings />;
     case "google_calendar_create_event":
       return <GoogleCalendarEventSettings />;
+    case "calendar_event":
+      return <CalendarTriggerSettings />;
     default:
       return null;
   }
