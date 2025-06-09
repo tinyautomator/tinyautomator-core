@@ -44,8 +44,10 @@ type AppConfig interface {
 
 	GetWorkflowRepository() WorkflowRepository
 	GetWorkflowScheduleRepository() WorkflowScheduleRepository
+	GetWorkflowCalendarRepository() WorkflowCalendarRepository
 	GetWorkflowRunRepository() WorkflowRunRepository
 	GetOauthIntegrationRepository() OauthIntegrationRepository
+
 	GetOrchestratorService() OrchestratorService
 	GetExecutorService() ExecutorService
 	GetSchedulerService() SchedulerService
@@ -55,7 +57,7 @@ type AppConfig interface {
 	GetGoogleOAuthConfig() *oauth2.Config
 	GetRedisClient() redis.RedisClient
 	GetRabbitMQClient() rabbitmq.RabbitMQClient
-
+	GetWorkflowCalendarService() WorkflowCalendarService
 	CleanUp()
 }
 
@@ -150,6 +152,26 @@ type WorkflowScheduleRepository interface {
 	DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error
 }
 
+type WorkflowCalendarRepository interface {
+	GetActiveWorkflowCalendarsLocked(ctx context.Context) ([]*WorkflowCalendar, error)
+	CreateWorkflowCalendar(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowCalendarConfig,
+		syncToken string,
+		executionState string,
+		lastSyncedAt int64,
+	) (*WorkflowCalendar, error)
+	UpdateWorkflowCalendar(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowCalendarConfig,
+		syncToken string,
+		executionState string,
+		lastSyncedAt int64,
+	) error
+}
+
 type OrchestratorService interface {
 	OrchestrateWorkflow(ctx context.Context, userID string, workflowID int32) (int32, error)
 }
@@ -190,6 +212,28 @@ type SchedulerService interface {
 		scheduleType ScheduleType,
 		scheduledDate time.Time,
 	) error
+	EnsureInFlightEnqueued()
+}
+
+type WorkflowCalendarService interface {
+	ValidateCalendarConfig(config WorkflowCalendarConfig) error
+	GetActiveCalendars(ctx context.Context) ([]*WorkflowCalendar, error)
+	GetSyncToken(ctx context.Context, calendarID string, userID string) (*string, error)
+	CreateWorkflowCalendar(
+		ctx context.Context,
+		workflowID int32,
+		userID string,
+		config WorkflowCalendarConfig,
+	) (*WorkflowCalendar, error)
+	UpdateWorkflowCalendar(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowCalendarConfig,
+		syncToken string,
+		executionState string,
+		lastSyncedAt time.Time,
+	) error
+	CheckEventChanges(ctx context.Context, calendar *WorkflowCalendar) error
 	EnsureInFlightEnqueued()
 }
 

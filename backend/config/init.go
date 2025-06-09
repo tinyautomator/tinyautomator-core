@@ -139,6 +139,7 @@ func (cfg *appConfig) initRepositories() {
 	q := dao.New(cfg.pgPool)
 	cfg.workflowRepo = repositories.NewWorkflowRepository(q, cfg.pgPool)
 	cfg.workflowScheduleRepo = repositories.NewWorkflowScheduleRepository(q, cfg.pgPool)
+	cfg.workflowCalendarRepo = repositories.NewWorkflowCalendarRepository(q, cfg.pgPool)
 	cfg.workflowRunRepo = repositories.NewWorkflowRunRepository(q, cfg.pgPool)
 	cfg.oauthIntegrationRepo = repositories.NewOauthIntegrationRepository(q, cfg.pgPool)
 }

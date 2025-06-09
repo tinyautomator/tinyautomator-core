@@ -27,6 +27,7 @@ type appConfig struct {
 	workflowRepo         models.WorkflowRepository
 	workflowRunRepo      models.WorkflowRunRepository
 	workflowScheduleRepo models.WorkflowScheduleRepository
+	workflowCalendarRepo models.WorkflowCalendarRepository
 	oauthIntegrationRepo models.OauthIntegrationRepository
 	orchestrator         models.OrchestratorService
 	executor             models.ExecutorService
@@ -34,6 +35,7 @@ type appConfig struct {
 	workflowSvc          models.WorkflowService
 	oauthIntegrationSvc  models.OauthIntegrationService
 	accountService       models.AccountService
+	workflowCalendarSvc  models.WorkflowCalendarService
 }
 
 var cfg *appConfig
@@ -67,6 +69,7 @@ func NewAppConfig(ctx context.Context) (models.AppConfig, error) {
 	cfg.scheduler = services.NewSchedulerService(cfg)
 	cfg.oauthIntegrationSvc = services.NewOauthIntegrationService(cfg)
 	cfg.accountService = services.NewAccountService(cfg)
+	cfg.workflowCalendarSvc = services.NewWorkflowCalendarService(cfg)
 
 	return cfg, nil
 }
@@ -111,6 +114,10 @@ func (c *appConfig) GetWorkflowScheduleRepository() models.WorkflowScheduleRepos
 	return c.workflowScheduleRepo
 }
 
+func (c *appConfig) GetWorkflowCalendarRepository() models.WorkflowCalendarRepository {
+	return c.workflowCalendarRepo
+}
+
 func (c *appConfig) GetOauthIntegrationRepository() models.OauthIntegrationRepository {
 	return c.oauthIntegrationRepo
 }
@@ -125,6 +132,10 @@ func (c *appConfig) GetExecutorService() models.ExecutorService {
 
 func (c *appConfig) GetSchedulerService() models.SchedulerService {
 	return c.scheduler
+}
+
+func (c *appConfig) GetWorkflowCalendarService() models.WorkflowCalendarService {
+	return c.workflowCalendarSvc
 }
 
 func (c *appConfig) GetWorkflowService() models.WorkflowService {
