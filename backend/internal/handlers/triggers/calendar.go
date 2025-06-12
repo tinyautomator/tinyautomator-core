@@ -104,7 +104,7 @@ func (h *CalendarEventTriggerHandler) Update(ctx context.Context, input TriggerN
 	}
 
 	executionState := "queued"
-	lastSyncedAt := time.Now()
+	lastSyncedAt := time.Now().UTC()
 
 	err = h.calendarSvc.UpdateWorkflowCalendar(
 		ctx,

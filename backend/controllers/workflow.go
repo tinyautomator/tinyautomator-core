@@ -193,6 +193,7 @@ func (c *workflowController) UpdateWorkflow(ctx *gin.Context) {
 
 	if err := c.workflowService.UpdateWorkflow(
 		ctx.Request.Context(),
+		userID,
 		int32(workflowID),
 		req.Name,
 		req.Description,

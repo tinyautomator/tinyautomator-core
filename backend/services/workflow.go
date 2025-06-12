@@ -239,6 +239,7 @@ func (s *WorkflowService) CreateWorkflow(
 
 func (s *WorkflowService) UpdateWorkflow(
 	ctx context.Context,
+	userID string,
 	workflowID int32,
 	name string,
 	description string,
@@ -304,7 +305,9 @@ func (s *WorkflowService) UpdateWorkflow(
 				"newConfig": node.Config,
 			}).Info("node config changed")
 
+			(*node.Config)["user_id"] = userID
 			(*node.Config)["workflow_id"] = workflowID
+
 			if node.Category == "trigger" {
 				if err := s.triggerRegistry.Update(node.NodeType, triggers.TriggerNodeInput{
 					Config: node.Config,

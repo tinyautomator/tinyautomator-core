@@ -11,18 +11,20 @@ import (
 )
 
 type Scheduler struct {
-	schedulerService models.SchedulerService
-	calendarService  models.WorkflowCalendarService
-	pollInterval     time.Duration
-	logger           logrus.FieldLogger
+	schedulerService      models.SchedulerService
+	calendarService       models.WorkflowCalendarService
+	schedulerPollInterval time.Duration
+	calendarPollInterval  time.Duration
+	logger                logrus.FieldLogger
 }
 
 func NewScheduler(cfg models.AppConfig) *Scheduler {
 	return &Scheduler{
-		schedulerService: cfg.GetSchedulerService(),
-		calendarService:  cfg.GetWorkflowCalendarService(),
-		pollInterval:     cfg.GetEnvVars().WorkerPollInterval,
-		logger:           cfg.GetLogger(),
+		schedulerService:      cfg.GetSchedulerService(),
+		calendarService:       cfg.GetWorkflowCalendarService(),
+		schedulerPollInterval: cfg.GetEnvVars().SchedulerPollInterval,
+		calendarPollInterval:  cfg.GetEnvVars().CalendarPollInterval,
+		logger:                cfg.GetLogger(),
 	}
 }
 
@@ -31,8 +33,8 @@ func (s *Scheduler) StopScheduler() {
 }
 
 func (s *Scheduler) PollAndRunScheduledWorkflows(ctx context.Context) error {
-	schedulerTicker := time.NewTicker(s.pollInterval)
-	calendarTicker := time.NewTicker(time.Minute * 15) // TODO: make this configurable
+	schedulerTicker := time.NewTicker(s.schedulerPollInterval)
+	calendarTicker := time.NewTicker(s.calendarPollInterval)
 
 	defer schedulerTicker.Stop()
 	defer calendarTicker.Stop()

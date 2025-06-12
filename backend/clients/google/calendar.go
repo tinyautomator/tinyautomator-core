@@ -137,8 +137,6 @@ func (c *CalendarClient) GetCalendarList(ctx context.Context) (*calendar.Calenda
 func (c *CalendarClient) GetSyncToken(ctx context.Context, calendarID string) (string, error) {
 	events, err := c.service.Events.List(calendarID).
 		SingleEvents(true).
-		TimeMin(time.Now().Format(time.RFC3339)).
-		OrderBy("startTime").
 		Context(ctx).
 		Do()
 	if err != nil {
@@ -155,12 +153,31 @@ func (c *CalendarClient) GetEventsBySyncToken(
 ) (*calendar.Events, error) {
 	events, err := c.service.Events.List(calendarID).
 		SyncToken(syncToken).
-		MaxResults(500).
-		OrderBy("startTime").
+		MaxResults(50).
 		Context(ctx).
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("unable to check for updates: %w", err)
+		return nil, fmt.Errorf("unable to get events by sync token: %w", err)
+	}
+
+	return events, nil
+}
+
+func (c *CalendarClient) GetEventsByTimeRange(
+	ctx context.Context,
+	calendarID string,
+	timeMin time.Time,
+	timeMax time.Time,
+) (*calendar.Events, error) {
+	events, err := c.service.Events.List(calendarID).
+		TimeMin(timeMin.Format(time.RFC3339)).
+		TimeMax(timeMax.Format(time.RFC3339)).
+		TimeZone("UTC").
+		MaxResults(50).
+		Context(ctx).
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get events by time range: %w", err)
 	}
 
 	return events, nil

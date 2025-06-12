@@ -100,10 +100,10 @@ var EventStatuses = map[string]EventStatus{
 }
 
 type WorkflowCalendarConfig struct {
-	CalendarID           *string     `json:"calendar_id,omitempty"`
+	CalendarID           *string     `json:"calendarID,omitempty"`
 	Keywords             []string    `json:"keywords,omitempty"`
-	TimeCondition        *string     `json:"time_condition,omitempty"`
-	EventStatusCondition EventStatus `json:"event_status_condition"`
+	TimeCondition        *int        `json:"timeCondition,omitempty"`
+	EventStatusCondition EventStatus `json:"eventStatus"`
 }
 
 type WorkflowCalendar struct {

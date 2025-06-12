@@ -88,6 +88,7 @@ func (r *workflowCalendarRepo) GetActiveWorkflowCalendarsLocked(
 
 		c = append(c, &models.WorkflowCalendar{
 			ID:             r.ID,
+			UserID:         r.UserID,
 			WorkflowID:     r.WorkflowID,
 			Config:         config,
 			SyncToken:      r.SyncToken,

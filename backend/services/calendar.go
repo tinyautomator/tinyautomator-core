@@ -4,17 +4,27 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/golang-module/carbon/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/google"
+	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/calendar/v3"
+)
+
+const (
+	maxKeywords    = 20
+	minTimeMinutes = 1
+)
+
+var (
+	maxTimeMinutes = int(time.Hour.Minutes() * 24 * 7 * 4) // 4 weeks
+
+	ErrSyncTokenExpired = errors.New("sync token expired")
 )
 
 type WorkflowCalendarService struct {
@@ -25,6 +35,7 @@ type WorkflowCalendarService struct {
 	orchestrator            models.OrchestratorService
 	oauthIntegrationService models.OauthIntegrationService
 	oauthConfig             *oauth2.Config
+	redisClient             redis.RedisClient
 }
 
 func NewWorkflowCalendarService(cfg models.AppConfig) models.WorkflowCalendarService {
@@ -33,7 +44,26 @@ func NewWorkflowCalendarService(cfg models.AppConfig) models.WorkflowCalendarSer
 		workflowCalendarRepo:    cfg.GetWorkflowCalendarRepository(),
 		orchestrator:            cfg.GetOrchestratorService(),
 		oauthIntegrationService: cfg.GetOauthIntegrationService(),
+		oauthConfig:             cfg.GetGoogleOAuthConfig(),
+		redisClient:             cfg.GetRedisClient(),
 	}
+}
+
+func (s *WorkflowCalendarService) InitCalendarClient(
+	ctx context.Context,
+	userID string,
+) (*google.CalendarClient, error) {
+	token, err := s.oauthIntegrationService.GetToken(ctx, userID, "google", s.oauthConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oauth integration: %w", err)
+	}
+
+	client, err := google.InitCalendarClient(ctx, token, s.oauthConfig, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init calendar client: %w", err)
+	}
+
+	return client, nil
 }
 
 func (s *WorkflowCalendarService) EnsureInFlightEnqueued() {
@@ -50,32 +80,28 @@ func (s *WorkflowCalendarService) ValidateCalendarConfig(
 		return errors.New("invalid event status condition")
 	}
 
-	if len(config.Keywords) > 20 {
+	if len(config.Keywords) > maxKeywords {
 		return errors.New("keywords must be less than 20")
 	}
 
-	timeSpecificStatus := config.EventStatusCondition == models.EventStatusStarting ||
-		config.EventStatusCondition == models.EventStatusEnding
+	esc := config.EventStatusCondition
+	timeSpecificStatus := esc == models.EventStatusStarting || esc == models.EventStatusEnding
 
 	if config.TimeCondition == nil && timeSpecificStatus {
 		return errors.New("time condition is required for time specific events")
 	}
 
-	if config.TimeCondition != nil && *config.TimeCondition == "" && timeSpecificStatus {
-		return errors.New("time condition is empty for time specific events")
+	if config.TimeCondition != nil && !timeSpecificStatus {
+		return errors.New("time condition should be empty for non-time specific events")
 	}
 
 	if config.TimeCondition != nil {
-		minutes, err := strconv.Atoi(*config.TimeCondition)
-		if err != nil {
-			return errors.New("time_condition must be a valid number of minutes")
-		}
-
-		if minutes < 1 {
+		minutes := *config.TimeCondition
+		if minutes < minTimeMinutes {
 			return errors.New("time_condition must be at least 1 minute")
 		}
 
-		if minutes > int(time.Hour.Minutes()*24*7*4) {
+		if minutes > maxTimeMinutes {
 			return errors.New("time_condition must be less than 4 weeks")
 		}
 	}
@@ -99,22 +125,17 @@ func (s *WorkflowCalendarService) GetSyncToken(
 	calendarID string,
 	userID string,
 ) (*string, error) {
-	token, err := s.oauthIntegrationService.GetToken(ctx, userID, "google", s.oauthConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get oauth integration: %w", err)
-	}
-
-	client, err := google.InitCalendarClient(ctx, token, s.oauthConfig, userID)
+	client, err := s.InitCalendarClient(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init calendar client: %w", err)
 	}
 
-	syncToken, err := client.GetSyncToken(ctx, calendarID)
+	token, err := client.GetSyncToken(ctx, calendarID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get calendar list: %w", err)
+		return nil, fmt.Errorf("failed to get sync token: %w", err)
 	}
 
-	return &syncToken, nil
+	return &token, nil
 }
 
 func (s *WorkflowCalendarService) CreateWorkflowCalendar(
@@ -183,19 +204,32 @@ func (s *WorkflowCalendarService) CheckEventChanges(
 	c *models.WorkflowCalendar,
 ) error {
 	errChan := make(chan error, 1)
+	done := make(chan struct{})
 
 	s.wg.Add(1)
 
 	go func() {
 		defer s.wg.Done()
 		defer close(errChan)
+		defer close(done)
 
-		if err := s.checkEventChanges(ctx, c); err != nil {
-			errChan <- fmt.Errorf("failed to check event changes: %w", err)
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+			return
+		default:
+			err := s.checkEventChanges(ctx, c)
+			errChan <- err
 		}
 	}()
 
-	return <-errChan
+	select {
+	case err := <-errChan:
+		return err
+	case <-ctx.Done():
+		<-done
+		return fmt.Errorf("context cancelled: %w", ctx.Err())
+	}
 }
 
 func (s *WorkflowCalendarService) checkEventChanges(
@@ -206,10 +240,7 @@ func (s *WorkflowCalendarService) checkEventChanges(
 		return fmt.Errorf("failed to validate calendar config: %w", err)
 	}
 
-	if c.SyncToken == "" && time.Since(c.LastSyncedAt) < 2*time.Hour {
-		return nil
-	}
-
+	// Handle sync token expiration
 	if c.SyncToken == "" {
 		syncToken, err := s.GetSyncToken(ctx, *c.Config.CalendarID, c.UserID)
 		if err != nil {
@@ -219,23 +250,50 @@ func (s *WorkflowCalendarService) checkEventChanges(
 		if syncToken != nil && *syncToken != "" {
 			c.SyncToken = *syncToken
 		} else {
-			return fmt.Errorf("failed to get new sync token after 2 hours")
+			return ErrSyncTokenExpired
 		}
 	}
 
-	token, err := s.oauthIntegrationService.GetToken(ctx, c.UserID, "google", s.oauthConfig)
-	if err != nil {
-		return fmt.Errorf("failed to get oauth integration: %w", err)
-	}
-
-	client, err := google.InitCalendarClient(ctx, token, s.oauthConfig, c.UserID)
+	client, err := s.InitCalendarClient(ctx, c.UserID)
 	if err != nil {
 		return fmt.Errorf("failed to init calendar client: %w", err)
 	}
 
-	events, err := client.GetEventsBySyncToken(ctx, *c.Config.CalendarID, c.SyncToken)
-	if err != nil {
-		return fmt.Errorf("failed to check for event changes: %w", err)
+	esc := c.Config.EventStatusCondition
+	timeBasedTrigger := esc == models.EventStatusStarting || esc == models.EventStatusEnding
+
+	now := time.Now().UTC()
+
+	var events *calendar.Events
+
+	if timeBasedTrigger {
+		var timeMin, timeMax time.Time
+
+		if esc == models.EventStatusStarting {
+			minutes := time.Duration(*c.Config.TimeCondition) * time.Minute
+			timeMin = now
+			timeMax = now.Add(minutes)
+		} else { // EventStatusEnding
+			minutes := time.Duration(*c.Config.TimeCondition) * time.Minute
+			timeMin = now.Add(-(minutes))
+			timeMax = now.Add((minutes))
+		}
+
+		events, err = client.GetEventsByTimeRange(ctx, *c.Config.CalendarID, timeMin, timeMax)
+		if err != nil {
+			return fmt.Errorf("failed to get events by time range: %w", err)
+		}
+	} else {
+		events, err = client.GetEventsBySyncToken(ctx, *c.Config.CalendarID, c.SyncToken)
+		if err != nil {
+			// If we get a 410 Gone response, we need to reset the sync token
+			if strings.Contains(err.Error(), "410") {
+				c.SyncToken = ""
+				return ErrSyncTokenExpired
+			}
+
+			return fmt.Errorf("failed to get events by sync token: %w", err)
+		}
 	}
 
 	s.logger.WithFields(logrus.Fields{
@@ -248,24 +306,57 @@ func (s *WorkflowCalendarService) checkEventChanges(
 	var triggerEvent *calendar.Event
 
 	for _, event := range events.Items {
-		shouldTrigger, err := shouldTriggerWorkflow(c, event)
+		shouldTrigger, err := s.shouldTriggerWorkflow(c, event)
 		if err != nil {
-			return fmt.Errorf("failed to check if event should trigger workflow: %w", err)
+			s.logger.WithError(err).WithFields(logrus.Fields{
+				"workflow_id": c.WorkflowID,
+				"event_id":    event.Id,
+			}).Error("failed to check if event should trigger workflow")
+
+			continue
 		}
 		// TODO: For future blob storage we should return all the events that match the criteria
 		if shouldTrigger {
+			var ttl time.Duration
+
+			if timeBasedTrigger {
+				minutes := *c.Config.TimeCondition
+				ttl = time.Duration(minutes) * time.Minute
+			} else {
+				// TODO: handle non-time based triggers
+				ttl = 24 * time.Hour
+			}
+
+			claimed, err := s.redisClient.TryEventClaim(ctx, c.WorkflowID, event.Id, ttl)
+			if err != nil {
+				s.logger.WithError(err).WithFields(logrus.Fields{
+					"workflow_id": c.WorkflowID,
+					"event_id":    event.Id,
+				}).Error("failed to claim calendar event")
+
+				continue
+			}
+
+			if !claimed {
+				continue
+			}
+
 			triggerEvent = event
+
 			break
 		}
 	}
 
 	if triggerEvent != nil {
-		s.logger.WithFields(logrus.Fields{
-			"workflow_id": c.WorkflowID,
-			"event_id":    triggerEvent.Id,
-			"event_title": triggerEvent.Summary,
-		}).Info("Triggering workflow for calendar event")
-
+		if triggerEvent.Start != nil && triggerEvent.End != nil {
+			s.logger.WithFields(logrus.Fields{
+				"event_id":     triggerEvent.Id,
+				"event_title":  triggerEvent.Summary,
+				"event_status": triggerEvent.Status,
+				"event_start":  triggerEvent.Start.DateTime,
+				"event_end":    triggerEvent.End.DateTime,
+			}).Info("event that has triggered the workflow")
+		}
 		// TODO: IDK how long it should take to do this part...
 		timeoutCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancel()
@@ -282,22 +373,25 @@ func (s *WorkflowCalendarService) checkEventChanges(
 		}).Info("workflow execution started successfully")
 	} else {
 		s.logger.WithFields(logrus.Fields{
-			"workflow_id":      c.WorkflowID,
-			"number_of_events": len(events.Items),
-		}).Debug("no events matched trigger criteria")
+			"workflow_id": c.WorkflowID,
+		}).Info("no events matched trigger criteria")
 	}
 
-	now := time.Now().UnixMilli()
+	lastSyncedAt := now.UnixMilli()
 	c.ExecutionState = "queued"
+	nextSyncToken := events.NextSyncToken
 
-	if err := s.workflowCalendarRepo.UpdateWorkflowCalendar(ctx, c.WorkflowID, c.Config, c.SyncToken, c.ExecutionState, now); err != nil {
+	if err := s.workflowCalendarRepo.UpdateWorkflowCalendar(ctx, c.WorkflowID, c.Config, nextSyncToken, c.ExecutionState, lastSyncedAt); err != nil {
 		return fmt.Errorf("failed to update workflow calendar: %w", err)
 	}
 
 	return nil
 }
 
-func shouldTriggerWorkflow(c *models.WorkflowCalendar, event *calendar.Event) (bool, error) {
+func (s *WorkflowCalendarService) shouldTriggerWorkflow(
+	c *models.WorkflowCalendar,
+	event *calendar.Event,
+) (bool, error) {
 	if !matchesKeywords(event, c.Config.Keywords) {
 		return false, nil
 	}
@@ -311,19 +405,16 @@ func shouldTriggerWorkflow(c *models.WorkflowCalendar, event *calendar.Event) (b
 	}
 
 	if c.Config.TimeCondition != nil {
-		minutes, err := strconv.Atoi(*c.Config.TimeCondition)
-		if err != nil {
-			return false, fmt.Errorf("failed to convert time condition to minutes: %w", err)
-		}
+		minutes := *c.Config.TimeCondition
 
 		var eventTime string
 
 		var isStartCondition bool
 
-		// Skip all-day events for time-based triggers
 		if c.Config.EventStatusCondition == models.EventStatusStarting {
 			isStartCondition = true
 
+			// TODO: Handle all-day events
 			if event.Start != nil && event.Start.DateTime != "" {
 				eventTime = event.Start.DateTime
 			} else {
@@ -339,21 +430,22 @@ func shouldTriggerWorkflow(c *models.WorkflowCalendar, event *calendar.Event) (b
 			}
 		}
 
-		carbonEventTime := carbon.Parse(eventTime, "UTC")
-		if carbonEventTime.IsZero() {
-			return false, fmt.Errorf("failed to parse event time: %s", eventTime)
+		eventTimeParsed, err := time.Parse(time.RFC3339, eventTime)
+		if err != nil {
+			return false, fmt.Errorf("failed to parse event time: %w", err)
 		}
 
-		now := carbon.Now()
+		eventTimeParsed = eventTimeParsed.UTC()
+		now := time.Now().UTC()
 
 		if isStartCondition {
-			triggerStart := carbonEventTime.SubMinutes(minutes)
-			if !now.Between(triggerStart, carbonEventTime) {
+			triggerStart := eventTimeParsed.Add(-time.Duration(minutes) * time.Minute)
+			if !now.After(triggerStart) || !now.Before(eventTimeParsed) {
 				return false, nil
 			}
 		} else {
-			triggerEnd := carbonEventTime.AddMinutes(minutes)
-			if !now.Between(carbonEventTime, triggerEnd) {
+			triggerEnd := eventTimeParsed.Add(time.Duration(minutes) * time.Minute)
+			if !now.After(eventTimeParsed) || !now.Before(triggerEnd) {
 				return false, nil
 			}
 		}
@@ -367,44 +459,42 @@ func matchesKeywords(event *calendar.Event, keywords []string) bool {
 		return true
 	}
 
-	var textParts []string
-
-	if event.Summary != "" {
-		textParts = append(textParts, event.Summary)
+	lowerKeywords := make([]string, len(keywords))
+	for i, kw := range keywords {
+		lowerKeywords[i] = strings.ToLower(kw)
 	}
 
-	if event.Description != "" {
-		textParts = append(textParts, event.Description)
-	}
+	var builder strings.Builder
 
-	if event.Location != "" {
-		textParts = append(textParts, event.Location)
-	}
+	estimatedSize := len(event.Summary) + len(event.Description) + len(event.Location) +
+		len(event.Attendees)*50
+	builder.Grow(estimatedSize + 100)
 
-	for _, attendee := range event.Attendees {
-		if attendee.DisplayName != "" {
-			textParts = append(textParts, attendee.DisplayName)
-		}
-
-		if attendee.Email != "" {
-			textParts = append(textParts, attendee.Email)
-		}
+	fields := []string{
+		event.Summary,
+		event.Description,
+		event.Location,
 	}
 
 	if event.Organizer != nil {
-		if event.Organizer.DisplayName != "" {
-			textParts = append(textParts, event.Organizer.DisplayName)
-		}
+		fields = append(fields, event.Organizer.DisplayName, event.Organizer.Email)
+	}
 
-		if event.Organizer.Email != "" {
-			textParts = append(textParts, event.Organizer.Email)
+	for _, attendee := range event.Attendees {
+		fields = append(fields, attendee.DisplayName, attendee.Email)
+	}
+
+	for _, field := range fields {
+		if field != "" {
+			builder.WriteString(field)
+			builder.WriteByte(' ')
 		}
 	}
 
-	searchableText := strings.ToLower(strings.Join(textParts, " "))
+	searchableText := strings.ToLower(builder.String())
 
-	for _, keyword := range keywords {
-		if !strings.Contains(searchableText, strings.ToLower(keyword)) {
+	for _, keyword := range lowerKeywords {
+		if !strings.Contains(searchableText, keyword) {
 			return false
 		}
 	}

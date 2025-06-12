@@ -48,17 +48,18 @@ export function CalendarTriggerForm() {
       }
       if (!data.calendarID) data.calendarID = "primary";
       // Convert form data to saved data format
+      const keywords = data.keywords.split(",").map((k) => k.trim());
       const savedData =
         data.eventStatus === "cancelled"
           ? {
               eventStatus: "cancelled" as const,
               calendarID: data.calendarID,
-              keywords: data.keywords,
+              keywords: keywords,
             }
           : {
               eventStatus: data.eventStatus as "starting" | "ending",
               calendarID: data.calendarID,
-              keywords: data.keywords,
+              keywords: keywords,
               timeCondition: data.timeCondition,
             };
 
