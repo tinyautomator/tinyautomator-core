@@ -79,7 +79,6 @@ WITH locked AS (
   INNER JOIN workflow w ON wc.workflow_id = w.id
   WHERE wc.execution_state = 'queued'
     AND wc.last_synced_at IS NOT NULL
-    AND wc.last_synced_at <= extract(epoch from now()) * 1000
   FOR UPDATE OF wc SKIP LOCKED
   LIMIT $1
 )
@@ -112,7 +111,6 @@ type GetActiveWorkflowCalendarsLockedRow struct {
 //	  INNER JOIN workflow w ON wc.workflow_id = w.id
 //	  WHERE wc.execution_state = 'queued'
 //	    AND wc.last_synced_at IS NOT NULL
-//	    AND wc.last_synced_at <= extract(epoch from now()) * 1000
 //	  FOR UPDATE OF wc SKIP LOCKED
 //	  LIMIT $1
 //	)

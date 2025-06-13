@@ -80,6 +80,20 @@ type Querier interface {
 	//  )
 	//  RETURNING workflow_id, source_node_id, target_node_id
 	CreateWorkflowEdge(ctx context.Context, arg *CreateWorkflowEdgeParams) (*WorkflowEdge, error)
+	//CreateWorkflowEmail
+	//
+	//  INSERT INTO workflow_email (
+	//      workflow_id,
+	//      config,
+	//      history_id,
+	//      execution_state,
+	//      last_synced_at,
+	//      created_at,
+	//      updated_at
+	//  )
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
+	//  RETURNING id, workflow_id, config, history_id, execution_state, last_synced_at, created_at, updated_at
+	CreateWorkflowEmail(ctx context.Context, arg *CreateWorkflowEmailParams) (*WorkflowEmail, error)
 	//CreateWorkflowNode
 	//
 	//  INSERT INTO workflow_node (
@@ -176,7 +190,6 @@ type Querier interface {
 	//    INNER JOIN workflow w ON wc.workflow_id = w.id
 	//    WHERE wc.execution_state = 'queued'
 	//      AND wc.last_synced_at IS NOT NULL
-	//      AND wc.last_synced_at <= extract(epoch from now()) * 1000
 	//    FOR UPDATE OF wc SKIP LOCKED
 	//    LIMIT $1
 	//  )
@@ -186,6 +199,25 @@ type Querier interface {
 	//  WHERE workflow_calendar.id = locked.id
 	//  RETURNING workflow_calendar.id, workflow_calendar.workflow_id, workflow_calendar.config, workflow_calendar.sync_token, workflow_calendar.execution_state, workflow_calendar.last_synced_at, workflow_calendar.created_at, workflow_calendar.updated_at, locked.user_id
 	GetActiveWorkflowCalendarsLocked(ctx context.Context, limit int32) ([]*GetActiveWorkflowCalendarsLockedRow, error)
+	//GetActiveWorkflowEmailsLocked
+	//
+	//  WITH locked AS (
+	//    SELECT
+	//      we.id,
+	//      w.user_id
+	//    FROM workflow_email we
+	//    INNER JOIN workflow w ON we.workflow_id = w.id
+	//    WHERE we.execution_state = 'queued'
+	//      AND we.last_synced_at IS NOT NULL
+	//    FOR UPDATE OF we SKIP LOCKED
+	//    LIMIT $1
+	//  )
+	//  UPDATE workflow_email
+	//  SET execution_state = 'running'
+	//  FROM locked
+	//  WHERE workflow_email.id = locked.id
+	//  RETURNING workflow_email.id, workflow_email.workflow_id, workflow_email.config, workflow_email.history_id, workflow_email.execution_state, workflow_email.last_synced_at, workflow_email.created_at, workflow_email.updated_at, locked.user_id
+	GetActiveWorkflowEmailsLocked(ctx context.Context, limit int32) ([]*GetActiveWorkflowEmailsLockedRow, error)
 	//GetChildWorkflowNodeRuns
 	//
 	//  SELECT wnr.id, wnr.workflow_run_id, wnr.workflow_node_id, wnr.status, wnr.retry_count, wnr.started_at, wnr.finished_at, wnr.metadata, wnr.error_message
@@ -396,6 +428,16 @@ type Querier interface {
 	//      updated_at = $6
 	//  WHERE workflow_id = $1
 	UpdateWorkflowCalendar(ctx context.Context, arg *UpdateWorkflowCalendarParams) error
+	//UpdateWorkflowEmail
+	//
+	//  UPDATE workflow_email
+	//  SET config = $2,
+	//      history_id = $3,
+	//      execution_state = $4,
+	//      last_synced_at = $5,
+	//      updated_at = $6
+	//  WHERE workflow_id = $1
+	UpdateWorkflowEmail(ctx context.Context, arg *UpdateWorkflowEmailParams) error
 	//UpdateWorkflowNode
 	//
 	//  UPDATE workflow_node
