@@ -47,6 +47,7 @@ type AppConfig interface {
 
 	GetWorkflowRepository() WorkflowRepository
 	GetWorkflowScheduleRepository() WorkflowScheduleRepository
+	GetWorkflowEmailRepository() WorkflowEmailRepository
 	GetWorkflowCalendarRepository() WorkflowCalendarRepository
 	GetWorkflowRunRepository() WorkflowRunRepository
 	GetOauthIntegrationRepository() OauthIntegrationRepository
@@ -153,6 +154,26 @@ type WorkflowScheduleRepository interface {
 		lastRunAt *int64,
 	) error
 	DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error
+}
+
+type WorkflowEmailRepository interface {
+	GetActiveWorkflowEmailsLocked(ctx context.Context) ([]*WorkflowEmail, error)
+	CreateWorkflowEmail(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowEmailConfig,
+		historyID string,
+		executionState string,
+		lastSyncedAt int64,
+	) (*WorkflowEmail, error)
+	UpdateWorkflowEmail(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowEmailConfig,
+		historyID string,
+		executionState string,
+		lastSyncedAt int64,
+	) error
 }
 
 type WorkflowCalendarRepository interface {

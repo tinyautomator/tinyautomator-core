@@ -27,6 +27,7 @@ type appConfig struct {
 	workflowRepo         models.WorkflowRepository
 	workflowRunRepo      models.WorkflowRunRepository
 	workflowScheduleRepo models.WorkflowScheduleRepository
+	workflowEmailRepo    models.WorkflowEmailRepository
 	workflowCalendarRepo models.WorkflowCalendarRepository
 	oauthIntegrationRepo models.OauthIntegrationRepository
 	orchestrator         models.OrchestratorService
@@ -112,6 +113,10 @@ func (c *appConfig) GetWorkflowRunRepository() models.WorkflowRunRepository {
 
 func (c *appConfig) GetWorkflowScheduleRepository() models.WorkflowScheduleRepository {
 	return c.workflowScheduleRepo
+}
+
+func (c *appConfig) GetWorkflowEmailRepository() models.WorkflowEmailRepository {
+	return c.workflowEmailRepo
 }
 
 func (c *appConfig) GetWorkflowCalendarRepository() models.WorkflowCalendarRepository {

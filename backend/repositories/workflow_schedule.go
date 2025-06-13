@@ -26,7 +26,7 @@ func NewWorkflowScheduleRepository(
 func (r *workflowScheduleRepo) GetDueSchedulesLocked(
 	ctx context.Context,
 ) ([]*models.WorkflowSchedule, error) {
-	rows, err := r.q.GetDueSchedulesLocked(ctx, 1000)
+	rows, err := r.q.GetDueSchedulesLocked(ctx, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch due schedules: %w", err)
 	}

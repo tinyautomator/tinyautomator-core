@@ -23,15 +23,6 @@ func NewWorkflowCalendarRepository(
 	return &workflowCalendarRepo{q, db}
 }
 
-func marshalConfig(config models.WorkflowCalendarConfig) ([]byte, error) {
-	jsonBytes, err := json.Marshal(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal workflow calendar config: %w", err)
-	}
-
-	return jsonBytes, nil
-}
-
 func (r *workflowCalendarRepo) CreateWorkflowCalendar(
 	ctx context.Context,
 	workflowID int32,
@@ -73,7 +64,7 @@ func (r *workflowCalendarRepo) CreateWorkflowCalendar(
 func (r *workflowCalendarRepo) GetActiveWorkflowCalendarsLocked(
 	ctx context.Context,
 ) ([]*models.WorkflowCalendar, error) {
-	rows, err := r.q.GetActiveWorkflowCalendarsLocked(ctx, 1000)
+	rows, err := r.q.GetActiveWorkflowCalendarsLocked(ctx, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get active workflow calendars locked: %w", err)
 	}

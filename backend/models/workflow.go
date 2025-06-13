@@ -83,6 +83,21 @@ type WorkflowSchedule struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
+type WorkflowEmailConfig struct {
+	EmailAddress string   `json:"email_address"`
+	Keywords     []string `json:"keywords"`
+}
+
+type WorkflowEmail struct {
+	ID             int32               `json:"id"`
+	UserID         string              `json:"user_id"`
+	WorkflowID     int32               `json:"workflow_id"`
+	Config         WorkflowEmailConfig `json:"config"`
+	HistoryID      string              `json:"history_id"`
+	ExecutionState string              `json:"execution_state"`
+	LastSyncedAt   time.Time           `json:"last_synced_at"`
+}
+
 type EventStatus string
 
 const (
@@ -115,7 +130,6 @@ type WorkflowCalendar struct {
 	ExecutionState string                 `json:"execution_state"`
 	LastSyncedAt   time.Time              `json:"last_synced_at"`
 }
-
 type WorkflowRunCore struct {
 	ID         int32     `json:"id"`
 	WorkflowID int32     `json:"workflow_id"`
