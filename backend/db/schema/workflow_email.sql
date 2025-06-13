@@ -3,7 +3,6 @@ CREATE TABLE workflow_email (
     workflow_id INTEGER NOT NULL REFERENCES workflow(id) ON DELETE CASCADE,
     config JSONB NOT NULL,
     history_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
     execution_state TEXT NOT NULL CHECK (
         execution_state IN ('queued', 'paused', 'running', 'completed', 'failed')
     ),
