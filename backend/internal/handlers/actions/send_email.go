@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/mail"
@@ -49,6 +50,23 @@ func ExtractEmailConfig(input ActionNodeInput) (*EmailConfig, error) {
 	return &config, nil
 }
 
+func encodeSimpleText(to, from, subject, body string) (string, error) {
+	if to == "" || from == "" || subject == "" {
+		return "", fmt.Errorf("to, from, and subject are required")
+	}
+
+	raw := fmt.Sprintf(
+		"To: %s\r\nFrom: %s\r\nSubject: %s\r\nContent-Type: text/plain; charset=\"UTF-8\"\r\n\r\n%s",
+		to,
+		from,
+		subject,
+		body,
+	)
+	encoded := base64.RawURLEncoding.EncodeToString([]byte(raw))
+
+	return encoded, nil
+}
+
 func (h *SendEmailHandler) Execute(
 	ctx context.Context,
 	userID string,
@@ -70,12 +88,17 @@ func (h *SendEmailHandler) Execute(
 		return fmt.Errorf("failed to get oauth token: %w", err)
 	}
 
-	email, err := google.GetUserEmail(ctx, oauthToken, h.googleOAuthConfig)
+	client, err := google.InitGmailClient(ctx, oauthToken, h.googleOAuthConfig)
 	if err != nil {
 		return fmt.Errorf("failed to get user email: %w", err)
 	}
 
-	encoded, err := google.EncodeSimpleText(
+	email, err := client.GetUserEmail(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get user email: %w", err)
+	}
+
+	encoded, err := encodeSimpleText(
 		strings.Join(c.Recipients, ", "),
 		email,
 		c.Subject,
@@ -85,7 +108,7 @@ func (h *SendEmailHandler) Execute(
 		return fmt.Errorf("failed to encode email: %w", err)
 	}
 
-	err = google.SendRawEmail(ctx, oauthToken, h.googleOAuthConfig, encoded)
+	err = client.SendRawEmail(ctx, encoded)
 	if err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
