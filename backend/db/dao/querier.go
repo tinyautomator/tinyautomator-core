@@ -92,7 +92,7 @@ type Querier interface {
 	//      updated_at
 	//  )
 	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
-	//  RETURNING id, workflow_id, config, history_id, execution_state, last_synced_at, created_at, updated_at
+	//  RETURNING id, workflow_id, config, history_id, user_id, execution_state, last_synced_at, created_at, updated_at
 	CreateWorkflowEmail(ctx context.Context, arg *CreateWorkflowEmailParams) (*WorkflowEmail, error)
 	//CreateWorkflowNode
 	//
@@ -216,7 +216,7 @@ type Querier interface {
 	//  SET execution_state = 'running'
 	//  FROM locked
 	//  WHERE workflow_email.id = locked.id
-	//  RETURNING workflow_email.id, workflow_email.workflow_id, workflow_email.config, workflow_email.history_id, workflow_email.execution_state, workflow_email.last_synced_at, workflow_email.created_at, workflow_email.updated_at, locked.user_id
+	//  RETURNING workflow_email.id, workflow_email.workflow_id, workflow_email.config, workflow_email.history_id, workflow_email.user_id, workflow_email.execution_state, workflow_email.last_synced_at, workflow_email.created_at, workflow_email.updated_at, locked.user_id
 	GetActiveWorkflowEmailsLocked(ctx context.Context, limit int32) ([]*GetActiveWorkflowEmailsLockedRow, error)
 	//GetChildWorkflowNodeRuns
 	//

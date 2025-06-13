@@ -53,7 +53,8 @@ type WorkflowEmail struct {
 	ID             int32  `json:"id"`
 	WorkflowID     int32  `json:"workflow_id"`
 	Config         []byte `json:"config"`
-	HistoryID      int64  `json:"history_id"`
+	HistoryID      string `json:"history_id"`
+	UserID         string `json:"user_id"`
 	ExecutionState string `json:"execution_state"`
 	LastSyncedAt   int64  `json:"last_synced_at"`
 	CreatedAt      int64  `json:"created_at"`

@@ -20,13 +20,13 @@ INSERT INTO workflow_email (
     updated_at
 )
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, workflow_id, config, history_id, execution_state, last_synced_at, created_at, updated_at
+RETURNING id, workflow_id, config, history_id, user_id, execution_state, last_synced_at, created_at, updated_at
 `
 
 type CreateWorkflowEmailParams struct {
 	WorkflowID     int32  `json:"workflow_id"`
 	Config         []byte `json:"config"`
-	HistoryID      int64  `json:"history_id"`
+	HistoryID      string `json:"history_id"`
 	ExecutionState string `json:"execution_state"`
 	LastSyncedAt   int64  `json:"last_synced_at"`
 	CreatedAt      int64  `json:"created_at"`
@@ -45,7 +45,7 @@ type CreateWorkflowEmailParams struct {
 //	    updated_at
 //	)
 //	VALUES ($1, $2, $3, $4, $5, $6, $7)
-//	RETURNING id, workflow_id, config, history_id, execution_state, last_synced_at, created_at, updated_at
+//	RETURNING id, workflow_id, config, history_id, user_id, execution_state, last_synced_at, created_at, updated_at
 func (q *Queries) CreateWorkflowEmail(ctx context.Context, arg *CreateWorkflowEmailParams) (*WorkflowEmail, error) {
 	row := q.db.QueryRow(ctx, createWorkflowEmail,
 		arg.WorkflowID,
@@ -62,6 +62,7 @@ func (q *Queries) CreateWorkflowEmail(ctx context.Context, arg *CreateWorkflowEm
 		&i.WorkflowID,
 		&i.Config,
 		&i.HistoryID,
+		&i.UserID,
 		&i.ExecutionState,
 		&i.LastSyncedAt,
 		&i.CreatedAt,
@@ -86,19 +87,20 @@ UPDATE workflow_email
 SET execution_state = 'running'
 FROM locked
 WHERE workflow_email.id = locked.id
-RETURNING workflow_email.id, workflow_email.workflow_id, workflow_email.config, workflow_email.history_id, workflow_email.execution_state, workflow_email.last_synced_at, workflow_email.created_at, workflow_email.updated_at, locked.user_id
+RETURNING workflow_email.id, workflow_email.workflow_id, workflow_email.config, workflow_email.history_id, workflow_email.user_id, workflow_email.execution_state, workflow_email.last_synced_at, workflow_email.created_at, workflow_email.updated_at, locked.user_id
 `
 
 type GetActiveWorkflowEmailsLockedRow struct {
 	ID             int32  `json:"id"`
 	WorkflowID     int32  `json:"workflow_id"`
 	Config         []byte `json:"config"`
-	HistoryID      int64  `json:"history_id"`
+	HistoryID      string `json:"history_id"`
+	UserID         string `json:"user_id"`
 	ExecutionState string `json:"execution_state"`
 	LastSyncedAt   int64  `json:"last_synced_at"`
 	CreatedAt      int64  `json:"created_at"`
 	UpdatedAt      int64  `json:"updated_at"`
-	UserID         string `json:"user_id"`
+	UserID_2       string `json:"user_id_2"`
 }
 
 // GetActiveWorkflowEmailsLocked
@@ -118,7 +120,7 @@ type GetActiveWorkflowEmailsLockedRow struct {
 //	SET execution_state = 'running'
 //	FROM locked
 //	WHERE workflow_email.id = locked.id
-//	RETURNING workflow_email.id, workflow_email.workflow_id, workflow_email.config, workflow_email.history_id, workflow_email.execution_state, workflow_email.last_synced_at, workflow_email.created_at, workflow_email.updated_at, locked.user_id
+//	RETURNING workflow_email.id, workflow_email.workflow_id, workflow_email.config, workflow_email.history_id, workflow_email.user_id, workflow_email.execution_state, workflow_email.last_synced_at, workflow_email.created_at, workflow_email.updated_at, locked.user_id
 func (q *Queries) GetActiveWorkflowEmailsLocked(ctx context.Context, limit int32) ([]*GetActiveWorkflowEmailsLockedRow, error) {
 	rows, err := q.db.Query(ctx, getActiveWorkflowEmailsLocked, limit)
 	if err != nil {
@@ -133,11 +135,12 @@ func (q *Queries) GetActiveWorkflowEmailsLocked(ctx context.Context, limit int32
 			&i.WorkflowID,
 			&i.Config,
 			&i.HistoryID,
+			&i.UserID,
 			&i.ExecutionState,
 			&i.LastSyncedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.UserID,
+			&i.UserID_2,
 		); err != nil {
 			return nil, err
 		}
@@ -162,7 +165,7 @@ WHERE workflow_id = $1
 type UpdateWorkflowEmailParams struct {
 	WorkflowID     int32  `json:"workflow_id"`
 	Config         []byte `json:"config"`
-	HistoryID      int64  `json:"history_id"`
+	HistoryID      string `json:"history_id"`
 	ExecutionState string `json:"execution_state"`
 	LastSyncedAt   int64  `json:"last_synced_at"`
 	UpdatedAt      int64  `json:"updated_at"`
