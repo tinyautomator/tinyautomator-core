@@ -9,6 +9,10 @@ import (
 	"google.golang.org/api/option"
 )
 
+const (
+	MAX_RESULTS = 50
+)
+
 type GmailClient struct {
 	service *gmail.Service
 }
@@ -32,6 +36,32 @@ func InitGmailClient(
 	}
 
 	return &GmailClient{service: service}, nil
+}
+
+func (c *GmailClient) GetHistoryID(ctx context.Context) (*uint64, error) {
+	profile, err := c.service.Users.GetProfile("me").Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get the user's history: %w", err)
+	}
+
+	return &profile.HistoryId, nil
+}
+
+func (c *GmailClient) GetHistoryWithID(
+	ctx context.Context,
+	historyID uint64,
+	historyType string,
+) (*gmail.ListHistoryResponse, error) {
+	history, err := c.service.Users.History.List("me").
+		StartHistoryId(historyID).
+		MaxResults(MAX_RESULTS).
+		HistoryTypes(historyType).
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get the user's history: %w", err)
+	}
+
+	return history, nil
 }
 
 func (c *GmailClient) GetUserEmail(
