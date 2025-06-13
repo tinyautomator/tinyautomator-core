@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/calendar/v3"
@@ -14,20 +13,14 @@ import (
 )
 
 type CalendarClient struct {
-	service    *calendar.Service
-	logger     logrus.FieldLogger
-	token      *oauth2.Token
-	userID     string
-	calendarID string
+	service *calendar.Service
 }
 
-func NewCalendarClient(
+func InitCalendarClient(
 	ctx context.Context,
 	token *oauth2.Token,
 	oauthConfig *oauth2.Config,
-	logger logrus.FieldLogger,
 	userID string,
-	calendarID string,
 ) (*CalendarClient, error) {
 	tokenSource := oauthConfig.TokenSource(ctx, token)
 
@@ -36,23 +29,10 @@ func NewCalendarClient(
 		return nil, fmt.Errorf("unable to init calendar service: %w", err)
 	}
 
-	if calendarID == "" {
-		calendarID = primaryCalendarID
-	}
-
 	return &CalendarClient{
-		service:    service,
-		logger:     logger,
-		token:      token,
-		userID:     userID,
-		calendarID: calendarID,
+		service: service,
 	}, nil
 }
-
-const (
-	primaryCalendarID = "primary"
-	defaultTimeZone   = "UTC"
-)
 
 func (c *CalendarClient) BuildEvent(eventCfg *models.EventConfig) (*calendar.Event, error) {
 	if eventCfg == nil || eventCfg.StartDate == nil || eventCfg.EndDate == nil {
@@ -148,25 +128,57 @@ func (c *CalendarClient) BuildEvent(eventCfg *models.EventConfig) (*calendar.Eve
 func (c *CalendarClient) GetCalendarList(ctx context.Context) (*calendar.CalendarList, error) {
 	calendarList, err := c.service.CalendarList.List().Context(ctx).Do()
 	if err != nil {
-		c.logger.WithError(err).
-			WithField("user_id", c.userID).
-			WithField("token", c.token).
-			Error("Failed to get calendar list")
-
 		return nil, fmt.Errorf("unable to get calendar list: %w", err)
 	}
 
 	return calendarList, nil
 }
 
-func (c *CalendarClient) CreateEvent(
-	ctx context.Context,
-	event *calendar.Event,
-) (*calendar.Event, error) {
-	event, err := c.service.Events.Insert(c.calendarID, event).Context(ctx).Do()
+func (c *CalendarClient) GetSyncToken(ctx context.Context, calendarID string) (string, error) {
+	events, err := c.service.Events.List(calendarID).
+		SingleEvents(true).
+		Context(ctx).
+		Do()
 	if err != nil {
-		return nil, fmt.Errorf("unable to create event: %w", err)
+		return "", fmt.Errorf("unable to get events: %w", err)
 	}
 
-	return event, nil
+	return events.NextSyncToken, nil
+}
+
+func (c *CalendarClient) GetEventsBySyncToken(
+	ctx context.Context,
+	calendarID string,
+	syncToken string,
+) (*calendar.Events, error) {
+	events, err := c.service.Events.List(calendarID).
+		SyncToken(syncToken).
+		MaxResults(50).
+		Context(ctx).
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get events by sync token: %w", err)
+	}
+
+	return events, nil
+}
+
+func (c *CalendarClient) GetEventsByTimeRange(
+	ctx context.Context,
+	calendarID string,
+	timeMin time.Time,
+	timeMax time.Time,
+) (*calendar.Events, error) {
+	events, err := c.service.Events.List(calendarID).
+		TimeMin(timeMin.Format(time.RFC3339)).
+		TimeMax(timeMax.Format(time.RFC3339)).
+		TimeZone("UTC").
+		MaxResults(50).
+		Context(ctx).
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get events by time range: %w", err)
+	}
+
+	return events, nil
 }

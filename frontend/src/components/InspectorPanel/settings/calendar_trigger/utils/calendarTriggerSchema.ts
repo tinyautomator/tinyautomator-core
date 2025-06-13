@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const baseTrigger = {
   calendarID: z.string().nullable().optional(),
-  keywords: z.array(z.string()).transform((val) => val.map((k) => k.trim())),
+  keywords: z.string(),
 };
 
 const cancelledTrigger = z.object({
@@ -44,5 +44,5 @@ export type CalendarTriggerFormSchema = z.infer<
 export const calendarTriggerDefaultValues: CalendarTriggerFormSchema = {
   eventStatus: null,
   calendarID: null,
-  keywords: [],
+  keywords: "",
 };

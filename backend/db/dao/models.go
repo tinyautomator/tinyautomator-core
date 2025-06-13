@@ -32,6 +32,17 @@ type Workflow struct {
 	UpdatedAt   int64  `json:"updated_at"`
 }
 
+type WorkflowCalendar struct {
+	ID             int32  `json:"id"`
+	WorkflowID     int32  `json:"workflow_id"`
+	Config         []byte `json:"config"`
+	SyncToken      string `json:"sync_token"`
+	ExecutionState string `json:"execution_state"`
+	LastSyncedAt   int64  `json:"last_synced_at"`
+	CreatedAt      int64  `json:"created_at"`
+	UpdatedAt      int64  `json:"updated_at"`
+}
+
 type WorkflowEdge struct {
 	WorkflowID   int32 `json:"workflow_id"`
 	SourceNodeID int32 `json:"source_node_id"`

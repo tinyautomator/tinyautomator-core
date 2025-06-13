@@ -194,6 +194,7 @@ func loadSQLFiles(dir string) ([]string, error) {
 		"workflow_edge",
 		"workflow_run",
 		"workflow_node_run",
+		"workflow_calendar",
 		"oauth_integration",
 	}
 

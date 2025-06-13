@@ -12,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/internal"
 	"github.com/tinyautomator/tinyautomator-core/backend/internal/handlers/triggers"
+
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
 	"github.com/yourbasic/graph"
 )
@@ -32,6 +33,7 @@ func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 	schedulerSvc := cfg.GetSchedulerService()
 	t := triggers.NewTriggerRegistry()
 	t.Register("schedule", triggers.NewScheduleTriggerHandler(logger, schedulerSvc))
+	t.Register("calendar_event", triggers.NewCalendarEventTriggerHandler(cfg))
 
 	return &WorkflowService{
 		logger:               logger,
@@ -222,6 +224,8 @@ func (s *WorkflowService) CreateWorkflow(
 	for _, node := range rootNodes {
 		if node.Category == "trigger" {
 			(*node.Config)["workflow_id"] = w.ID
+			(*node.Config)["user_id"] = userID
+
 			if err := s.triggerRegistry.Execute(node.NodeType, triggers.TriggerNodeInput{
 				Config: node.Config,
 			}); err != nil {
@@ -235,6 +239,7 @@ func (s *WorkflowService) CreateWorkflow(
 
 func (s *WorkflowService) UpdateWorkflow(
 	ctx context.Context,
+	userID string,
 	workflowID int32,
 	name string,
 	description string,
@@ -300,7 +305,9 @@ func (s *WorkflowService) UpdateWorkflow(
 				"newConfig": node.Config,
 			}).Info("node config changed")
 
+			(*node.Config)["user_id"] = userID
 			(*node.Config)["workflow_id"] = workflowID
+
 			if node.Category == "trigger" {
 				if err := s.triggerRegistry.Update(node.NodeType, triggers.TriggerNodeInput{
 					Config: node.Config,

@@ -11,11 +11,14 @@ import (
 )
 
 type EnvironmentVariables struct {
-	LogLevel           string        `envconfig:"LOG_LEVEL"               default:"INFO"`
-	ClerkSecretKey     string        `envconfig:"CLERK_API_KEY"                                 required:"true"`
-	Port               string        `envconfig:"PORT"                    default:"9000"`
-	WorkerPollInterval time.Duration `envconfig:"WORKER_POLLING_INTERVAL" default:"10m"`
-	Env                string        `envconfig:"APPLICATION_ENV"         default:"development"`
+	LogLevel       string `envconfig:"LOG_LEVEL"       default:"INFO"`
+	ClerkSecretKey string `envconfig:"CLERK_API_KEY"                         required:"true"`
+	Port           string `envconfig:"PORT"            default:"9000"`
+	Env            string `envconfig:"APPLICATION_ENV" default:"development"`
+
+	// Polling intervals
+	SchedulerPollInterval time.Duration `envconfig:"SCHEDULER_POLLING_INTERVAL" default:"1m"`
+	CalendarPollInterval  time.Duration `envconfig:"CALENDAR_POLLING_INTERVAL"  default:"15m"`
 
 	// Oauth
 	JwtSecret          string `envconfig:"JWT_SECRET"           required:"true"`
@@ -44,8 +47,10 @@ type AppConfig interface {
 
 	GetWorkflowRepository() WorkflowRepository
 	GetWorkflowScheduleRepository() WorkflowScheduleRepository
+	GetWorkflowCalendarRepository() WorkflowCalendarRepository
 	GetWorkflowRunRepository() WorkflowRunRepository
 	GetOauthIntegrationRepository() OauthIntegrationRepository
+
 	GetOrchestratorService() OrchestratorService
 	GetExecutorService() ExecutorService
 	GetSchedulerService() SchedulerService
@@ -55,7 +60,7 @@ type AppConfig interface {
 	GetGoogleOAuthConfig() *oauth2.Config
 	GetRedisClient() redis.RedisClient
 	GetRabbitMQClient() rabbitmq.RabbitMQClient
-
+	GetWorkflowCalendarService() WorkflowCalendarService
 	CleanUp()
 }
 
@@ -150,6 +155,26 @@ type WorkflowScheduleRepository interface {
 	DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error
 }
 
+type WorkflowCalendarRepository interface {
+	GetActiveWorkflowCalendarsLocked(ctx context.Context) ([]*WorkflowCalendar, error)
+	CreateWorkflowCalendar(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowCalendarConfig,
+		syncToken string,
+		executionState string,
+		lastSyncedAt int64,
+	) (*WorkflowCalendar, error)
+	UpdateWorkflowCalendar(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowCalendarConfig,
+		syncToken string,
+		executionState string,
+		lastSyncedAt int64,
+	) error
+}
+
 type OrchestratorService interface {
 	OrchestrateWorkflow(ctx context.Context, userID string, workflowID int32) (int32, error)
 }
@@ -193,6 +218,28 @@ type SchedulerService interface {
 	EnsureInFlightEnqueued()
 }
 
+type WorkflowCalendarService interface {
+	ValidateCalendarConfig(config WorkflowCalendarConfig) error
+	GetActiveCalendars(ctx context.Context) ([]*WorkflowCalendar, error)
+	GetSyncToken(ctx context.Context, calendarID string, userID string) (*string, error)
+	CreateWorkflowCalendar(
+		ctx context.Context,
+		workflowID int32,
+		userID string,
+		config WorkflowCalendarConfig,
+	) (*WorkflowCalendar, error)
+	UpdateWorkflowCalendar(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowCalendarConfig,
+		syncToken string,
+		executionState string,
+		lastSyncedAt time.Time,
+	) error
+	CheckEventChanges(ctx context.Context, calendar *WorkflowCalendar) error
+	EnsureInFlightEnqueued()
+}
+
 type WorkflowService interface {
 	VerifyWorkflowAccess(ctx context.Context, workflowID int32, userID string) error
 	ValidateWorkflowGraph(nodes []ValidateNode, edges []ValidateEdge) error
@@ -207,6 +254,7 @@ type WorkflowService interface {
 	) (*WorkflowGraph, error)
 	UpdateWorkflow(
 		ctx context.Context,
+		userID string,
 		workflowID int32,
 		name string,
 		description string,

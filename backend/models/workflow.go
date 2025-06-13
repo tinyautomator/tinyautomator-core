@@ -83,6 +83,39 @@ type WorkflowSchedule struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
+type EventStatus string
+
+const (
+	EventStatusCreated   EventStatus = "created"
+	EventStatusUpdated   EventStatus = "edited"
+	EventStatusStarting  EventStatus = "starting"
+	EventStatusEnding    EventStatus = "ending"
+	EventStatusCancelled EventStatus = "cancelled"
+)
+
+var EventStatuses = map[string]EventStatus{
+	"cancelled": EventStatusCancelled,
+	"starting":  EventStatusStarting,
+	"ending":    EventStatusEnding,
+}
+
+type WorkflowCalendarConfig struct {
+	CalendarID           *string     `json:"calendarID,omitempty"`
+	Keywords             []string    `json:"keywords,omitempty"`
+	TimeCondition        *int        `json:"timeCondition,omitempty"`
+	EventStatusCondition EventStatus `json:"eventStatus"`
+}
+
+type WorkflowCalendar struct {
+	ID             int32                  `json:"id"`
+	UserID         string                 `json:"user_id"`
+	WorkflowID     int32                  `json:"workflow_id"`
+	Config         WorkflowCalendarConfig `json:"config"`
+	SyncToken      string                 `json:"sync_token"`
+	ExecutionState string                 `json:"execution_state"`
+	LastSyncedAt   time.Time              `json:"last_synced_at"`
+}
+
 type WorkflowRunCore struct {
 	ID         int32     `json:"id"`
 	WorkflowID int32     `json:"workflow_id"`

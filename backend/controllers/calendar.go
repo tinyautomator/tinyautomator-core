@@ -26,75 +26,6 @@ func NewCalendarController(
 	}
 }
 
-func (c *CalendarController) CreateEvent(ctx *gin.Context) {
-	user, ok := ctx.Get("user")
-	if !ok {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
-		return
-	}
-
-	userID := user.(*models.User).ID
-
-	// Note: This would be some kind of service that does all this
-
-	token, err := c.oauthService.GetToken(ctx, userID, "google", c.oauthConfig)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get OAuth credentials"})
-		return
-	}
-
-	calendarClient, err := google.NewCalendarClient(
-		ctx,
-		token,
-		c.oauthConfig,
-		c.logger,
-		userID,
-		"",
-	)
-	if err != nil {
-		ctx.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": "Failed to initialize calendar client"},
-		)
-
-		return
-	}
-
-	var eventConfig models.EventConfig
-	if err := ctx.ShouldBindJSON(&eventConfig); err != nil {
-		c.logger.WithError(err).Error("Failed to bind JSON")
-		ctx.JSON(
-			http.StatusBadRequest,
-			gin.H{"error": "Invalid event configuration", "details": err.Error()},
-		)
-
-		return
-	}
-
-	event, err := calendarClient.BuildEvent(&eventConfig)
-	if err != nil {
-		c.logger.WithError(err).Error("Failed to build event")
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-
-		return
-	}
-
-	c.logger.WithField("event", event).Info("Creating event")
-
-	createdEvent, err := calendarClient.CreateEvent(ctx, event)
-	if err != nil {
-		c.logger.WithError(err).Error("Failed to create event")
-		ctx.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": "Failed to create event", "details": err.Error()},
-		)
-
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, createdEvent)
-}
-
 func (c *CalendarController) GetCalendarList(ctx *gin.Context) {
 	user, ok := ctx.Get("user")
 	if !ok {
@@ -110,24 +41,17 @@ func (c *CalendarController) GetCalendarList(ctx *gin.Context) {
 		return
 	}
 
-	calendarClient, err := google.NewCalendarClient(
-		ctx,
-		token,
-		c.oauthConfig,
-		c.logger,
-		userID,
-		"",
-	)
+	client, err := google.InitCalendarClient(ctx, token, c.oauthConfig, userID)
 	if err != nil {
 		ctx.JSON(
 			http.StatusInternalServerError,
-			gin.H{"error": "Failed to initialize calendar client"},
+			gin.H{"error": "Failed to initialize google calendar service"},
 		)
 
 		return
 	}
 
-	calendarList, err := calendarClient.GetCalendarList(ctx)
+	calendarList, err := client.GetCalendarList(ctx)
 	if err != nil {
 		ctx.JSON(
 			http.StatusInternalServerError,

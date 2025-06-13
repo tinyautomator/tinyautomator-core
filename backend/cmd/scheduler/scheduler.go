@@ -8,30 +8,36 @@ import (
 	"github.com/guregu/null/v6"
 	"github.com/sirupsen/logrus"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
-	"github.com/tinyautomator/tinyautomator-core/backend/services"
 )
 
 type Scheduler struct {
-	service      models.SchedulerService
-	pollInterval time.Duration
-	logger       logrus.FieldLogger
+	schedulerService      models.SchedulerService
+	calendarService       models.WorkflowCalendarService
+	schedulerPollInterval time.Duration
+	calendarPollInterval  time.Duration
+	logger                logrus.FieldLogger
 }
 
 func NewScheduler(cfg models.AppConfig) *Scheduler {
 	return &Scheduler{
-		service:      services.NewSchedulerService(cfg),
-		pollInterval: cfg.GetEnvVars().WorkerPollInterval,
-		logger:       cfg.GetLogger(),
+		schedulerService:      cfg.GetSchedulerService(),
+		calendarService:       cfg.GetWorkflowCalendarService(),
+		schedulerPollInterval: cfg.GetEnvVars().SchedulerPollInterval,
+		calendarPollInterval:  cfg.GetEnvVars().CalendarPollInterval,
+		logger:                cfg.GetLogger(),
 	}
 }
 
 func (s *Scheduler) StopScheduler() {
-	s.service.EnsureInFlightEnqueued()
+	s.schedulerService.EnsureInFlightEnqueued()
 }
 
 func (s *Scheduler) PollAndRunScheduledWorkflows(ctx context.Context) error {
-	ticker := time.NewTicker(s.pollInterval)
-	defer ticker.Stop()
+	schedulerTicker := time.NewTicker(s.schedulerPollInterval)
+	calendarTicker := time.NewTicker(s.calendarPollInterval)
+
+	defer schedulerTicker.Stop()
+	defer calendarTicker.Stop()
 
 	s.logger.Info("start polling for scheduled workflows")
 
@@ -40,8 +46,8 @@ func (s *Scheduler) PollAndRunScheduledWorkflows(ctx context.Context) error {
 		case <-ctx.Done():
 			s.logger.Info("ctx cancelled - stopping polling loop")
 			return context.Canceled
-		case <-ticker.C:
-			ws, err := s.service.GetDueWorkflows(ctx)
+		case <-schedulerTicker.C:
+			ws, err := s.schedulerService.GetDueWorkflows(ctx)
 			if err != nil {
 				return fmt.Errorf("error getting due workflows: %w", err)
 			}
@@ -51,7 +57,7 @@ func (s *Scheduler) PollAndRunScheduledWorkflows(ctx context.Context) error {
 			for _, ws := range ws {
 				s.logger.WithField("workflow_schedule_id", ws.ID).Info("scheduling workflow")
 
-				if err := s.service.RunScheduledWorkflow(ctx, ws); err != nil {
+				if err := s.schedulerService.RunScheduledWorkflow(ctx, ws); err != nil {
 					s.logger.WithField("workflow_schedule_id", ws.ID).
 						Errorf("failed to schedule workflow: %v", err)
 				}
@@ -66,6 +72,28 @@ func (s *Scheduler) PollAndRunScheduledWorkflows(ctx context.Context) error {
 					"last_run_at":    null.TimeFrom(ws.LastRunAt.Time).Time.Format(time.DateTime),
 				}).Info("workflow ran successfully")
 			}
+
+		case <-calendarTicker.C:
+			s.logger.Info("polling for calendar events")
+
+			calendars, err := s.calendarService.GetActiveCalendars(ctx)
+			if err != nil {
+				s.logger.WithError(err).Error("failed to get active calendars")
+			}
+
+			s.logger.WithField("count", len(calendars)).Info("fetched calendars")
+
+			for _, c := range calendars {
+				if err := s.calendarService.CheckEventChanges(ctx, c); err != nil {
+					s.logger.WithError(err).
+						WithField("workflow_id", c.WorkflowID).
+						Error("failed to check event changes")
+				} else {
+					s.logger.WithField("workflow_id", c.WorkflowID).Info("event changes checked successfully")
+				}
+			}
+
+			s.logger.Info("finished polling for calendar events")
 		}
 	}
 }

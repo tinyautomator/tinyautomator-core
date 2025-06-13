@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/mail"
 	"strings"
@@ -27,32 +28,25 @@ func NewSendEmailHandler(cfg models.AppConfig) ActionHandler {
 }
 
 type EmailConfig struct {
-	Recipients []string
-	Subject    string
-	Message    string
+	Recipients []string `json:"recipients" binding:"required"`
+	Subject    string   `json:"subject"    binding:"required"`
+	Message    string   `json:"message"    binding:"required"`
 }
 
 func ExtractEmailConfig(input ActionNodeInput) (*EmailConfig, error) {
-	recipients, ok := input.Config["recipients"].([]string)
-	if !ok {
-		return nil, fmt.Errorf("recipients must be an array of strings")
+	bytes, err := json.Marshal(input.Config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	subject, ok := input.Config["subject"].(string)
-	if !ok {
-		return nil, fmt.Errorf("subject must be a string")
+	var config EmailConfig
+
+	err = json.Unmarshal(bytes, &config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-	message, ok := input.Config["message"].(string)
-	if !ok {
-		return nil, fmt.Errorf("message must be a string")
-	}
-
-	return &EmailConfig{
-		Recipients: recipients,
-		Subject:    subject,
-		Message:    message,
-	}, nil
+	return &config, nil
 }
 
 func (h *SendEmailHandler) Execute(

@@ -42,6 +42,15 @@ type RedisClient interface {
 		details map[string]any,
 	) error
 	SubscribeWorkflowProgress(ctx context.Context) (<-chan *redis.Message, *redis.PubSub, error)
+
+	// Calendar Events
+	TryEventClaim(
+		ctx context.Context,
+		workflowCalendarID int32,
+		eventID string,
+		ttl time.Duration,
+	) (bool, error)
+
 	Close() error
 }
 
@@ -283,4 +292,26 @@ func (c *redisClient) SubscribeWorkflowProgress(
 	}
 
 	return nil, nil, fmt.Errorf("failed to subscribe to redis for workflow progress: %w", err)
+}
+
+func (c *redisClient) TryEventClaim(
+	ctx context.Context,
+	workflowCalendarID int32,
+	eventID string,
+	ttl time.Duration,
+) (bool, error) {
+	key := fmt.Sprintf("triggered_event:%d:%s", workflowCalendarID, eventID)
+
+	claimed, err := c.client.SetNX(ctx, key, time.Now().UnixMilli(), ttl).Result()
+	if err != nil {
+		c.logger.WithError(err).WithFields(logrus.Fields{
+			"workflow_calendar_id": workflowCalendarID,
+			"event_id":             eventID,
+			"ttl":                  ttl,
+		}).Error("failed to claim calendar event")
+
+		return false, fmt.Errorf("failed to claim calendar event: %w", err)
+	}
+
+	return claimed, nil
 }

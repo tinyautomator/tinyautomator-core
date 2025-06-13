@@ -54,6 +54,20 @@ type Querier interface {
 	//  )
 	//  RETURNING id, user_id, name, description, status, created_at, updated_at
 	CreateWorkflow(ctx context.Context, arg *CreateWorkflowParams) (*Workflow, error)
+	//CreateWorkflowCalendar
+	//
+	//  INSERT INTO workflow_calendar (
+	//      workflow_id,
+	//      config,
+	//      sync_token,
+	//      execution_state,
+	//      last_synced_at,
+	//      created_at,
+	//      updated_at
+	//  )
+	//  VALUES ($1, $2, $3, $4, $5, $6, $7)
+	//  RETURNING id, workflow_id, config, sync_token, execution_state, last_synced_at, created_at, updated_at
+	CreateWorkflowCalendar(ctx context.Context, arg *CreateWorkflowCalendarParams) (*WorkflowCalendar, error)
 	//CreateWorkflowEdge
 	//
 	//  INSERT INTO workflow_edge (
@@ -152,6 +166,26 @@ type Querier interface {
 	//
 	//  DELETE FROM workflow_schedule WHERE workflow_id = $1
 	DeleteWorkflowScheduleByWorkflowID(ctx context.Context, workflowID int32) error
+	//GetActiveWorkflowCalendarsLocked
+	//
+	//  WITH locked AS (
+	//    SELECT
+	//      wc.id,
+	//      w.user_id
+	//    FROM workflow_calendar wc
+	//    INNER JOIN workflow w ON wc.workflow_id = w.id
+	//    WHERE wc.execution_state = 'queued'
+	//      AND wc.last_synced_at IS NOT NULL
+	//      AND wc.last_synced_at <= extract(epoch from now()) * 1000
+	//    FOR UPDATE OF wc SKIP LOCKED
+	//    LIMIT $1
+	//  )
+	//  UPDATE workflow_calendar
+	//  SET execution_state = 'running'
+	//  FROM locked
+	//  WHERE workflow_calendar.id = locked.id
+	//  RETURNING workflow_calendar.id, workflow_calendar.workflow_id, workflow_calendar.config, workflow_calendar.sync_token, workflow_calendar.execution_state, workflow_calendar.last_synced_at, workflow_calendar.created_at, workflow_calendar.updated_at, locked.user_id
+	GetActiveWorkflowCalendarsLocked(ctx context.Context, limit int32) ([]*GetActiveWorkflowCalendarsLockedRow, error)
 	//GetChildWorkflowNodeRuns
 	//
 	//  SELECT wnr.id, wnr.workflow_run_id, wnr.workflow_node_id, wnr.status, wnr.retry_count, wnr.started_at, wnr.finished_at, wnr.metadata, wnr.error_message
@@ -352,6 +386,16 @@ type Querier interface {
 	//      updated_at = $4
 	//  WHERE id = $1
 	UpdateWorkflow(ctx context.Context, arg *UpdateWorkflowParams) error
+	//UpdateWorkflowCalendar
+	//
+	//  UPDATE workflow_calendar
+	//  SET config = $2,
+	//      sync_token = $3,
+	//      execution_state = $4,
+	//      last_synced_at = $5,
+	//      updated_at = $6
+	//  WHERE workflow_id = $1
+	UpdateWorkflowCalendar(ctx context.Context, arg *UpdateWorkflowCalendarParams) error
 	//UpdateWorkflowNode
 	//
 	//  UPDATE workflow_node

@@ -72,6 +72,5 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 	calendarGroup := r.Group("/api/calendar")
 	{
 		calendarGroup.GET("/list", calendarController.GetCalendarList)
-		calendarGroup.POST("/create-event", calendarController.CreateEvent)
 	}
 }
