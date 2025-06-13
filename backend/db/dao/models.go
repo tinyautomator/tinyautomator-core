@@ -49,6 +49,17 @@ type WorkflowEdge struct {
 	TargetNodeID int32 `json:"target_node_id"`
 }
 
+type WorkflowEmail struct {
+	ID             int32  `json:"id"`
+	WorkflowID     int32  `json:"workflow_id"`
+	Config         []byte `json:"config"`
+	HistoryID      int64  `json:"history_id"`
+	ExecutionState string `json:"execution_state"`
+	LastSyncedAt   int64  `json:"last_synced_at"`
+	CreatedAt      int64  `json:"created_at"`
+	UpdatedAt      int64  `json:"updated_at"`
+}
+
 type WorkflowNode struct {
 	ID         int32  `json:"id"`
 	WorkflowID int32  `json:"workflow_id"`
