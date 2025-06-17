@@ -239,6 +239,30 @@ type SchedulerService interface {
 	EnsureInFlightEnqueued()
 }
 
+type WorkflowEmailService interface {
+	ValidateEmailConfig(config WorkflowEmailConfig) error
+	GetActiveEmails(ctx context.Context) ([]*WorkflowEmail, error)
+	GetHistoryID(ctx context.Context, emailID string, userID string) (*uint64, error)
+	CreateWorkflowEmail(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowEmailConfig,
+		historyID string,
+		executionState string,
+		lastSyncedAt int64,
+	) (*WorkflowEmail, error)
+	UpdateWorkflowEmail(
+		ctx context.Context,
+		workflowID int32,
+		config WorkflowEmailConfig,
+		historyID string,
+		executionState string,
+		lastSyncedAt int64,
+	) error
+	CheckEmailChanges(ctx context.Context, email *WorkflowEmail) error
+	EnsureInFlightEnqueued()
+}
+
 type WorkflowCalendarService interface {
 	ValidateCalendarConfig(config WorkflowCalendarConfig) error
 	GetActiveCalendars(ctx context.Context) ([]*WorkflowCalendar, error)
