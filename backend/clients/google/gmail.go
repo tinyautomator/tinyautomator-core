@@ -38,6 +38,15 @@ func InitGmailClient(
 	return &GmailClient{service: service}, nil
 }
 
+func (c *GmailClient) GetLabelList(ctx context.Context) ([]*gmail.Label, error) {
+	res, err := c.service.Users.Labels.List("me").Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get the user's label list: %w", err)
+	}
+
+	return res.Labels, nil
+}
+
 func (c *GmailClient) GetHistoryID(ctx context.Context) (*uint64, error) {
 	profile, err := c.service.Users.GetProfile("me").Do()
 	if err != nil {
