@@ -68,9 +68,10 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 	accountController := controllers.NewAccountController(cfg)
 	r.POST("/api/webhooks/delete-account", accountController.HandleAccountDeleted)
 
-	calendarController := controllers.NewCalendarController(cfg)
-	calendarGroup := r.Group("/api/calendar")
+	googleController := controllers.NewGoogleController(cfg)
+	googleGroup := r.Group("/api/google")
 	{
-		calendarGroup.GET("/list", calendarController.GetCalendarList)
+		googleGroup.GET("/calendar/list", googleController.GetCalendarList)
+		googleGroup.GET("/label/list", googleController.GetLabelList)
 	}
 }
