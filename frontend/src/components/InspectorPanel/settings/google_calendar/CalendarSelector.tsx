@@ -25,6 +25,7 @@ export function CalendarSelector({ value, onChange }: CalendarSelectorProps) {
       googleCalendarApi
         .getCalendars()
         .then((response) => {
+          console.log("response", response);
           setCalendars(response);
         })
         .catch((error) => {
@@ -34,7 +35,7 @@ export function CalendarSelector({ value, onChange }: CalendarSelectorProps) {
           setIsLoading(false);
         });
     }
-  }, [isOpen, isLoading]);
+  }, [calendars, isOpen, isLoading]);
 
   const selectedCalendar = calendars?.items?.find((c) => c.id === value);
   const displayValue =

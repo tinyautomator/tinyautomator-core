@@ -14,3 +14,12 @@ export interface SendEmailResponse {
   messageId: string;
   threadId: string;
 }
+
+export interface Label {
+  id: string;
+  name: string;
+}
+
+export interface LabelListResponse {
+  labels: Label[];
+}

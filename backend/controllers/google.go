@@ -10,23 +10,23 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type CalendarController struct {
+type GoogleController struct {
 	logger       logrus.FieldLogger
 	oauthConfig  *oauth2.Config
 	oauthService models.OauthIntegrationService
 }
 
-func NewCalendarController(
+func NewGoogleController(
 	cfg models.AppConfig,
-) *CalendarController {
-	return &CalendarController{
+) *GoogleController {
+	return &GoogleController{
 		logger:       cfg.GetLogger(),
 		oauthConfig:  cfg.GetGoogleOAuthConfig(),
 		oauthService: cfg.GetOauthIntegrationService(),
 	}
 }
 
-func (c *CalendarController) GetCalendarList(ctx *gin.Context) {
+func (c *GoogleController) GetCalendarList(ctx *gin.Context) {
 	user, ok := ctx.Get("user")
 	if !ok {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
@@ -62,4 +62,38 @@ func (c *CalendarController) GetCalendarList(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, calendarList)
+}
+
+func (c *GoogleController) GetLabelList(ctx *gin.Context) {
+	user, ok := ctx.Get("user")
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+		return
+	}
+
+	userID := user.(*models.User).ID
+
+	token, err := c.oauthService.GetToken(ctx, userID, "google", c.oauthConfig)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get OAuth credentials"})
+		return
+	}
+
+	client, err := google.InitGmailClient(ctx, token, c.oauthConfig)
+	if err != nil {
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to initialize google gmail service"},
+		)
+
+		return
+	}
+
+	labelList, err := client.GetLabelList(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get label list"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"labels": labelList})
 }

@@ -1,5 +1,10 @@
 import { BaseApiClient } from "../base";
-import { GmailAuthUrlResponse, SendEmailDto, SendEmailResponse } from "./types";
+import {
+  GmailAuthUrlResponse,
+  LabelListResponse,
+  SendEmailDto,
+  SendEmailResponse,
+} from "./types";
 
 export class GmailApiClient extends BaseApiClient {
   async getAuthUrl(): Promise<GmailAuthUrlResponse> {
@@ -17,6 +22,13 @@ export class GmailApiClient extends BaseApiClient {
     const response = await this.post<SendEmailResponse>(
       "/api/integrations/google/send-email",
       JSON.stringify(data),
+    );
+    return response;
+  }
+
+  async getLabelList(): Promise<LabelListResponse> {
+    const response = await this.get<LabelListResponse>(
+      "/api/google/label/list",
     );
     return response;
   }
