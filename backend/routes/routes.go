@@ -72,5 +72,6 @@ func RegisterRoutes(r *gin.Engine, cfg models.AppConfig, ctx context.Context) {
 	googleGroup := r.Group("/api/google")
 	{
 		googleGroup.GET("/calendar/list", googleController.GetCalendarList)
+		googleGroup.GET("/label/list", googleController.GetLabelList)
 	}
 }
