@@ -95,5 +95,5 @@ func (c *GoogleController) GetLabelList(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, labelList)
+	ctx.JSON(http.StatusOK, gin.H{"labels": labelList})
 }

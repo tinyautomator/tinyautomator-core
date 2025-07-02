@@ -3,7 +3,9 @@ import { GetCalendarsResponse } from "./types";
 
 export class GoogleCalendarApiClient extends BaseApiClient {
   async getCalendars(): Promise<GetCalendarsResponse> {
-    const response = await this.get<GetCalendarsResponse>("/api/calendar/list");
+    const response = await this.get<GetCalendarsResponse>(
+      "/api/google/calendar/list",
+    );
     return response;
   }
 }

@@ -25,6 +25,7 @@ export function CalendarSelector({ value, onChange }: CalendarSelectorProps) {
       googleCalendarApi
         .getCalendars()
         .then((response) => {
+          console.log("response", response);
           setCalendars(response);
         })
         .catch((error) => {

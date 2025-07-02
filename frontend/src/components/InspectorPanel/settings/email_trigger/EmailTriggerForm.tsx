@@ -14,6 +14,8 @@ import { FormControls } from "@/components/shared/FormControls";
 import { toast } from "sonner";
 import { useFlowStore } from "@/components/Canvas/flowStore";
 
+import LabelSelector from "./LabelSelector";
+
 export const EmailTriggerForm = () => {
   const { getSelectedNode } = useFlowStore();
   const selectedNode = getSelectedNode();
@@ -75,7 +77,7 @@ export const EmailTriggerForm = () => {
             <FormItem>
               <FormLabel>Label IDs</FormLabel>
               <FormControl>
-                <Input value={field.value ?? ""} onChange={field.onChange} />
+                <LabelSelector field={field} />
               </FormControl>
               <FormMessage />
             </FormItem>
