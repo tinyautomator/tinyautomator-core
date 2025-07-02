@@ -3,6 +3,7 @@ import { EmailSettings } from "./email";
 import { ScheduleSettings } from "./schedule";
 import { GoogleCalendarEventSettings } from "./google_calendar";
 import CalendarTriggerSettings from "./calendar_trigger";
+import { EmailTrigger } from "./email_trigger";
 
 export function SettingsTab() {
   const { getSelectedNode } = useFlowStore();
@@ -19,6 +20,8 @@ export function SettingsTab() {
       return <GoogleCalendarEventSettings />;
     case "calendar_event":
       return <CalendarTriggerSettings />;
+    case "email_trigger":
+      return <EmailTrigger />;
     default:
       return null;
   }

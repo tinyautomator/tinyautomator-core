@@ -39,17 +39,17 @@ export const blockCategories = [
       },
       {
         category: "trigger",
+        node_type: "email_trigger",
+        label: "Email",
+        icon: Mail,
+        description: "Initiate a workflow when a specific email action occurs",
+      },
+      {
+        category: "trigger",
         node_type: "webhook",
         label: "Webhook",
         icon: Globe,
         description: "Trigger a workflow when a webhook is received",
-      },
-      {
-        category: "trigger",
-        node_type: "email_trigger",
-        label: "Email Received",
-        icon: Mail,
-        description: "Initiate a workflow when a specific email is received",
       },
       {
         category: "trigger",
