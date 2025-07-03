@@ -34,6 +34,7 @@ func NewWorkflowService(cfg models.AppConfig) models.WorkflowService {
 	t := triggers.NewTriggerRegistry()
 	t.Register("schedule", triggers.NewScheduleTriggerHandler(logger, schedulerSvc))
 	t.Register("calendar_event", triggers.NewCalendarEventTriggerHandler(cfg))
+	t.Register("email_trigger", triggers.NewEmailTriggerHandler(cfg))
 
 	return &WorkflowService{
 		logger:               logger,
