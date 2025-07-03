@@ -61,6 +61,7 @@ type AppConfig interface {
 	GetGoogleOAuthConfig() *oauth2.Config
 	GetRedisClient() redis.RedisClient
 	GetRabbitMQClient() rabbitmq.RabbitMQClient
+	GetWorkflowEmailService() WorkflowEmailService
 	GetWorkflowCalendarService() WorkflowCalendarService
 	CleanUp()
 }
@@ -242,22 +243,18 @@ type SchedulerService interface {
 type WorkflowEmailService interface {
 	ValidateEmailConfig(config WorkflowEmailConfig) error
 	GetActiveEmails(ctx context.Context) ([]*WorkflowEmail, error)
-	GetHistoryID(ctx context.Context, emailID string, userID string) (*uint64, error)
+	GetHistoryID(ctx context.Context, userID string) (*uint64, error)
 	CreateWorkflowEmail(
 		ctx context.Context,
 		workflowID int32,
 		config WorkflowEmailConfig,
 		historyID string,
-		executionState string,
-		lastSyncedAt int64,
 	) (*WorkflowEmail, error)
 	UpdateWorkflowEmail(
 		ctx context.Context,
 		workflowID int32,
 		config WorkflowEmailConfig,
 		historyID string,
-		executionState string,
-		lastSyncedAt int64,
 	) error
 	CheckEmailChanges(ctx context.Context, email *WorkflowEmail) error
 	EnsureInFlightEnqueued()

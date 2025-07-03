@@ -84,10 +84,9 @@ type WorkflowSchedule struct {
 }
 
 type WorkflowEmailConfig struct {
-	EmailAddress string   `json:"email_address"`
-	Keywords     []string `json:"keywords"`
-	HistoryType  string   `json:"history_type"`
-	LabelIds     []string `json:"label_ids"`
+	HistoryType string   `json:"history_type"`
+	Keywords    []string `json:"keywords,omitempty"`
+	LabelIds    []string `json:"label_ids,omitempty"`
 }
 
 type WorkflowEmail struct {

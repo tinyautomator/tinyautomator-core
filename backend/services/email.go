@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -16,6 +17,10 @@ import (
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/google"
 	"github.com/tinyautomator/tinyautomator-core/backend/clients/redis"
 	"github.com/tinyautomator/tinyautomator-core/backend/models"
+)
+
+const (
+	maxEmailKeywords = 20
 )
 
 type WorkflowEmailService struct {
@@ -66,6 +71,14 @@ func (s *WorkflowEmailService) EnsureInFlightEnqueued() {
 }
 
 func (s *WorkflowEmailService) ValidateEmailConfig(config models.WorkflowEmailConfig) error {
+	if config.HistoryType == "" {
+		return errors.New("history type is required")
+	}
+
+	if len(config.Keywords) > maxEmailKeywords {
+		return fmt.Errorf("keywords must be less than %d", maxEmailKeywords)
+	}
+
 	return nil
 }
 
@@ -82,7 +95,6 @@ func (s *WorkflowEmailService) GetActiveEmails(
 
 func (s *WorkflowEmailService) GetHistoryID(
 	ctx context.Context,
-	emailID string,
 	userID string,
 ) (*uint64, error) {
 	client, err := s.InitGmailClient(ctx, userID)
@@ -103,9 +115,10 @@ func (s *WorkflowEmailService) CreateWorkflowEmail(
 	workflowID int32,
 	config models.WorkflowEmailConfig,
 	historyID string,
-	executionState string,
-	lastSyncedAt int64,
 ) (*models.WorkflowEmail, error) {
+	executionState := "active"
+	lastSyncedAt := time.Now().UnixMilli()
+
 	email, err := s.workflowEmailRepo.CreateWorkflowEmail(
 		ctx,
 		workflowID,
@@ -126,9 +139,10 @@ func (s *WorkflowEmailService) UpdateWorkflowEmail(
 	workflowID int32,
 	config models.WorkflowEmailConfig,
 	historyID string,
-	executionState string,
-	lastSyncedAt int64,
 ) error {
+	executionState := "active"
+	lastSyncedAt := time.Now().UnixMilli()
+
 	err := s.workflowEmailRepo.UpdateWorkflowEmail(
 		ctx,
 		workflowID,

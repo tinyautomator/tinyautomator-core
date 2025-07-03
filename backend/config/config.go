@@ -37,6 +37,7 @@ type appConfig struct {
 	oauthIntegrationSvc  models.OauthIntegrationService
 	accountService       models.AccountService
 	workflowCalendarSvc  models.WorkflowCalendarService
+	workflowEmailSvc     models.WorkflowEmailService
 }
 
 var cfg *appConfig
@@ -71,6 +72,7 @@ func NewAppConfig(ctx context.Context) (models.AppConfig, error) {
 	cfg.oauthIntegrationSvc = services.NewOauthIntegrationService(cfg)
 	cfg.accountService = services.NewAccountService(cfg)
 	cfg.workflowCalendarSvc = services.NewWorkflowCalendarService(cfg)
+	cfg.workflowEmailSvc = services.NewWorkflowEmailService(cfg)
 
 	return cfg, nil
 }
@@ -153,6 +155,10 @@ func (c *appConfig) GetOauthIntegrationService() models.OauthIntegrationService 
 
 func (c *appConfig) GetAccountService() models.AccountService {
 	return c.accountService
+}
+
+func (c *appConfig) GetWorkflowEmailService() models.WorkflowEmailService {
+	return c.workflowEmailSvc
 }
 
 func (c *appConfig) CleanUp() {
